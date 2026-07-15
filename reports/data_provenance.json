@@ -1,0 +1,15 @@
+{
+ "dataset": "kaggle:i212385nomanarif/2024-brats-glioma",
+ "cite": "BraTS 2024 (de Verdier et al., arXiv:2405.18368) \u2014 PARTIAL community mirror",
+ "n_cases": 200,
+ "modalities_kept": [
+  "t2f",
+  "t1c",
+  "t2w"
+ ],
+ "label": "seg",
+ "geometry": "182x218x182 (mirror is resampled to MNI-like space; native BraTS is 240x240x155 \u2014 provenance caveat)",
+ "seed": 42,
+ "content_sha256_16": "dce57ab5972de05e",
+ "total_bytes_on_disk": 4919565071
+}
