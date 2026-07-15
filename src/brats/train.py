@@ -193,7 +193,7 @@ def _save_checkpoint(path: Path, model: torch.nn.Module, optimizer, scheduler,
     )
 
 
-def train(cfg: dict[str, Any], track: str) -> dict[str, Any]:
+def train(cfg: dict[str, Any], track: str, tag: str | None = None) -> dict[str, Any]:
     """Train one track end-to-end (CLAUDE.md §6.6). Returns a run summary.
 
     Seeds everything; builds the shared UNet, the track's loss, and the train/val
@@ -237,7 +237,8 @@ def train(cfg: dict[str, Any], track: str) -> dict[str, Any]:
     selection = _select_metric_name(cfg, track)
 
     # Run outputs live on native ext4 (§1.3, guardrail #1), never on a 9p drive.
-    run_dir = RUNS_DIR / track
+    # tag lets multi-seed runs write to distinct dirs, e.g. runs/b_s0 (seed sweep).
+    run_dir = RUNS_DIR / (f"{track}_{tag}" if tag else track)
     assert_native_storage(RUNS_DIR)
     run_dir.mkdir(parents=True, exist_ok=True)
     _write_meta(run_dir, cfg, track, seed, selection, n_params)

@@ -33,10 +33,19 @@ def main() -> None:
         required=True,
         help="'a' = faithful baseline (D1-D7,D9); 'b' = corrected pipeline.",
     )
+    ap.add_argument("--seed", type=int, default=None,
+                    help="Override the training seed (init/aug/sampling). Data split stays fixed.")
+    ap.add_argument("--epochs", type=int, default=None, help="Override cfg epochs.")
+    ap.add_argument("--tag", default=None,
+                    help="Suffix for the run dir, e.g. --tag s0 -> runs/<track>_s0 (seed sweep).")
     args = ap.parse_args()
 
     cfg = load_config(args.track)
-    summary = train(cfg, args.track)
+    if args.seed is not None:
+        cfg["seed"] = args.seed
+    if args.epochs is not None:
+        cfg["epochs"] = args.epochs
+    summary = train(cfg, args.track, tag=args.tag)
 
     print("=" * 60)
     print(f"Track {args.track}: best {summary['metric_selection']} = "
