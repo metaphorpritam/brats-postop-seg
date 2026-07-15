@@ -1,0 +1,32 @@
+{
+  "generated": "2026-07-15T18:26:09+00:00",
+  "errors": {
+    "broken_links": [],
+    "missing_frontmatter": [],
+    "missing_sources": [],
+    "stale_pages": []
+  },
+  "warnings": {
+    "unhashed_sources": [],
+    "orphans": [],
+    "uncovered_sources": [
+      "reference/Model/3D-U-Net/Categorical-CrossEntropy/unet_cctd_pred.py",
+      "reference/Model/3D-U-Net/Categorical-CrossEntropy/unet_cctd_pred_Backup.py",
+      "src/brats/__init__.py",
+      "src/brats/config.py",
+      "src/brats/evaluate.py",
+      "src/brats/losses.py",
+      "src/brats/train.py"
+    ],
+    "todos": [],
+    "duplicates": [],
+    "unknown_type": [],
+    "index_gaps": []
+  },
+  "counts": {
+    "errors": 0,
+    "warnings": 7,
+    "pages": 6,
+    "edges": 43
+  }
+}

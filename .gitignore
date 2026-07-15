@@ -29,3 +29,6 @@ kb/index/
 
 # NOTE (deliberately NOT ignored): wiki/ is committed (§5); training logs
 # (CSV + TensorBoard event files) are artifacts to commit (§9) — copy them into reports/.
+
+# KB sources are re-derivable (logs via tr, PDFs from arXiv) — rebuild with scripts/build_kb.sh
+kb/sources/

@@ -1,0 +1,12 @@
+{
+  "name": "BraTS Post-Treatment Reproduction",
+  "source_roots": [
+    "../src",
+    "../reference/Model/3D-U-Net/Categorical-CrossEntropy",
+    "../reports"
+  ],
+  "code_globs": [
+    "**/*.py"
+  ],
+  "created": "2026-07-15T18:04:38+00:00"
+}
