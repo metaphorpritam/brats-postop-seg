@@ -10,6 +10,7 @@ dependencies = [
     "monai>=1.6.0",
     "nibabel>=5.4.2",
     "numpy>=2.5.1",
+    "opencv-python-headless>=5.0.0.93",
     "pyyaml>=6.0.3",
     "tensorboard>=2.21.0",
     "torch>=2.13.0",
@@ -18,5 +19,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "kaggle>=2.2.3",
     "kagglehub>=1.0.2",
+    "pytest>=9.1.1",
 ]
