@@ -32,3 +32,6 @@ kb/index/
 
 # KB sources are re-derivable (logs via tr, PDFs from arXiv) — rebuild with scripts/build_kb.sh
 kb/sources/
+
+# regenerable from report.md via scripts/08_report_html.py
+report.html
