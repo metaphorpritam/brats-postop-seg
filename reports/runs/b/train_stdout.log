@@ -1,0 +1,47 @@
+/home/pritam/code/brats-postop-seg/.venv/lib/python3.13/site-packages/monai/utils/deprecate_utils.py:320: FutureWarning: monai.transforms.spatial.dictionary Orientationd.__init__:labels: Current default value of argument `labels=(('L', 'R'), ('P', 'A'), ('I', 'S'))` was changed in version None from `labels=(('L', 'R'), ('P', 'A'), ('I', 'S'))` to `labels=None`. Default value changed to None meaning that the transform now uses the 'space' of a meta-tensor, if applicable, to determine appropriate axis labels.
+  warn_deprecated(argname, msg, warning_category)
+[b] epoch   1/40  loss=1.6817  lr=9.98e-04
+[b] epoch   2/40  loss=1.0899  lr=9.94e-04  acc=0.9827  mean_fg_dice=0.3241
+[b] epoch   3/40  loss=0.9636  lr=9.86e-04
+[b] epoch   4/40  loss=0.8921  lr=9.76e-04  acc=0.9840  mean_fg_dice=0.3771
+[b] epoch   5/40  loss=0.8579  lr=9.62e-04
+[b] epoch   6/40  loss=0.8356  lr=9.46e-04  acc=0.9876  mean_fg_dice=0.4079
+[b] epoch   7/40  loss=0.8045  lr=9.26e-04
+[b] epoch   8/40  loss=0.7893  lr=9.05e-04  acc=0.9883  mean_fg_dice=0.4279
+[b] epoch   9/40  loss=0.7732  lr=8.80e-04
+[b] epoch  10/40  loss=0.7631  lr=8.54e-04  acc=0.9876  mean_fg_dice=0.4357
+[b] epoch  11/40  loss=0.7620  lr=8.25e-04
+[b] epoch  12/40  loss=0.7456  lr=7.94e-04  acc=0.9889  mean_fg_dice=0.4384
+[b] epoch  13/40  loss=0.7472  lr=7.61e-04
+[b] epoch  14/40  loss=0.7178  lr=7.27e-04  acc=0.9896  mean_fg_dice=0.4627
+[b] epoch  15/40  loss=0.7165  lr=6.91e-04
+[b] epoch  16/40  loss=0.7250  lr=6.55e-04  acc=0.9903  mean_fg_dice=0.4644
+[b] epoch  17/40  loss=0.7074  lr=6.17e-04
+[b] epoch  18/40  loss=0.7054  lr=5.78e-04  acc=0.9910  mean_fg_dice=0.4717
+[b] epoch  19/40  loss=0.6972  lr=5.39e-04
+[b] epoch  20/40  loss=0.6910  lr=5.00e-04  acc=0.9902  mean_fg_dice=0.4841
+[b] epoch  21/40  loss=0.6857  lr=4.61e-04
+[b] epoch  22/40  loss=0.6807  lr=4.22e-04  acc=0.9888  mean_fg_dice=0.4804
+[b] epoch  23/40  loss=0.6851  lr=3.83e-04
+[b] epoch  24/40  loss=0.6692  lr=3.45e-04  acc=0.9915  mean_fg_dice=0.5082
+[b] epoch  25/40  loss=0.6691  lr=3.09e-04
+[b] epoch  26/40  loss=0.6791  lr=2.73e-04  acc=0.9918  mean_fg_dice=0.5183
+[b] epoch  27/40  loss=0.6608  lr=2.39e-04
+[b] epoch  28/40  loss=0.6634  lr=2.06e-04  acc=0.9917  mean_fg_dice=0.5207
+[b] epoch  29/40  loss=0.6643  lr=1.75e-04
+[b] epoch  30/40  loss=0.6514  lr=1.46e-04  acc=0.9920  mean_fg_dice=0.5264
+[b] epoch  31/40  loss=0.6508  lr=1.20e-04
+[b] epoch  32/40  loss=0.6566  lr=9.55e-05  acc=0.9922  mean_fg_dice=0.5308
+[b] epoch  33/40  loss=0.6461  lr=7.37e-05
+[b] epoch  34/40  loss=0.6476  lr=5.45e-05  acc=0.9925  mean_fg_dice=0.5344
+[b] epoch  35/40  loss=0.6460  lr=3.81e-05
+[b] epoch  36/40  loss=0.6452  lr=2.45e-05  acc=0.9925  mean_fg_dice=0.5353
+[b] epoch  37/40  loss=0.6419  lr=1.38e-05
+[b] epoch  38/40  loss=0.6501  lr=6.16e-06  acc=0.9924  mean_fg_dice=0.5380
+[b] epoch  39/40  loss=0.6439  lr=1.54e-06
+[b] epoch  40/40  loss=0.6467  lr=0.00e+00  acc=0.9925  mean_fg_dice=0.5374
+[b] done. best mean_fg_dice=0.5379711054265499 @ epoch 38. artifacts -> /home/pritam/brats/runs/b
+============================================================
+Track b: best mean_fg_dice = 0.5379711054265499 @ epoch 38
+Artifacts (best.pt / last.pt / metrics.csv / TB): /home/pritam/brats/runs/b
+TRAIN_B_EXIT=0

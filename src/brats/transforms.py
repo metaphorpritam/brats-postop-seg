@@ -194,7 +194,10 @@ def _track_b_deterministic_head(cfg: Mapping[str, Any]) -> list:
         Orientationd(keys=keys, axcodes=axcodes),
         AssertLabelSetd(keys=["label"], allowed=label_set),          # D7
         NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),  # D5 fix
-        CropForegroundd(keys=keys, source_key="image"),  # end of cached head
+        # start/end_coord_key=None: don't emit foreground_{start,end}_coord — they are
+        # numpy arrays that break list_data_collate on the val (head-only) loader.
+        CropForegroundd(keys=keys, source_key="image", start_coord_key=None, end_coord_key=None),
+
     ]
 
 

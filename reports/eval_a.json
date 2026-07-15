@@ -1,0 +1,18 @@
+{
+  "track": "a",
+  "checkpoint": "/home/pritam/brats/runs/a/best.pt",
+  "n_test": 30,
+  "per_class": {
+    "NETC": 0.0,
+    "SNFH": 0.5801407694816589,
+    "ET": 0.05440577492117882,
+    "RC": 0.08696120232343674
+  },
+  "counts": {
+    "NETC": 30,
+    "SNFH": 30,
+    "ET": 30,
+    "RC": 25
+  },
+  "mean_fg": 0.18037693668156862
+}

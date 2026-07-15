@@ -1,0 +1,15 @@
+[a] epoch   1/10  loss=0.3923  lr=9.76e-04
+[a] epoch   2/10  loss=0.0840  lr=9.05e-04  acc=0.9864  mean_fg_dice=0.0837
+[a] epoch   3/10  loss=0.0634  lr=7.94e-04
+[a] epoch   4/10  loss=0.0537  lr=6.55e-04  acc=0.9883  mean_fg_dice=0.1291
+[a] epoch   5/10  loss=0.0468  lr=5.00e-04
+[a] epoch   6/10  loss=0.0421  lr=3.45e-04  acc=0.9889  mean_fg_dice=0.1650
+[a] epoch   7/10  loss=0.0387  lr=2.06e-04
+[a] epoch   8/10  loss=0.0364  lr=9.55e-05  acc=0.9894  mean_fg_dice=0.1995
+[a] epoch   9/10  loss=0.0351  lr=2.45e-05
+[a] epoch  10/10  loss=0.0346  lr=0.00e+00  acc=0.9896  mean_fg_dice=0.1978
+[a] done. best val_accuracy=0.9895769331190322 @ epoch 10. artifacts -> /home/pritam/brats/runs/a
+============================================================
+Track a: best val_accuracy = 0.9895769331190322 @ epoch 10
+Artifacts (best.pt / last.pt / metrics.csv / TB): /home/pritam/brats/runs/a
+TRAIN_A_EXIT=0
