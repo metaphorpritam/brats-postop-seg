@@ -1,0 +1,35 @@
+# Shared configuration — common to BOTH tracks.
+# The network architecture defined here is IDENTICAL across tracks (CLAUDE.md §4.2,
+# guardrail #2). Only the data pipeline, loss, and model-selection criterion may differ.
+seed: 42
+
+data:
+  n_subsample: 200                # ~200 of ~700 mirror cases (§6.1.1)
+  split: {train: 0.70, val: 0.15, test: 0.15}
+  stratify_by: rc_presence        # presence of class 4 (RC) (§6.1.1)
+  modalities: [t2f, t1c, t2w]     # channel order 0,1,2 — matches original (drops t1n)
+  num_classes: 5                  # 0 bg, 1 NETC, 2 SNFH, 3 ET, 4 RC
+  label_set: [0, 1, 2, 3, 4]      # BraTS-2024 contiguous; assert on load (D7, §6.1.2)
+
+model:                            # MONAI UNet — shared by both tracks (§6.4)
+  name: monai.networks.nets.UNet
+  spatial_dims: 3
+  in_channels: 3
+  out_channels: 5
+  channels: [16, 32, 64, 128, 256]
+  strides: [2, 2, 2, 2]
+  num_res_units: 0
+  dropout: 0.1
+
+training:
+  optimizer: adamw
+  lr: 1.0e-3
+  lr_schedule: cosine
+  precision: bf16                 # autocast; NO GradScaler (§1.2, guardrail #3)
+
+inference:                        # sliding-window (§6.7)
+  roi_size: [96, 96, 96]
+  sw_batch_size: 1
+  overlap: 0.5
+
+logging: {csv: true, tensorboard: true}

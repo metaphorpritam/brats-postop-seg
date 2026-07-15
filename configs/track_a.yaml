@@ -1,0 +1,19 @@
+# Track A — FAITHFUL reproduction of the original pipeline's defects D1–D7, D9
+# (CLAUDE.md §4.1, §6.3). Its job is to FAIL in a documented way (guardrail #5):
+# ~98% accuracy, respectable SNFH Dice, near-zero NETC/ET/RC Dice. Do NOT "fix" it.
+track: a
+defaults: base.yaml
+
+transforms:
+  label_interpolation: bilinear     # D1 — cv2.resize INTER_LINEAR on labels (fractional labels)
+  normalization: global_max         # D5 — X / np.max(X), single global max over all modalities
+  slice_sampling: "VOLUME_START_AT + int(j*2.5)"   # D6 — irregular strides, start=22, 48 slices
+  geometry: whole_volume
+  spatial_size: [128, 128, 48]
+  augmentation: none
+
+loss: cross_entropy                 # plain CE (§6.5); alpha=[.05,.25,.25,.25,.20] defined-but-unused = D3
+metric_selection: val_accuracy      # D4 — degenerate metric under 98% background
+cache: none                         # D9 — naive per-epoch reload; keep the I/O-bound loader for the speedup comparison
+epochs: 10                          # plateaus early (§8.3)
+batch_size: 1                       # one whole volume

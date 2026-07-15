@@ -1,0 +1,22 @@
+# Track B — CORRECTED pipeline (CLAUDE.md §4.1, §6.3). Fixes D1–D7, D9.
+# Architecture is BYTE-IDENTICAL to Track A (base.yaml) — only data/loss/selection differ (§4.2).
+track: b
+defaults: base.yaml
+
+transforms:
+  label_interpolation: nearest      # D1 fix — NN resampling for labels, always
+  orientation: RAS                  # Orientationd
+  normalization: zscore_per_modality_nonzero   # D5 fix — NormalizeIntensityd(nonzero=True, channel_wise=True)
+  crop_foreground: true             # CropForegroundd(source_key="image") — end of deterministic (cached) head
+  patch_sampling:                   # RandCropByLabelClassesd — D3/D6 fix (oversample minority classes)
+    spatial_size: [96, 96, 96]
+    num_classes: 5
+    ratios: [1, 2, 2, 2, 2]
+    num_samples: 2
+  augmentation: [rand_flip_xyz, rand_rotate90, rand_scale_intensity, rand_shift_intensity]
+
+loss: dice_ce                       # DiceCELoss(include_background=False, to_onehot_y=True, softmax=True) — D3
+metric_selection: mean_fg_dice      # D4 fix — select on mean foreground Dice
+cache: persistent                   # D9 fix — MONAI PersistentDataset, deterministic head -> ~/brats/cache
+epochs: 40                          # §8.3 (30–40, not 50)
+batch_size: 2                       # 2 patches of 96^3

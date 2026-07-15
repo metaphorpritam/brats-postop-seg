@@ -1,0 +1,31 @@
+# Python / uv
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.venv/
+
+# Transient
+install.log
+
+# Data / cache / runs live on ~/brats (outside the repo). Never commit if copied in.
+/data/
+/raw/
+/cache/
+/runs/
+
+# Derived knowledge base — re-derivable from immutable sources (§5 commit rule).
+kb/corpus/
+kb/index/
+
+# Large model weights (retrain clean; never reuse the original's — guardrail #7)
+*.pth
+*.pt
+*.ckpt
+*.weights.h5
+*.keras
+
+# NOTE (deliberately NOT ignored): wiki/ is committed (§5); training logs
+# (CSV + TensorBoard event files) are artifacts to commit (§9) — copy them into reports/.
