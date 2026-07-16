@@ -26,6 +26,9 @@ BraTS-2024 + Kim arXiv papers, code map) is indexed separately in the **pageinde
   the tool/version stack.
 - [[Results]] — per-class test & validation Dice (Track A vs B) with case counts, the delta,
   and the ~2.8× D9 loader speedup.
+- [[Build Journal]] — the *why we got here*: the build narrative plus every decision (16),
+  incident + fix (14), and open/resolved question, compiled from the session transcript —
+  the storage saga, the WSL mount fights, the D7 discovery, the collate crash, and the scale-up.
 
 ## Decisions & open questions
 

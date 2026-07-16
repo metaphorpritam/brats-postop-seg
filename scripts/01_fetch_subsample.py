@@ -20,6 +20,7 @@ import json
 import os
 import random
 import shutil
+import socket
 import sys
 import threading
 import time
@@ -212,6 +213,12 @@ def main() -> None:
     ap.add_argument("--workers", type=int, default=6)
     ap.add_argument("--stage", choices=["masks", "split", "modalities", "all"], default="all")
     args = ap.parse_args()
+    # Harden against stalled HTTPS reads: the kaggle client sets no socket timeout,
+    # so a stuck recv() blocks a worker thread forever and the ThreadPoolExecutor
+    # never completes (observed: 698/700 masks land, 2 stall, the whole run wedges
+    # at 0% CPU indefinitely). A per-read timeout converts a stall into a
+    # socket.timeout that _download_one's 4-attempt backoff loop already retries.
+    socket.setdefaulttimeout(90)
     paths.assert_native_storage(paths.RAW_DIR)
     cases = select_cases(args.n, args.seed)
     if args.stage in ("masks", "all"):

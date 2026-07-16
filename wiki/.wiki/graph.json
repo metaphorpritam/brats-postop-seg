@@ -1,8 +1,112 @@
 {
-  "generated": "2026-07-15T18:24:32+00:00",
+  "generated": "2026-07-16T07:34:40+00:00",
   "wiki_dir": "wiki",
-  "pages": 6,
+  "pages": 7,
   "nodes": [
+    {
+      "id": "build-journal",
+      "path": "pages/build-journal.md",
+      "title": "Build Journal",
+      "type": "session",
+      "tags": [
+        "journal",
+        "decisions",
+        "incidents",
+        "storage",
+        "wsl",
+        "provenance"
+      ],
+      "aliases": [],
+      "status": "active",
+      "sources": [
+        "../CLAUDE.md"
+      ],
+      "code": [],
+      "headings": [
+        {
+          "line": 13,
+          "text": "Build Journal"
+        },
+        {
+          "line": 18,
+          "text": "Narrative"
+        },
+        {
+          "line": 33,
+          "text": "Timeline"
+        },
+        {
+          "line": 51,
+          "text": "Key decisions"
+        },
+        {
+          "line": 104,
+          "text": "Incidents & fixes"
+        },
+        {
+          "line": 108,
+          "text": "1. Fictional 772 GB of free ext4 space"
+        },
+        {
+          "line": 114,
+          "text": "2. Space was never the blocker — the no-9p rule was"
+        },
+        {
+          "line": 120,
+          "text": "3. wsl --mount E_ACCESSDENIED with no Hyper-V log"
+        },
+        {
+          "line": 126,
+          "text": "4. diskpart create vdisk 'path not found'"
+        },
+        {
+          "line": 132,
+          "text": "5. WSL mount-namespace split (transient + systemd)"
+        },
+        {
+          "line": 138,
+          "text": "6. PowerShell escaping / execution-policy friction"
+        },
+        {
+          "line": 144,
+          "text": "7. Kaggle 404 HTML and dataset size/format surprise"
+        },
+        {
+          "line": 150,
+          "text": "8. Real data geometry 182×218×182, not 240×240×155"
+        },
+        {
+          "line": 156,
+          "text": "9. Empty download log — stdout thread race"
+        },
+        {
+          "line": 162,
+          "text": "10. Track-B validation collate crash"
+        },
+        {
+          "line": 168,
+          "text": "11. Workflow figure race — README claimed figures missing"
+        },
+        {
+          "line": 174,
+          "text": "12. Validation accuracy mislabeled as test accuracy"
+        },
+        {
+          "line": 180,
+          "text": "13. Knowledge layer never built"
+        },
+        {
+          "line": 186,
+          "text": "14. Detached download untracked; pgrep self-match"
+        },
+        {
+          "line": 193,
+          "text": "Questions"
+        }
+      ],
+      "in_degree": 3,
+      "out_degree": 10
+    },
     {
       "id": "data-provenance",
       "path": "pages/data-provenance.md",
@@ -47,7 +151,7 @@
           "text": "Subsample and split"
         }
       ],
-      "in_degree": 9,
+      "in_degree": 11,
       "out_degree": 8
     },
     {
@@ -111,7 +215,7 @@
           "text": "D9 — Pipeline is I/O-bound; the GPU starves"
         }
       ],
-      "in_degree": 9,
+      "in_degree": 11,
       "out_degree": 7
     },
     {
@@ -162,7 +266,7 @@
           "text": "Software stack"
         }
       ],
-      "in_degree": 7,
+      "in_degree": 9,
       "out_degree": 7
     },
     {
@@ -212,7 +316,7 @@
           "text": "Phase gates (§7)"
         }
       ],
-      "in_degree": 9,
+      "in_degree": 11,
       "out_degree": 7
     },
     {
@@ -237,12 +341,12 @@
           "text": "Core pages"
         },
         {
-          "line": 30,
+          "line": 33,
           "text": "Decisions & open questions"
         }
       ],
       "in_degree": 0,
-      "out_degree": 5
+      "out_degree": 6
     },
     {
       "id": "results",
@@ -254,47 +358,107 @@
         "evaluation",
         "track-a",
         "track-b",
-        "metrics"
+        "metrics",
+        "seed-sweep"
       ],
       "aliases": [],
       "status": "active",
       "sources": [
         "../reports/results.md",
-        "../reports/eval_a.json",
-        "../reports/eval_b.json"
+        "../reports/results_700_seeds.json"
       ],
       "code": [],
       "headings": [
         {
-          "line": 18,
-          "text": "TEST set (n=30) — per-class voxel Dice"
+          "line": 17,
+          "text": "TEST set (n=105) — per-class voxel Dice (mean ± SD, 3 seeds)"
         },
         {
-          "line": 32,
+          "line": 33,
           "text": "Defect D1 exposed by the GT-present counts"
         },
         {
-          "line": 36,
-          "text": "Validation set — per-class Dice (each track at its own best epoch)"
+          "line": 37,
+          "text": "Validation set — per-class Dice (mean ± SD, each track at its own best epoch)"
         },
         {
-          "line": 48,
+          "line": 49,
           "text": "Model selection (D4)"
         },
         {
-          "line": 52,
+          "line": 53,
           "text": "Speed (D9)"
         },
         {
-          "line": 56,
+          "line": 57,
           "text": "Attribution"
         }
       ],
-      "in_degree": 9,
-      "out_degree": 9
+      "in_degree": 11,
+      "out_degree": 11
     }
   ],
   "edges": [
+    {
+      "src": "build-journal",
+      "dst": "data-provenance",
+      "type": "mentions",
+      "line": 15
+    },
+    {
+      "src": "build-journal",
+      "dst": "data-provenance",
+      "type": "relates",
+      "line": 9
+    },
+    {
+      "src": "build-journal",
+      "dst": "defect-inventory",
+      "type": "mentions",
+      "line": 15
+    },
+    {
+      "src": "build-journal",
+      "dst": "defect-inventory",
+      "type": "relates",
+      "line": 9
+    },
+    {
+      "src": "build-journal",
+      "dst": "environment",
+      "type": "mentions",
+      "line": 15
+    },
+    {
+      "src": "build-journal",
+      "dst": "environment",
+      "type": "relates",
+      "line": 9
+    },
+    {
+      "src": "build-journal",
+      "dst": "experimental-design",
+      "type": "mentions",
+      "line": 15
+    },
+    {
+      "src": "build-journal",
+      "dst": "experimental-design",
+      "type": "relates",
+      "line": 9
+    },
+    {
+      "src": "build-journal",
+      "dst": "results",
+      "type": "mentions",
+      "line": 15
+    },
+    {
+      "src": "build-journal",
+      "dst": "results",
+      "type": "relates",
+      "line": 9
+    },
     {
       "src": "data-provenance",
       "dst": "defect-inventory",
@@ -471,6 +635,12 @@
     },
     {
       "src": "index",
+      "dst": "build-journal",
+      "type": "mentions",
+      "line": 29
+    },
+    {
+      "src": "index",
       "dst": "data-provenance",
       "type": "mentions",
       "line": 23
@@ -501,57 +671,69 @@
     },
     {
       "src": "results",
+      "dst": "build-journal",
+      "type": "mentions",
+      "line": 15
+    },
+    {
+      "src": "results",
+      "dst": "build-journal",
+      "type": "relates",
+      "line": 11
+    },
+    {
+      "src": "results",
       "dst": "data-provenance",
       "type": "derived-from",
-      "line": 13
+      "line": 12
     },
     {
       "src": "results",
       "dst": "data-provenance",
       "type": "mentions",
-      "line": 34
+      "line": 35
     },
     {
       "src": "results",
       "dst": "data-provenance",
       "type": "relates",
-      "line": 12
+      "line": 11
     },
     {
       "src": "results",
       "dst": "defect-inventory",
       "type": "mentions",
-      "line": 16
+      "line": 15
     },
     {
       "src": "results",
       "dst": "defect-inventory",
       "type": "relates",
-      "line": 12
+      "line": 11
     },
     {
       "src": "results",
       "dst": "environment",
       "type": "mentions",
-      "line": 54
+      "line": 55
     },
     {
       "src": "results",
       "dst": "environment",
       "type": "relates",
-      "line": 12
+      "line": 11
     },
     {
       "src": "results",
       "dst": "experimental-design",
       "type": "mentions",
-      "line": 16
+      "line": 15
     },
     {
       "src": "results",
       "dst": "experimental-design",
       "type": "relates",
-      "line": 12
+      "line": 11
     }
   ],
   "unresolved": [],
@@ -559,6 +741,8 @@
   "title_index": {
     "brats post-treatment reproduction index": "index",
     "index": "index",
+    "build journal": "build-journal",
+    "build-journal": "build-journal",
     "data provenance": "data-provenance",
     "data-provenance": "data-provenance",
     "defect inventory": "defect-inventory",

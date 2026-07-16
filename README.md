@@ -6,8 +6,8 @@ MONAI, faithfully reproduces a set of named defects (**D1–D9**) from the origi
 TensorFlow/Keras research code in **Track A**, then fixes them in **Track B** while
 holding the network architecture byte-identical between the two. The deliverable is
 **not a leaderboard score** — it is the **A→B delta in mean foreground Dice**
-(**0.180 → 0.513, +0.333, ≈2.8×** on a held-out test set), which is immune to the
-project's deliberate handicaps because both tracks carry them equally.
+(**0.349 → 0.670, +0.321 ± 0.013** over 3 seeds on a held-out test set), which is immune
+to the project's deliberate handicaps because both tracks carry them equally.
 
 > **[CLAUDE.md](CLAUDE.md) is the authoritative build spec** — mission, hard
 > constraints, the full defect inventory (D1–D9), experimental design, phase gates,
@@ -16,45 +16,46 @@ project's deliberate handicaps because both tracks carry them equally.
 
 ---
 
-## Results — held-out TEST set, per-class voxel-wise Dice (n_test = 30)
+## Results — held-out TEST set, per-class voxel-wise Dice (n_test = 105, mean ± SD over 3 seeds)
 
 One shared MONAI `UNet` (**1,983,069 params**), byte-identical across tracks (§4.2).
-Seed 42; split `reports/splits.json` (140/30/30 train/val/test, stratified by RC
-presence). Numbers copied from `reports/results.md` / `reports/eval_{a,b}.json`
-(guardrail #9 — every number comes from a committed run log).
+**700 cases**; split `reports/splits.json` (**490/105/105** train/val/test, stratified by RC,
+fixed at seed 42); each track trained on **3 seeds {0,1,2}**. Numbers from `reports/results.md` /
+`reports/results_700_seeds.json` (guardrail #9 — every number comes from a committed run log).
 
 | Class | Track A | Track B | Δ (B−A) | n GT-present (A / B) |
 |---|---|---|---|---|
-| NETC (1) | 0.000 | 0.140 | **+0.140** | 30 / 17 |
-| SNFH (2) | 0.580 | 0.807 | **+0.227** | 30 / 30 |
-| ET (3)   | 0.054 | 0.567 | **+0.513** | 30 / 25 |
-| RC (4)   | 0.087 | 0.538 | **+0.451** | 25 / 25 |
-| **Mean foreground** | **0.180** | **0.513** | **+0.333** | |
+| NETC (1) | 0.009 ± 0.008 | 0.466 ± 0.004 | **+0.457** | 105 / 48 |
+| SNFH (2) | 0.683 ± 0.017 | 0.870 ± 0.003 | **+0.187** | 105 / 105 |
+| ET (3)   | 0.299 ± 0.033 | 0.650 ± 0.007 | **+0.351** | 100 / 85 |
+| RC (4)   | 0.403 ± 0.026 | 0.694 ± 0.002 | **+0.291** | 87 / 87 |
+| **Mean foreground** | **0.349 ± 0.013** | **0.670 ± 0.002** | **+0.321 ± 0.013** | |
 
-**Headline:** mean foreground Dice **0.180 → 0.513** (≈2.8×) on unseen data; largest
-recovery on **ET (+0.513)** and **RC (+0.451)**. Track A reproduces the intended
-pathology — 98.96% *validation* voxel accuracy while minority-class Dice sits near zero — which is
-the whole point of a faithful baseline (a Track A that scored well would mean the
-reproduction was wrong, guardrail #5). NETC stays the hardest class even after the fix.
+**Headline:** mean foreground Dice **0.349 → 0.670**, **Δ = +0.321 ± 0.013** (≈1.9×) on unseen
+data; largest recovery on the **rarest class, NETC (+0.457)**, then ET (+0.351) and RC (+0.291).
+This reproduces the 200-case pilot's +0.333 **with error bars** (tiny per-seed SD). Track A
+reproduces the intended pathology — ~99.1% *validation* voxel accuracy while the rare class sits
+near zero (NETC 0.009) — the whole point of a faithful baseline (a Track A that scored well would
+mean the reproduction was wrong, guardrail #5). NETC stays the lowest absolute Dice even after the fix.
 
-<sub>Validation set (each track at its own best epoch): mean fg Dice **A 0.198 → B
-0.538**; validation voxel accuracy **A 0.9896 / B 0.9924** (degenerate — ~98% background,
-which is the whole D4 point). **D4 model selection:** Track A checkpoints on `val_accuracy` (the degenerate
-metric — best @ epoch 10); Track B on **mean foreground Dice** (the fix — best @ epoch
-38). See `reports/results.md` for the full validation table.</sub>
+<sub>Validation set (each track at its own best epoch): mean fg Dice **A 0.320 → B 0.682**;
+validation voxel accuracy **A 0.991 / B 0.995** (degenerate — ~98%+ background, which is the whole
+D4 point). **D4 model selection:** Track A checkpoints on `val_accuracy` (the degenerate metric —
+best @ epochs 18–22); Track B on **mean foreground Dice** (the fix — best @ epochs 64–72). See
+`reports/results.md` for the full validation table.</sub>
 
 ### Key findings behind the delta
 
 - **D1 — bilinear label resize invents minority labels (measured directly).** Track A
   resizes the *label* volume with `cv2.resize` (default `INTER_LINEAR`), then truncates
   to int. The per-class case counts expose the damage: Track A reports **NETC present in
-  30/30** test cases and **ET in 30/30**, but the faithful (nearest-neighbour) labels
-  show only **17** and **25**. Interpolating across class boundaries **fabricates**
+  105/105** test cases and **ET in 100/105**, but the faithful (nearest-neighbour) labels
+  show only **48** and **85**. Interpolating across class boundaries **fabricates**
   minority-class voxels — exactly the "can invent/destroy labels" harm in §3/D1, which
   is why Dice is never reported without its per-class case count (§6.5, guardrail #4).
 - **D4 — model selection on the wrong metric.** With ~98% background, `val_accuracy` is
-  degenerate; Track A's "best" checkpoint is chosen on it (peaks @ epoch 10). Track B
-  selects on mean foreground Dice (peaks @ epoch 38) — a genuinely better segmenter.
+  degenerate; Track A's "best" checkpoint is chosen on it (peaks @ epochs 18–22). Track B
+  selects on mean foreground Dice (peaks @ epochs 64–72) — a genuinely better segmenter.
 - **D9 — I/O-bound naive loader vs. cached (≈2.8× data-loading speedup).** Track A keeps
   the original's uncached loader; Track B uses MONAI `PersistentDataset`.
 
@@ -140,10 +141,12 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 # Phase 0 — env + GPU + /mnt guard
 uv run python scripts/00_verify_env.py
 
-# Phase 1 — fetch from Kaggle, subsample 200, seeded stratified 140/30/30 split.
+# Phase 1 — fetch from Kaggle, all 700 cases, seeded stratified 490/105/105 split.
 # Writes reports/splits.json, reports/data_provenance.json, labels_summary.json.
 # (Needs a Kaggle API token at ~/.config/kaggle/kaggle.json; data lands on ~/brats/raw.)
-uv run python scripts/01_fetch_subsample.py --n 200 --seed 42
+uv run python scripts/01_fetch_subsample.py --n 700 --seed 42 --stage all
+# Or run the whole 700-case, 3-seed A/B end-to-end (fetch → sweep → aggregate):
+#   bash scripts/run_full_experiment.sh
 
 # Phase 2 — synthetic end-to-end smoke test (no download; guardrail #11)
 uv run python scripts/02_smoke_test.py

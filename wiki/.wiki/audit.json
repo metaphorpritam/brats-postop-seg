@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-15T18:26:09+00:00",
+  "generated": "2026-07-16T07:34:40+00:00",
   "errors": {
     "broken_links": [],
     "missing_frontmatter": [],
@@ -26,7 +26,7 @@
   "counts": {
     "errors": 0,
     "warnings": 7,
-    "pages": 6,
-    "edges": 43
+    "pages": 7,
+    "edges": 56
   }
 }

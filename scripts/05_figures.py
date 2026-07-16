@@ -85,9 +85,9 @@ from brats.transforms import (  # noqa: E402
 # so the 5-class colormap and the A→B minority-class recovery are both visible.
 # All are drawn from reports/splits.json -> splits.test (verified present at runtime).
 CASES: tuple[str, ...] = (
-    "BraTS-GLI-02403-100",  # NETC/SNFH/ET/RC all present; large ET (~32k) + RC (~14k)
-    "BraTS-GLI-02375-101",  # all four classes present; balanced
-    "BraTS-GLI-00080-101",  # all four present; strong ET (~22k)
+    "BraTS-GLI-02403-100",  # all four classes present (kept from pilot; still in the new TEST split)
+    "BraTS-GLI-00463-100",  # all four classes present
+    "BraTS-GLI-00557-100",  # all four classes present
 )
 
 # Background modality for the overlays: channel 0 = t2f (FLAIR) — the primary modality
@@ -105,8 +105,10 @@ CLASS_COLORS = {
 }
 OVERLAY_ALPHA = 0.50
 
-CKPT_A = RUNS_DIR / "a" / "best.pt"
-CKPT_B = RUNS_DIR / "b" / "best.pt"
+# Representative seed (s0) of the 700-case, 3-seed sweep. The montage caption uses the
+# 3-seed AGGREGATE mean (reports/results_700_seeds.json), not this single seed.
+CKPT_A = RUNS_DIR / "a_s0" / "best.pt"
+CKPT_B = RUNS_DIR / "b_s0" / "best.pt"
 
 
 # ---------------------------------------------------------------------------
@@ -291,8 +293,13 @@ def main() -> None:
     model_b.eval()
     val_transform_b = track_b_val_transforms(cfg_b)
 
-    # A→B delta headline for the montage caption (from the committed eval JSONs).
+    # A→B delta headline for the montage caption. Prefer the 3-seed aggregate so the
+    # montage matches reports/results.md; fall back to a single-run eval JSON.
     def _mean_fg(track: str) -> float:
+        agg = REPORTS_DIR / "results_700_seeds.json"
+        if agg.exists():
+            key = "track_a" if track == "a" else "track_b"
+            return float(json.loads(agg.read_text())[key]["mean_fg"]["mean"])
         p = REPORTS_DIR / f"eval_{track}.json"
         return float(json.loads(p.read_text())["mean_fg"]) if p.exists() else float("nan")
 

@@ -4,9 +4,10 @@
 1 NETC, 2 SNFH, 3 ET, 4 RC).
 **Metric:** voxel-wise Dice — **not** BraTS lesion-wise; see [§5](#5-analysis--intuition--why-the-delta) and CLAUDE.md §14.3. Do not compare to challenge leaderboards.
 **Model:** one shared MONAI `UNet` (`16→32→64→128→256`, **1,983,069 params**), byte-identical
-across both tracks (§4.2). Seed 42; stratified split 140/30/30 (train/val/test).
-All numbers below are recomputed from `reports/eval_{a,b}.json`, `reports/results.md`, and
-`~/brats/runs/{a,b}/metrics.csv` (guardrail #9).
+across both tracks (§4.2). **700 cases**; split fixed at seed 42 (**490/105/105** train/val/test,
+stratified by RC); each track trained on **3 seeds {0,1,2}**, so every number below is **mean ± SD
+over 3 runs** on one shared test set. Recomputed from `reports/eval_{a,b}_s{0,1,2}.json`,
+`reports/results_700_seeds.json`, and `~/brats/runs/{a,b}_s{0,1,2}/metrics.csv` (guardrail #9).
 
 ---
 
@@ -28,12 +29,14 @@ the project's deliberate handicaps (small data, tiny model, no ensembling) becau
 tracks carry them equally.
 
 > ### Headline
-> **Mean foreground Dice `0.180 → 0.513` on the held-out TEST set — Δ = +0.333, ≈2.8×.**
-> Largest recovery on **ET (+0.513)** and **RC (+0.451)**. Track A behaves exactly as a
-> faithful baseline should: **98.96% validation voxel accuracy with minority-class Dice
-> near zero** — a Track A that scored well would mean the reproduction was wrong
-> (guardrail #5). NETC stays the hardest class even after the fix, because it is both
-> small and rare (GT-present in only 17/30 test cases; ~52% of the dataset).
+> **Mean foreground Dice `0.349 → 0.670` on the held-out TEST set — Δ = +0.321 ± 0.013, ≈1.9×**
+> (mean ± SD over 3 seeds, n_test = 105). Largest recovery on the **rarest class, NETC
+> (+0.457)**, then ET (+0.351) and RC (+0.291); the tiny per-seed SD (Track B ±0.002–0.007)
+> makes this a stable effect, not a lucky run. Track A behaves exactly as a faithful baseline
+> should: **~99.1% validation voxel accuracy with the rare class pinned near zero (NETC 0.009)**
+> — a Track A that scored well would mean the reproduction was wrong (guardrail #5). The absolute
+> delta reproduces the 200-case pilot's +0.333 *with error bars*; the ratio fell from ~2.8× only
+> because more data lets even the **defective** Track A learn the prevalent classes (§5.1).
 
 ---
 
@@ -44,20 +47,20 @@ differ — that is the whole reason the comparison is credible.
 
 ```mermaid
 flowchart TB
-    M["Shared MONAI UNet (§4.2)<br/>16→32→64→128→256 · 1,983,069 params<br/>seed 42 · split 140/30/30 · byte-identical"]
+    M["Shared MONAI UNet (§4.2)<br/>16→32→64→128→256 · 1,983,069 params<br/>split 490/105/105 (seed 42) · 3 training seeds · byte-identical"]
     M --> A1
     M --> B1
     subgraph A["Track A — faithful defects (D1–D7, D9)"]
         direction TB
         A1["bilinear labels · global-max norm<br/>CrossEntropy · val_accuracy selection<br/>uncached loader"]
-        A1 --> A2["PATHOLOGY REPRODUCED<br/>98.96% val acc<br/>minority Dice ≈ 0<br/>best @ epoch 10"]
+        A1 --> A2["PATHOLOGY REPRODUCED<br/>~99.1% val acc<br/>NETC Dice ≈ 0<br/>best @ ep 18–22"]
     end
     subgraph B["Track B — corrected pipeline"]
         direction TB
         B1["NN labels · z-score norm<br/>DiceCE + class-balanced sampling<br/>mean-fg-Dice selection · PersistentDataset"]
-        B1 --> B2["RECOVERY<br/>mean fg Dice 0.513<br/>ET & RC restored<br/>best @ epoch 38"]
+        B1 --> B2["RECOVERY<br/>mean fg Dice 0.670<br/>NETC/ET/RC restored<br/>best @ ep 64–72"]
     end
-    A2 --> D["Δ = THE DELIVERABLE<br/>mean fg Dice 0.180 → 0.513<br/>+0.333 (~2.8×) on held-out TEST"]
+    A2 --> D["Δ = THE DELIVERABLE<br/>mean fg Dice 0.349 → 0.670<br/>+0.321 ± 0.013 on held-out TEST"]
     B2 --> D
 ```
 
@@ -101,59 +104,60 @@ sees a balanced, uncorrupted signal.
 
 ## 4. Results
 
-### 4.1 Held-out TEST set — per-class Dice (n_test = 30)
+### 4.1 Held-out TEST set — per-class Dice (n_test = 105, mean ± SD over 3 seeds)
 
-Source: `reports/eval_a.json`, `reports/eval_b.json`. `n GT-present` = number of test
-cases in which that class actually occurs, reported **alongside** every Dice (guardrail #4)
-because Track A's counts are themselves a finding (§5.2).
+Source: `reports/eval_{a,b}_s{0,1,2}.json`, aggregated in `reports/results_700_seeds.json`.
+`n GT-present` = number of test cases in which that class actually occurs, reported
+**alongside** every Dice (guardrail #4) because Track A's counts are themselves a finding (§5.2).
 
 | Class | Track A | Track B | Δ (B−A) | n GT-present (A / B) |
 |---|---|---|---|---|
-| NETC (1) | 0.000 | 0.140 | **+0.140** | 30 / 17 |
-| SNFH (2) | 0.580 | 0.807 | **+0.227** | 30 / 30 |
-| ET (3)   | 0.054 | 0.567 | **+0.513** | 30 / 25 |
-| RC (4)   | 0.087 | 0.538 | **+0.451** | 25 / 25 |
-| **Mean foreground** | **0.180** | **0.513** | **+0.333** | |
+| NETC (1) | 0.009 ± 0.008 | 0.466 ± 0.004 | **+0.457** | 105 / 48 |
+| SNFH (2) | 0.683 ± 0.017 | 0.870 ± 0.003 | **+0.187** | 105 / 105 |
+| ET (3)   | 0.299 ± 0.033 | 0.650 ± 0.007 | **+0.351** | 100 / 85 |
+| RC (4)   | 0.403 ± 0.026 | 0.694 ± 0.002 | **+0.291** | 87 / 87 |
+| **Mean foreground** | **0.349 ± 0.013** | **0.670 ± 0.002** | **+0.321 ± 0.013** | |
 
-### 4.2 Validation set — per-class Dice (each track at its own best epoch)
+### 4.2 Validation set — per-class Dice (mean ± SD, each track at its own best epoch)
 
-Source: `~/brats/runs/{a,b}/metrics.csv` (Track A @ epoch 10, Track B @ epoch 38).
+Source: `~/brats/runs/{a,b}_s{0,1,2}/metrics.csv` (Track A @ epochs 18–22, Track B @ epochs 64–72).
 
 | Class | Track A | Track B | Δ (B−A) |
 |---|---|---|---|
-| NETC | 0.000 | 0.162 | +0.162 |
-| SNFH | 0.615 | 0.794 | +0.179 |
-| ET   | 0.036 | 0.572 | +0.536 |
-| RC   | 0.140 | 0.624 | +0.484 |
-| **Mean foreground** | **0.198** | **0.538** | **+0.340** |
+| NETC | 0.007 ± 0.004 | 0.545 ± 0.009 | +0.538 |
+| SNFH | 0.674 ± 0.014 | 0.856 ± 0.003 | +0.182 |
+| ET   | 0.261 ± 0.022 | 0.653 ± 0.010 | +0.392 |
+| RC   | 0.337 ± 0.017 | 0.674 ± 0.003 | +0.337 |
+| **Mean foreground** | **0.320 ± 0.008** | **0.682 ± 0.003** | **+0.362** |
 
-**Validation voxel accuracy: A 0.9896 / B 0.9924** — degenerate (~98% of voxels are
+**Validation voxel accuracy: A 0.991 / B 0.995** — degenerate (~98%+ of voxels are
 background). This is precisely the D4 motivation, so it is *not* a headline; it is the
 metric a faithful baseline is supposed to be fooled by. Track A checkpoints on this
-degenerate `val_accuracy` (peaks @ epoch 10); Track B checkpoints on **mean foreground
-Dice** (peaks @ epoch 38).
+degenerate `val_accuracy` (peaks @ epochs 18–22); Track B checkpoints on **mean foreground
+Dice** (peaks @ epochs 64–72).
 
 ### 4.3 Figures
 
-**Training curves — the two selection metrics diverge.** Track A's `val_accuracy` saturates
-near 0.99 while its foreground Dice never leaves the floor; Track B climbs steadily on
-mean-foreground Dice to epoch 38.
+**Training curves — the two selection metrics diverge (mean ± SD band over 3 seeds).** Track A's
+mean-foreground Dice plateaus low while Track B climbs steadily to ~0.68; the shaded band is the
+per-seed SD, tight throughout.
 
-![Training curves — val accuracy vs mean foreground Dice, Track A vs Track B](reports/figures/report/training_curves.png)
+![Training curves — mean foreground Dice, mean ± SD over 3 seeds, Track A vs Track B](reports/figures/report/training_curves.png)
 
-**Per-class TEST Dice.** The minority classes (ET, RC, NETC) are where the recovery lives;
-SNFH was learnable all along and improves modestly.
+**Per-class TEST Dice (mean ± SD).** Every class recovers; the rarest, NETC, jumps furthest —
+error bars (per-seed SD) are small enough to see the gaps are real.
 
-![Per-class TEST Dice, Track A vs Track B](reports/figures/report/perclass_test_dice.png)
+![Per-class TEST Dice, mean ± SD over 3 seeds, Track A vs Track B](reports/figures/report/perclass_test_dice.png)
 
-**The delta, per class.** ET (+0.513) and RC (+0.451) dominate the deliverable.
+**The delta, per class.** NETC (+0.457) leads, then ET (+0.351) and RC (+0.291) — the rare/minority
+classes dominate the deliverable; SNFH (+0.187) refines.
 
 ![Per-class delta on the TEST set](reports/figures/report/delta_test.png)
 
-**Count inflation (defect D1, measured directly).** Track A reports NETC and ET present in
-**30/30** test cases; the faithful nearest-neighbour labels show **17** and **25**. The gap
-is fabricated minority-class voxels created by bilinear interpolation across class
-boundaries.
+**Count inflation (defect D1, measured directly).** Track A reports NETC present in **105/105**
+test cases and ET in **100/105**; the faithful nearest-neighbour labels show only **48** and **85**.
+The gap is fabricated minority-class voxels created by bilinear interpolation across class
+boundaries — even starker at scale than the pilot's 30-vs-17.
 
 ![Case-count inflation from bilinear label resize (D1)](reports/figures/report/count_inflation.png)
 
@@ -163,10 +167,11 @@ against ~5 s of compute; Track B's `PersistentDataset` cuts data loading to ~8 s
 
 ![Per-epoch data-loading vs compute time, Track A vs Track B (D9)](reports/figures/report/d9_speed.png)
 
-**Qualitative overlays — three held-out TEST cases.** Columns are **ground truth / Track A /
-Track B** (axial slices; NETC blue, SNFH green, ET red, RC amber). Track A predicts
-essentially only SNFH — **zero RC, zero NETC** — the minority-class collapse. Track B
-recovers ET and RC in spatial agreement with GT.
+**Qualitative overlays — three held-out TEST cases** (all four classes present; regenerated from
+the scaled `a_s0`/`b_s0` checkpoints). Columns are **ground truth / Track A / Track B** (axial
+slices; NETC blue, SNFH green, ET red, RC amber). Track A captures SNFH and much of ET but
+**misses the rare NETC (blue) and RC (amber)** — visible in rows 2–3; Track B recovers them in
+spatial agreement with GT, which is the minority-class recovery the delta measures.
 
 ![Ground truth vs Track A vs Track B overlays on three test cases](reports/figures/combined_overlay.png)
 
@@ -180,35 +185,40 @@ viewing. Inference is faithful; only the display is resampled.</sub>
 
 ### 5.1 Per-class reasoning
 
-- **ET (+0.513) and RC (+0.451) recover the most.** In Track A, background is ~98% of
-  voxels and plain CrossEntropy plus a single global-max normalization let the network
-  *coast*: predicting "background almost everywhere, plus a blob of SNFH" already scores
-  98.96% pixel accuracy, so there is no gradient pressure to find small enhancing tumour
-  (ET) or resection cavities (RC). Track B removes both escape hatches at once — **DiceCE
-  with `include_background=False`** makes the loss care about foreground overlap directly,
-  and **`RandCropByLabelClasses` with ratios `[1,2,2,2,2]`** guarantees the model is shown
-  patches centred on every foreground class, over-sampling the rare ones. The classes that
-  were being *ignored* are exactly the classes that jump.
-- **SNFH (+0.227) was always learnable.** It is present in 30/30 cases and is the largest,
-  most contiguous foreground structure, so even the coasting Track A reaches Dice 0.580.
-  Track B lifts it to 0.807 — a real but smaller gain, because there was no collapse to
-  reverse here, only refinement.
-- **NETC stays hardest (Dice 0.140, +0.140).** It is *both small and rare*: GT-present in
-  only **17/30** test cases and in ~**52% (105/200)** of the whole dataset (from
-  `reports/labels_summary.json`). Class-balanced sampling cannot manufacture signal that is
-  absent from half the volumes, and necrotic tissue is genuinely confusable with the
-  resection cavity. A partial recovery from exactly 0.000 to 0.140 is the honest ceiling
-  for this class at this data scale.
+- **NETC (+0.457) recovers the most — the rarest class.** In Track A, background is ~98% of
+  voxels and plain CrossEntropy plus a single global-max normalization let the network *coast*:
+  predicting "background almost everywhere, plus the easy structures" already scores ~99% pixel
+  accuracy, so there is no gradient pressure to find the small necrotic core — Track A's NETC Dice
+  is essentially zero (0.009). Track B removes both escape hatches at once — **DiceCE with
+  `include_background=False`** makes the loss care about foreground overlap directly, and
+  **`RandCropByLabelClasses` with ratios `[1,2,2,2,2]`** guarantees the model is shown patches
+  centred on every foreground class, over-sampling the rare ones. NETC leaps to 0.466 — the class
+  that was being *ignored* is exactly the class that jumps furthest.
+- **ET (+0.351) and RC (+0.291) recover strongly.** Both are prevalent in this cohort (GT-present
+  in ~83% of cases), so even the defective Track A partly learns them (ET 0.299, RC 0.403) once it
+  has 490 training cases — but Track B's balanced sampling and Dice loss still add a large margin
+  (ET → 0.650, RC → 0.694).
+- **SNFH (+0.187) was always learnable.** Present in 105/105 cases and the largest, most contiguous
+  foreground structure, so even the coasting Track A reaches Dice 0.683; Track B refines it to
+  0.870 — a real but smaller gain, because there was no collapse to reverse here.
+- **The scale effect (vs the 200-case pilot).** At 140 training cases Track A was data-starved and
+  collapsed on *everything* (mean_fg 0.180); at 490 it recovers the prevalent classes and rises to
+  0.349, while Track B rose further (0.513 → 0.670). So the absolute A→B delta held (+0.333 →
+  +0.321) even as the ratio fell (~2.8× → ~1.9×), and the effect **sharpened onto the genuinely
+  rare class**. NETC stays the lowest absolute Dice in both tracks (B 0.466) — small, and
+  confusable with the resection cavity — so +0.457 is a large but honest recovery, not a solved
+  class.
 
 ### 5.2 The D1 finding — bilinear resize *invents* labels (measured, not asserted)
 
 Track A resizes the label volume with `cv2.resize` (default `INTER_LINEAR`) and truncates
 to int. Interpolating across a class boundary produces fractional label values that round
 into a *different* class. The per-class case counts expose the damage directly: Track A
-reports **NETC in 30/30** and **ET in 30/30** test cases, but the faithful nearest-neighbour
-labels show only **17** and **25**. Those extra "present" cases are fabricated voxels — the
-"can invent/destroy labels" harm named in the defect inventory (D1), quantified. This is
-why per-class Dice is **never** reported without its case count.
+reports **NETC in 105/105** and **ET in 100/105** test cases, but the faithful nearest-neighbour
+labels show only **48** and **85**. Those extra "present" cases are fabricated voxels — the
+"can invent/destroy labels" harm named in the defect inventory (D1), quantified (and more
+starkly than the pilot's 30-vs-17). This is why per-class Dice is **never** reported without its
+case count.
 
 ### 5.3 The D9 story — the original was benchmarking gzip, not the GPU
 
@@ -237,17 +247,16 @@ the very class this project exists to measure. This is documented, not papered o
   per connected component. Ours is plain voxel-wise Dice — correct and internally
   consistent for an A/B, but a *different number on identical predictions*. **Never**
   compared to leaderboards here.
-- **~200 cases, a ~2M-param plain U-Net.** No test-time augmentation, no ensembling, ~10/40
-  epochs, 3 channels, 8 GB laptop GPU. Per the SOTA-handicap discussion (§2.3), **low
-  absolute numbers are by design** — the A→B delta carries the identical handicap on both
-  sides, so the delta, not the absolute Dice, is the result.
-- **Partial community mirror in MNI-like space.** Data is a 200-case subsample of a Kaggle
-  re-upload (~700 of ~1,350 official cases), **resampled to 182×218×182**, not the native
-  BraTS 240×240×155. Cite the BraTS 2024 challenge (de Verdier et al., arXiv:2405.18368),
-  not the mirror. Exact IDs and the dataset hash: `reports/splits.json`,
-  `reports/data_provenance.json`.
+- **700 cases (490 train), a ~2M-param plain U-Net.** No test-time augmentation, no ensembling,
+  25/80 epochs, 3 channels, 8 GB laptop GPU. Per the SOTA-handicap discussion (§2.3), **low
+  absolute numbers are by design** — the A→B delta carries the identical handicap on both sides,
+  so the delta, not the absolute Dice, is the result.
+- **Community mirror in MNI-like space.** Data is the full 700-case Kaggle re-upload (~700 of
+  ~1,350 official cases), **resampled to 182×218×182**, not the native BraTS 240×240×155. Cite the
+  BraTS 2024 challenge (de Verdier et al., arXiv:2405.18368), not the mirror. Exact IDs and the
+  dataset hash: `reports/splits.json`, `reports/data_provenance.json`.
 - **Flat 5-class ≠ pre-op merged regions.** A pre-op paper's "WT Dice 0.90" and our "SNFH
-  Dice 0.807" are not on speaking terms.
+  Dice 0.870" are not on speaking terms.
 
 ---
 
@@ -255,10 +264,10 @@ the very class this project exists to measure. This is documented, not papered o
 
 | # | Defect (Track A reproduces) | Fix (Track B) | Evidence in this report |
 |---|---|---|---|
-| **D1** | Bilinear `cv2.resize` on the label volume — invents/destroys labels | Nearest-neighbour label resampling | Count inflation: NETC 30→17, ET 30→25 (§4.1, §5.2, `count_inflation.png`) |
+| **D1** | Bilinear `cv2.resize` on the label volume — invents/destroys labels | Nearest-neighbour label resampling | Count inflation: NETC 105→48, ET 100→85 (§4.1, §5.2, `count_inflation.png`) |
 | **D2** | Per-class Dice shape bug (4-index vs 5-index) — original logs untrustworthy | Correct indexing via MONAI `DiceMetric` | All Dice here computed with fixed metric (§4.1) |
-| **D3** | Class imbalance unhandled; plain CE coasts on background | `DiceCELoss(include_background=False)` + class-balanced sampling | ET +0.513, RC +0.451 (§4.1, §5.1, `delta_test.png`) |
-| **D4** | Checkpoint selected on degenerate `val_accuracy` | Select on mean foreground Dice | A best @ ep10 vs B best @ ep38 (§4.2, `training_curves.png`) |
+| **D3** | Class imbalance unhandled; plain CE coasts on background | `DiceCELoss(include_background=False)` + class-balanced sampling | NETC +0.457, ET +0.351, RC +0.291 (§4.1, §5.1, `delta_test.png`) |
+| **D4** | Checkpoint selected on degenerate `val_accuracy` | Select on mean foreground Dice | A best @ ep 18–22 vs B best @ ep 64–72 (§4.2, `training_curves.png`) |
 | **D5** | Crude global `X / max(X)` normalization | Per-modality z-score over non-zero voxels | Contributes to the mean-fg delta (§3, §4.1) |
 | **D6** | Non-uniform slice stride `int(j*2.5)` | Foreground crop + `RandCropByLabelClasses` 96³ | Part of Track B pipeline (§3) |
 | **D7** | Dead 4-class remap merges RC→ET (label-contract fork) | Explicit 5-class contract asserted at load | 5-class throughout; RC kept & measured (§5.4) |
@@ -274,11 +283,12 @@ guardrails live in **[CLAUDE.md](CLAUDE.md)** (authoritative). Environment setup
 exact command sequence (fetch → smoke-test → train A/B → evaluate), and where every
 artifact lives are in **[README.md](README.md#reproduce)**.
 
-- **Sources of truth (committed):** `reports/results.md`, `reports/eval_{a,b}.json`,
-  `reports/splits.json`, `reports/data_provenance.json`, `reports/labels_summary.json`.
-- **Run logs:** `~/brats/runs/{a,b}/metrics.csv`, `meta.json`, TensorBoard events (copied
-  into `reports/runs/{a,b}/`).
-- **Figures:** regenerate with `scripts/05_figures.py`.
+- **Sources of truth (committed):** `reports/results.md`, `reports/results_700_seeds.json`,
+  `reports/eval_{a,b}_s{0,1,2}.json`, `reports/splits.json`, `reports/data_provenance.json`,
+  `reports/labels_summary.json`.
+- **Run logs:** `~/brats/runs/{a,b}_s{0,1,2}/metrics.csv`, `meta.json`, TensorBoard events.
+- **Figures:** regenerate the analysis plots with `scripts/06_report_figures.py` and the
+  qualitative overlays with `scripts/05_figures.py`.
 
 *Every number in this report traces to a committed run log (guardrail #9). Voxel-wise Dice
 only — no leaderboard comparisons (§14.3).*
