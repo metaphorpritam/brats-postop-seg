@@ -33,8 +33,9 @@ kb/index/
 # KB sources are re-derivable (logs via tr, PDFs from arXiv) — rebuild with scripts/build_kb.sh
 kb/sources/
 
-# regenerable from report.md via scripts/08_report_html.py
-report.html
+# regenerable from report.md via scripts/08_report_html.py (root copy only —
+# the published copy under docs/ MUST be committed for GitHub Pages)
+/report.html
 
 # Type-checker / test caches
 .mypy_cache/
