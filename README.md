@@ -9,6 +9,11 @@ holding the network architecture byte-identical between the two. The deliverable
 (**0.349 → 0.670, +0.321 ± 0.013** over 3 seeds on a held-out test set), which is immune
 to the project's deliberate handicaps because both tracks carry them equally.
 
+📖 **[Read the explainer note online →](https://metaphorpritam.github.io/brats-postop-seg/)** — a
+ground-up walkthrough (brain tumours and MRI → CNNs, U-Nets and loss functions derived step by step
+→ this experiment and what its numbers mean), alongside the
+[technical report](https://metaphorpritam.github.io/brats-postop-seg/report.html).
+
 > **[CLAUDE.md](CLAUDE.md) is the authoritative build spec** — mission, hard
 > constraints, the full defect inventory (D1–D9), experimental design, phase gates,
 > and guardrails. Read it for anything this README summarizes. Section numbers below

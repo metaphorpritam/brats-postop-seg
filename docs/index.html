@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Post-Treatment Glioma Segmentation — A Controlled A/B Reproduction</title>
+<meta name="description" content="A controlled A/B experiment on BraTS post-treatment glioma segmentation: fixing a defective data pipeline, with the network held byte-identical, raises mean foreground Dice from 0.349 to 0.670.">
+<style>
+:root{--fg:#1b1b1f;--bg:#fff;--muted:#5a5a66;--line:#e2e2e8;--accent:#0b5cad;--card:#f7f8fa}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.65;color:var(--fg);background:var(--bg);font-size:17px}
+.wrap{max-width:860px;margin:0 auto;padding:3rem 1.3rem 5rem}
+h1{font-size:2.1rem;line-height:1.2;margin:0 0 .4rem}
+.sub{color:var(--muted);font-size:1.06rem;margin:0 0 2rem}
+.headline{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--accent);
+  border-radius:10px;padding:1.1rem 1.3rem;margin:0 0 2.2rem}
+.headline .big{font-size:1.55rem;font-weight:700;letter-spacing:-.01em}
+.headline .big span{color:var(--accent)}
+.headline p{margin:.5rem 0 0;color:var(--muted);font-size:.97rem}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin:0 0 2.4rem}
+@media(max-width:680px){.cards{grid-template-columns:1fr}}
+.card{display:block;border:1px solid var(--line);border-radius:12px;padding:1.2rem 1.3rem;
+  text-decoration:none;color:inherit;background:var(--bg);transition:.16s}
+.card:hover{border-color:var(--accent);box-shadow:0 4px 18px rgba(11,92,173,.12);transform:translateY(-2px)}
+.card h2{margin:.1rem 0 .45rem;font-size:1.16rem;color:var(--accent)}
+.card p{margin:0;font-size:.93rem;color:var(--muted)}
+.card .tag{display:inline-block;margin-top:.7rem;font-size:.76rem;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--muted);border:1px solid var(--line);border-radius:20px;padding:.15rem .6rem}
+h3{margin:2rem 0 .6rem;font-size:1.05rem}
+ul{padding-left:1.2rem} li{margin:.3rem 0}
+table{border-collapse:collapse;width:100%;font-size:.92rem;margin:.8rem 0}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left}
+th{background:var(--card)}
+code{background:var(--card);padding:2px 6px;border-radius:4px;font-size:.88em}
+footer{margin-top:2.5rem;padding-top:1.2rem;border-top:1px solid var(--line);color:var(--muted);font-size:.88rem}
+a{color:var(--accent)}
+@media (prefers-color-scheme:dark){
+  :root{--fg:#e6e6ea;--bg:#15151a;--muted:#a6a6b2;--line:#33333c;--accent:#5aa9ec;--card:#1e1e25}
+}
+</style></head><body><div class="wrap">
+
+<h1>Post-Treatment Glioma Segmentation</h1>
+<p class="sub">A controlled A/B experiment: what happens when you fix a defective data pipeline and
+change <em>nothing</em> about the neural network.</p>
+
+<div class="headline">
+  <div class="big">Mean foreground Dice <span>0.349 &rarr; 0.670</span> &nbsp;(&Delta; +0.321 &plusmn; 0.013)</div>
+  <p>Held-out test set (105 cases), mean &plusmn; SD over 3 training seeds, with the 3D U-Net held
+  <strong>byte-identical</strong> between both tracks — so the gain is attributable to the pipeline,
+  not the model. The largest recovery is on the rarest class (NETC, +0.457).</p>
+</div>
+
+<div class="cards">
+  <a class="card" href="explainer.html">
+    <h2>📘 The Explainer &rarr;</h2>
+    <p>A ground-up teaching note for readers with no medical or ML background: brain tumours and MRI,
+    then CNNs, U-Nets and loss functions derived step by step, then this experiment and what its
+    numbers mean.</p>
+    <span class="tag">24 sections · 73 cited sources</span>
+  </a>
+  <a class="card" href="report.html">
+    <h2>📊 The Technical Report &rarr;</h2>
+    <p>The compact write-up: experimental design, the nine reproduced defects (D1–D9), per-class
+    results with error bars, figures, and an honest list of limitations.</p>
+    <span class="tag">Results &amp; analysis</span>
+  </a>
+</div>
+
+<h3>What this is</h3>
+<p>An earlier research pipeline for post-treatment glioma segmentation carried nine named defects —
+a bilinear resize applied to <em>label</em> volumes, class imbalance left unhandled, checkpoints
+selected on a degenerate accuracy metric, an uncached loader that starves the GPU. This project
+reimplements it in PyTorch + MONAI as a controlled A/B:</p>
+<ul>
+  <li><strong>Track A</strong> faithfully reproduces the defects — and fails in the documented way.</li>
+  <li><strong>Track B</strong> fixes them, with the architecture frozen byte-for-byte.</li>
+</ul>
+<p>The deliverable is not a leaderboard score — it is the <strong>A&rarr;B delta</strong>, which is
+immune to the project's deliberate handicaps because both tracks carry them equally.</p>
+
+<h3>Results at a glance</h3>
+<table>
+<tr><th>Class</th><th>Track A</th><th>Track B</th><th>&Delta;</th></tr>
+<tr><td>NETC (necrotic core)</td><td>0.009 ± 0.008</td><td>0.466 ± 0.004</td><td><strong>+0.457</strong></td></tr>
+<tr><td>SNFH (edema / FLAIR)</td><td>0.683 ± 0.017</td><td>0.870 ± 0.003</td><td>+0.187</td></tr>
+<tr><td>ET (enhancing tumour)</td><td>0.299 ± 0.033</td><td>0.650 ± 0.007</td><td>+0.351</td></tr>
+<tr><td>RC (resection cavity)</td><td>0.403 ± 0.026</td><td>0.694 ± 0.002</td><td>+0.291</td></tr>
+<tr><td><strong>Mean foreground</strong></td><td><strong>0.349 ± 0.013</strong></td><td><strong>0.670 ± 0.002</strong></td><td><strong>+0.321</strong></td></tr>
+</table>
+<p style="font-size:.9rem;color:var(--muted)">Voxel-wise Dice — <em>not</em> BraTS lesion-wise, so
+these are not comparable to challenge leaderboards. 700 cases, split 490/105/105 at a fixed seed;
+a ~1.98M-parameter MONAI 3D U-Net on an 8 GB laptop GPU. Low absolute numbers are by design.</p>
+
+<footer>
+Code, data provenance and reproduction steps:
+<a href="https://github.com/metaphorpritam/brats-postop-seg">github.com/metaphorpritam/brats-postop-seg</a>
+· MIT licensed · Data: BraTS 2024 post-treatment glioma (cite
+<a href="https://arxiv.org/abs/2405.18368">de Verdier et al., arXiv:2405.18368</a>, not the mirror).
+</footer>
+
+</div></body></html>
