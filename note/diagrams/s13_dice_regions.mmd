@@ -1,0 +1,15 @@
+flowchart TB
+    subgraph Truth region G
+      FN[FN<br/>truth only<br/>missed]
+      TP[TP<br/>overlap]
+    end
+    subgraph Prediction region P
+      TP
+      FP[FP<br/>prediction<br/>only]
+    end
+    TN[TN<br/>background<br/>neither]
+    D["Dice = 2·TP /<br/>(2·TP + FP + FN)<br/>TN not used"]
+    TP --> D
+    FP --> D
+    FN --> D
+    TN -. ignored .-> D

@@ -1,0 +1,5 @@
+flowchart LR
+  A[Encoder map<br/>H x W x 64] -->|copy| C{{Concatenate<br/>on channels}}
+  B[Decoder map<br/>H x W x 64] --> C
+  C --> D[Combined map<br/>H x W x 128]
+  D --> E[Next 3x3 conv<br/>128 inputs]

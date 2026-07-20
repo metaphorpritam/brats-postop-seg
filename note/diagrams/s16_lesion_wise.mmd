@@ -1,0 +1,9 @@
+flowchart TB
+    L["Large lesion<br/>1000 voxels<br/>segmented perfectly"]
+    S["Small lesion<br/>10 voxels<br/>missed"]
+    L --> V["Voxel-wise:<br/>pool voxels<br/>Dice = 0.995"]
+    S --> V
+    L --> LW["Lesion-wise:<br/>1.0 for large,<br/>0 for missed<br/>mean = 0.50"]
+    S --> LW
+    V --> G["Gap exposes<br/>the missed lesion"]
+    LW --> G

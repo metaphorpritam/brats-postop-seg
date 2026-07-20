@@ -1,0 +1,6 @@
+flowchart TB
+    A["Adult diffuse<br/>glioma"] --> B{"IDH<br/>status?"}
+    B -->|Wildtype| C["Glioblastoma<br/>grade 4<br/>TERT / EGFR / +7-10<br/>or necrosis / MVP"]
+    B -->|Mutant| D{"1p/19q<br/>codeleted?"}
+    D -->|Yes| E["Oligodendroglioma<br/>grade 2 or 3"]
+    D -->|No| F["Astrocytoma<br/>grade 2, 3, or 4<br/>CDKN2A/B loss = 4"]

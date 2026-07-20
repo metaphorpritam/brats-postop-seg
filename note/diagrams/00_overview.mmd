@@ -1,0 +1,15 @@
+flowchart TB
+  M["Input: multi-parametric MRI<br/>t2f · t1c · t2w (3 channels)"]
+  M --> NET["Same 3D U-Net architecture<br/>byte-identical · 1.98M params"]
+  NET --> A["Track A<br/>faithful defects D1–D9"]
+  NET --> B["Track B<br/>corrected pipeline"]
+  A --> RA["per-voxel labels<br/>mean-fg Dice 0.349"]
+  B --> RB["per-voxel labels<br/>mean-fg Dice 0.670"]
+  RA --> D["Δ = +0.321 ± 0.013<br/><b>THE DELIVERABLE</b>"]
+  RB --> D
+  classDef a fill:#fdECe4,stroke:#D55E00,color:#000;
+  classDef b fill:#e4eff8,stroke:#0072B2,color:#000;
+  classDef d fill:#eae7f7,stroke:#5b4bc4,color:#000;
+  class A,RA a;
+  class B,RB b;
+  class D d;

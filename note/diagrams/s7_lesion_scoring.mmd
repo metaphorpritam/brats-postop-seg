@@ -1,0 +1,9 @@
+flowchart TB
+  GT["3 true lesions;<br/>model detects 2,<br/>misses 1, adds 1 FP"] --> A["Lesion A<br/>Dice 0.90"]
+  GT --> B["Lesion B<br/>Dice 0.80"]
+  GT --> M["Missed lesion<br/>= 0"]
+  GT --> F["False lesion<br/>= 0"]
+  A --> AVG["mean over 4<br/>= 0.425"]
+  B --> AVG
+  M --> AVG
+  F --> AVG

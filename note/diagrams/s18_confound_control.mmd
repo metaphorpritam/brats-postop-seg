@@ -1,0 +1,7 @@
+flowchart TB
+  subgraph Wrong["Wrong: many factors move"]
+    W1["loss + depth<br/>+ epochs change"] --> W2["score moves by<br/>delta + gamma + ...<br/>unattributable"]
+  end
+  subgraph Right["Right: one factor moves"]
+    R1["only loss changes<br/>rest frozen"] --> R2["delta isolated"]
+  end

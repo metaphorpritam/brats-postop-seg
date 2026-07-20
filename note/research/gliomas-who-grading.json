@@ -1,0 +1,135 @@
+{
+ "key_points": [
+  {
+   "point": "WHO CNS5 (2021, 5th edition) reduces adult-type diffuse gliomas to three molecularly-defined entities: astrocytoma, IDH-mutant; oligodendroglioma, IDH-mutant and 1p/19q-codeleted; and glioblastoma, IDH-wildtype. This replaced the roughly 15 entities of the 2016 edition.",
+   "source": "PMC - Implementing the WHO 2021 Classification of Adult Diffuse Gliomas",
+   "citation_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10216527/"
+  },
+  {
+   "point": "IDH mutation (IDH1 or IDH2) is the top-level branch point. The mutant enzyme overproduces the oncometabolite 2-hydroxyglutarate, altering histone/DNA methylation (glioma CpG-island methylator phenotype, G-CIMP). IDH-mutant tumors have a better prognosis than IDH-wildtype.",
+   "source": "PMC - Implementing the WHO 2021 Classification of Adult Diffuse Gliomas",
+   "citation_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10216527/"
+  },
+  {
+   "point": "Oligodendroglioma requires BOTH an IDH mutation AND whole-arm codeletion of chromosome arms 1p and 19q; the 1p/19q codeletion is the defining marker distinguishing it from IDH-mutant astrocytoma.",
+   "source": "PMC - Implementing the WHO 2021 Classification of Adult Diffuse Gliomas",
+   "citation_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10216527/"
+  },
+  {
+   "point": "Astrocytoma, IDH-mutant is graded 2, 3, or 4. A homozygous deletion of CDKN2A and/or CDKN2B defines CNS WHO grade 4 irrespective of histological appearance, a molecular feature overriding the microscope.",
+   "source": "RadioGraphics - Major Changes in 2021 WHO CNS Classification",
+   "citation_url": "https://pubs.rsna.org/doi/full/10.1148/rg.210236"
+  },
+  {
+   "point": "Glioblastoma, IDH-wildtype (CNS WHO grade 4) can be diagnosed even with lower-grade histology if IDH-wildtype and showing at least one of: TERT promoter mutation, EGFR amplification, or combined chromosome-7 gain with chromosome-10 loss (+7/-10), in addition to the classic criteria of necrosis and/or microvascular proliferation.",
+   "source": "RadioGraphics - Major Changes in 2021 WHO CNS Classification",
+   "citation_url": "https://pubs.rsna.org/doi/full/10.1148/rg.210236"
+  },
+  {
+   "point": "WHO CNS5 grades tumors WITHIN a tumor type using Arabic numerals (1 to 4), replacing Roman numerals (I to IV); 2016 'WHO grade IV' corresponds to 'CNS WHO grade 4'. Grade is always read with the tumor-type name.",
+   "source": "RadioGraphics - Major Changes in 2021 WHO CNS Classification",
+   "citation_url": "https://pubs.rsna.org/doi/full/10.1148/rg.210236"
+  },
+  {
+   "point": "Grade denotes expected biological aggressiveness: grade 1 is least malignant (often circumscribed, potentially cured by resection, e.g. pilocytic astrocytoma), grade 4 most malignant. CNS5 grading combines histology (cellularity, mitoses, microvascular proliferation, necrosis) with molecular markers.",
+   "source": "Frontiers in Oncology - Clinical updates on gliomas and the 5th edition WHO CNS",
+   "citation_url": "https://www.frontiersin.org/journals/oncology/articles/10.3389/fonc.2023.1131642/full"
+  },
+  {
+   "point": "Diagnosis uses a layered/integrated report: integrated diagnosis, histologic diagnosis, CNS WHO grade, and molecular information together. Molecular profiling is now required, not optional, for adult diffuse gliomas.",
+   "source": "RadioGraphics - Major Changes in 2021 WHO CNS Classification",
+   "citation_url": "https://pubs.rsna.org/doi/full/10.1148/rg.210236"
+  },
+  {
+   "point": "Approximate median overall survival in a WHO CNS5-era cohort: glioblastoma IDH-wildtype grade 4 ~12.6 months; astrocytoma IDH-mutant grade 4 ~26.4, grade 3 ~53.6, grade 2 ~55.4 months; oligodendroglioma grade 2 ~56.5, grade 3 ~45.8 months. Grade and IDH status together drive prognosis.",
+   "source": "Frontiers in Oncology - Clinical updates on gliomas and the 5th edition WHO CNS",
+   "citation_url": "https://www.frontiersin.org/journals/oncology/articles/10.3389/fonc.2023.1131642/full"
+  },
+  {
+   "point": "An IDH-mutant tumor is never called glioblastoma under CNS5; 'glioblastoma' is reserved for IDH-wildtype. A former 'glioblastoma, IDH-mutant' is now 'astrocytoma, IDH-mutant, CNS WHO grade 4', biologically and clinically distinct.",
+   "source": "Frontiers in Oncology - Clinical updates on gliomas and the 5th edition WHO CNS",
+   "citation_url": "https://www.frontiersin.org/journals/oncology/articles/10.3389/fonc.2023.1131642/full"
+  }
+ ],
+ "equations": [
+  {
+   "name": "Bayes theorem (posterior probability of glioblastoma given an IDH-wildtype test)",
+   "latex": "P(G \\mid W) = \\frac{P(W \\mid G)\\,P(G)}{P(W \\mid G)\\,P(G) + P(W \\mid \\neg G)\\,P(\\neg G)}",
+   "variables_explained": "P(G) = prior probability the glioma is glioblastoma; P(not G)=1-P(G); W = 'IDH-wildtype result'; P(W|G) = probability a glioblastoma tests wildtype (near 1); P(W|not G) = probability a non-glioblastoma tests wildtype (small); P(G|W) = posterior probability of glioblastoma after the wildtype result."
+  },
+  {
+   "name": "Exponential survival function and median survival",
+   "latex": "S(t) = e^{-\\lambda t}, \\qquad t_{1/2} = \\frac{\\ln 2}{\\lambda}",
+   "variables_explained": "S(t) = probability of being alive at time t; lambda = hazard rate (constant risk of death per unit time in this simple model); t = time since diagnosis; t_1/2 = median survival, the t where S(t)=0.5. Higher lambda (higher grade) means shorter median survival."
+  },
+  {
+   "name": "Hazard ratio to median-survival ratio (constant-hazard model)",
+   "latex": "\\mathrm{HR} = \\frac{\\lambda_A}{\\lambda_B} \\implies \\frac{t_{1/2,A}}{t_{1/2,B}} = \\frac{1}{\\mathrm{HR}}",
+   "variables_explained": "lambda_A, lambda_B = hazard rates of groups A and B (e.g. IDH-wildtype vs IDH-mutant); HR = hazard ratio of A vs B; t_1/2,A and t_1/2,B = the two medians. Under a constant-hazard model the ratio of medians is the reciprocal of the hazard ratio."
+  }
+ ],
+ "derivations": [
+  {
+   "title": "Bayesian update: how one IDH-wildtype result shifts the probability of glioblastoma",
+   "steps": [
+    "Setup: priors P(G)=0.5 (glioblastoma) and P(not G)=0.5 (an IDH-mutant type). We want P(G|W), probability of glioblastoma after the IDH test returns wildtype (W). Base rates before testing must sum to 1.",
+    "Likelihoods from biology: P(W|G)=0.98 (nearly all glioblastomas are IDH-wildtype); P(W|not G)=0.05 (an IDH-mutant tumor rarely returns a wildtype call). These say how strongly a wildtype result points to each hypothesis.",
+    "Bayes theorem: P(G|W) = [P(W|G)*P(G)] / [P(W|G)*P(G) + P(W|not G)*P(not G)]. The denominator is the total probability of a wildtype result over both classes.",
+    "Numerator (glioblastoma-and-wildtype path): 0.98 * 0.5 = 0.49. Multiply likelihood by prior for the glioblastoma branch.",
+    "Second denominator term (not-glioblastoma-and-wildtype path): 0.05 * 0.5 = 0.025. Same operation for the other branch.",
+    "Full denominator: 0.49 + 0.025 = 0.515. Total probability of a wildtype result.",
+    "Divide: P(G|W) = 0.49 / 0.515 = about 0.951. The single wildtype result raised the probability from 0.50 to about 0.95, showing why IDH status is the pivotal first test; confirming a lower-grade-looking tumor still needs TERT/EGFR/+7-10 checks."
+   ]
+  },
+  {
+   "title": "From a hazard ratio to a ratio of median survivals under the exponential model",
+   "steps": [
+    "Start from the exponential survival model: S(t) = e^{-\\lambda t}. This assumes a constant per-unit-time death risk lambda; a simplification that makes the algebra explicit.",
+    "Define median survival t_1/2 as when half remain: S(t_{1/2}) = 0.5, i.e. e^{-\\lambda t_{1/2}} = 0.5. The median is where the survival curve crosses one-half.",
+    "Take the natural log of both sides: -\\lambda t_{1/2} = \\ln(0.5). The log turns the exponential into a linear equation.",
+    "Use ln(0.5) = -ln 2, giving -\\lambda t_{1/2} = -\\ln 2, hence t_{1/2} = \\frac{\\ln 2}{\\lambda}. The minus signs cancel; this is the median-survival formula.",
+    "Apply to groups A and B: t_{1/2,A} = \\frac{\\ln 2}{\\lambda_A} and t_{1/2,B} = \\frac{\\ln 2}{\\lambda_B}. Same formula per group.",
+    "Take the ratio so ln 2 cancels: \\frac{t_{1/2,A}}{t_{1/2,B}} = \\frac{\\lambda_B}{\\lambda_A}. Only the inverted hazard rates remain.",
+    "Substitute HR = lambda_A/lambda_B: \\frac{t_{1/2,A}}{t_{1/2,B}} = \\frac{1}{\\mathrm{HR}}. Twice the hazard means half the median survival.",
+    "Numeric check: with IDH-mutant astrocytoma t_1/2,B = 52 months and HR = 4, then t_1/2,A = 52/4 = 13 months, close to the observed ~12.6-month glioblastoma median."
+   ]
+  }
+ ],
+ "intuitions": [
+  "WHO CNS5 diagnosis is a two-key lock: key one is the microscope (how cells look), key two is the molecular test (which genes/chromosomes are altered). You need both, and the molecular key can override the visual one; a benign-looking astrocytoma with CDKN2A/B deletion is still grade 4.",
+  "IDH status is the master switch. IDH-mutant tumors are a slower-growing family (astrocytoma or oligodendroglioma); IDH-wildtype in an adult diffuse astrocytic tumor points to glioblastoma. One gene reshuffles the diagnosis, prognosis, and name.",
+  "Grade is a forecast of behavior, not a size or location. Grade 1 = localized, often curable by surgery; grade 4 = fast, infiltrative, currently incurable. Because CNS5 grades within a type, always state type AND number together (e.g. astrocytoma, IDH-mutant, CNS WHO grade 3).",
+  "1p/19q codeletion is the single feature that turns an IDH-mutant glioma into an oligodendroglioma: IDH-mutant + intact 1p/19q = astrocytoma; IDH-mutant + 1p/19q codeleted = oligodendroglioma (generally the most favorable diffuse glioma)."
+ ],
+ "gotchas": [
+  "'Glioblastoma' is now reserved for IDH-wildtype tumors only. 'Glioblastoma, IDH-mutant' no longer exists; that tumor is reclassified as 'astrocytoma, IDH-mutant, CNS WHO grade 4'. Legacy datasets using the old term must be re-mapped before comparison.",
+  "A tumor can be grade 4 without the textbook microscopic signs (necrosis, microvascular proliferation). Molecular criteria (CDKN2A/B deletion for IDH-mutant astrocytoma; TERT/EGFR/+7-10 for IDH-wildtype glioblastoma) can force grade 4, so grade cannot be judged from histology or imaging alone.",
+  "There is no grade 1 among adult-type diffuse gliomas; grade 1 gliomas (e.g. pilocytic astrocytoma) are circumscribed, distinct, mostly pediatric tumor types. Do not assume grade runs 1 to 4 within every glioma family.",
+  "CNS5 grades are Arabic numerals (1 to 4) prefixed 'CNS WHO grade'; older literature uses Roman numerals (I to IV). 'Grade III' and 'CNS WHO grade 3' are the same rank but from different editions, so mind the version when merging labels.",
+  "The three-entity picture applies only to ADULT-type diffuse gliomas. Pediatric-type diffuse gliomas and other families (e.g. diffuse midline glioma, H3 K27-altered) are classified separately."
+ ],
+ "example_questions": [
+  {
+   "question": "A 45-year-old has an adult-type diffuse glioma: histology looks like grade 2 astrocytoma, but molecular testing reports IDH1 mutation, intact 1p/19q, and homozygous CDKN2A/B deletion. What is the full WHO CNS5 diagnosis and why?",
+   "answer": "Astrocytoma, IDH-mutant, CNS WHO grade 4. (1) IDH1 is mutated, so it is NOT glioblastoma (that is IDH-wildtype only); it is in the IDH-mutant family. (2) 1p/19q intact means astrocytoma, not oligodendroglioma. (3) Although histology looks grade 2, homozygous CDKN2A/B deletion defines CNS WHO grade 4 irrespective of histology. The molecular marker overrides the microscope; the name is written type + molecular status + grade."
+  },
+  {
+   "question": "Using the constant-hazard model, if IDH-mutant astrocytoma has a median survival of 52 months and IDH-wildtype glioblastoma has a hazard ratio of 4 relative to it, what median survival does the model predict, and how does it compare with data?",
+   "answer": "Use t_1/2,A / t_1/2,B = 1/HR with B = astrocytoma (52 months) and A = glioblastoma (HR = 4). Then t_1/2,A = 52/4 = 13 months, closely matching the reported ~12.6-month glioblastoma median. A 4-fold higher hazard gives roughly one-quarter the median survival, showing why the IDH split is prognostically decisive."
+  },
+  {
+   "question": "A report reads: adult diffuse glioma, IDH-wildtype, histology looks grade 2 (no necrosis, no microvascular proliferation), but TERT promoter mutation is present. What diagnosis and grade apply, and what principle does this show?",
+   "answer": "Glioblastoma, IDH-wildtype, CNS WHO grade 4. It is an adult diffuse astrocytic glioma and IDH-wildtype. Even without necrosis or microvascular proliferation, CNS5 allows grade-4 glioblastoma if at least one of TERT promoter mutation, EGFR amplification, or +7/-10 is present. TERT is present, so it qualifies. Principle: molecular markers can establish grade 4 in an IDH-wildtype tumor that looks lower-grade (the molecular upgrade concept)."
+  }
+ ],
+ "suggested_figures": [
+  "A decision-tree flowchart for adult-type diffuse gliomas: start at 'IDH status?'; if mutant, branch on '1p/19q codeleted?' (yes = oligodendroglioma, no = astrocytoma) with grade 2/3/4 and the CDKN2A/B note; if wildtype, branch to glioblastoma with molecular criteria (TERT / EGFR / +7-10) and histology (necrosis / microvascular proliferation).",
+  "A grade-vs-prognosis bar chart of median overall survival (months) per entity and grade: oligodendroglioma 2/3, astrocytoma IDH-mutant 2/3/4, glioblastoma IDH-wildtype 4, anchoring how IDH status and grade drive outcome.",
+  "An 'old vs new' mapping diagram showing how 2016 histology-only names (diffuse astrocytoma, anaplastic astrocytoma, glioblastoma IDH-mutant, anaplastic oligodendroglioma) collapse into the three CNS5 molecular entities and Arabic-numeral grades, for re-labeling legacy datasets."
+ ],
+ "topic": "Gliomas and the WHO CNS5 (2021) classification and grading: astrocytoma, oligodendroglioma, glioblastoma; IDH-mutant vs wildtype; grades 1-4 and what \"grade\" means clinically",
+ "overview": "A glioma is a tumor arising from glial cells, the brain's support cells. Gliomas are the most common primary malignant brain tumors in adults, and until recently they were named and graded almost entirely by how their cells looked under a microscope. The WHO's 5th edition CNS tumor classification (2021, \"WHO CNS5\") changed this fundamentally: diagnosis now integrates histology (the microscope picture) with the tumor's molecular fingerprint (specific gene mutations and chromosome changes). For a segmentation project this matters because the label attached to a scan is itself a molecular-plus-histologic verdict.\n\nWHO CNS5 collapses the older list of adult tumor names into three adult-type diffuse glioma entities, each defined by a molecular marker: (1) astrocytoma, IDH-mutant; (2) oligodendroglioma, IDH-mutant and 1p/19q-codeleted; and (3) glioblastoma, IDH-wildtype. The pivotal fork is the IDH gene (isocitrate dehydrogenase). If IDH is mutated, the tumor is an astrocytoma or oligodendroglioma with a comparatively better outlook; if IDH is normal (\"wildtype\") in an adult diffuse glioma with the right features, it is glioblastoma, the most aggressive form. A mutant IDH enzyme overproduces 2-hydroxyglutarate, a metabolite that reprograms how the cell's DNA is chemically marked, which is why one gene reshapes the whole tumor's behavior.\n\nGrade measures how aggressive a tumor is expected to be, from CNS WHO grade 1 (least aggressive, often curable by surgery, typically circumscribed childhood-type tumors like pilocytic astrocytoma) to grade 4 (most aggressive). CNS5 switched from Roman numerals (I-IV) to Arabic numerals (1-4) and grades tumors within a type rather than across types, so an astrocytoma, IDH-mutant is assigned grade 2, 3, or 4 and you always read the grade with the tumor name. Crucially, molecular features can override the microscope: homozygous CDKN2A/B deletion makes an IDH-mutant astrocytoma grade 4 even if it looks lower-grade, and TERT promoter mutation, EGFR amplification, or +7/-10 can make an IDH-wildtype astrocytic tumor a grade 4 glioblastoma even without the classic hallmarks of necrosis or microvascular proliferation.\n\nGrade maps onto prognosis. In one CNS5-era cohort, median overall survival was roughly 12-13 months for IDH-wildtype glioblastoma (grade 4), about 26 months for IDH-mutant astrocytoma grade 4, over four years for lower-grade IDH-mutant astrocytomas, and longest for 1p/19q-codeleted oligodendrogliomas. This is why the IDH split and the grade both matter clinically, and they are the ground-truth categories a segmentation dataset is ultimately organized around.",
+ "confidence_notes": "All clinical claims come from three sources I directly retrieved: PMC10216527 (implementing the WHO 2021 classification of adult diffuse gliomas), RadioGraphics rg.210236 (major changes in the 2021 WHO CNS classification), and Frontiers in Oncology fonc.2023.1131642 (clinical updates on gliomas). I did not directly retrieve the primary WHO CNS5 Blue Book or the Louis et al. 2021 Neuro-Oncology summary; treat those as the authoritative primary references and the retrieved articles as reputable secondary summaries. Survival figures are cohort-specific (Frontiers article) and vary across studies: a commonly cited glioblastoma range is about 15-21 months in treated cohorts (MedLink Neurology, seen in search snippets, not directly fetched) vs about 12.6 months in the Frontiers cohort; exact medians depend on treatment, age, resection extent, and MGMT status, so present as approximate. The two derivations use illustrative, clearly-labeled hypothetical numbers (priors, likelihoods, HR=4) to teach the reasoning; they are pedagogical assumptions, though the resulting ~13-month glioblastoma median was chosen to align with reported data. The exponential/constant-hazard model is a deliberate simplification; real glioma survival is better modeled with Kaplan-Meier/Cox methods where hazards need not be constant.",
+ "_key": "gliomas-who-grading",
+ "_kind": "medical"
+}

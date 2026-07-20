@@ -1,0 +1,9 @@
+flowchart LR
+    subgraph IN["Padded input (grey border = zeros)"]
+      P["3x3 window<br/>over patch"]
+    end
+    P -->|"multiply weights<br/>+ sum + bias"| O1["one output cell"]
+    P -.->|"stride S:<br/>window jumps"| P2["next window"]
+    P2 -->|"multiply + sum + bias"| O2["next output cell"]
+    O1 --> FM["output feature map"]
+    O2 --> FM

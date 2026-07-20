@@ -1,0 +1,7 @@
+flowchart TB
+    S["MRI scan"] --> M["Manual tracing<br/>slow, variable"]
+    S --> A["Automated<br/>segmentation<br/>fast, reproducible"]
+    M --> V["Tumor volume<br/>in mL"]
+    A --> V
+    V --> C["Clinician:<br/>tumor vs<br/>treatment effect"]
+    C --> T["Treatment<br/>decision"]

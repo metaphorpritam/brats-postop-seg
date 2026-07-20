@@ -1,0 +1,6 @@
+flowchart LR
+  S["Same seed s"] --> A["Arm A run<br/>Y_A(s)"]
+  S --> B["Arm B run<br/>Y_B(s)"]
+  A --> D["D(s) = Y_B - Y_A<br/>seed effect cancels"]
+  B --> D
+  D --> R["mean D +/- CI<br/>the deliverable"]

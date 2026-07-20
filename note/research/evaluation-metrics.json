@@ -1,0 +1,176 @@
+{
+ "topic": "Segmentation evaluation metrics for BraTS post-treatment glioma segmentation: Dice (voxel-wise vs lesion-wise), sensitivity/precision/specificity, Hausdorff distance, and the pitfalls of voxel accuracy under class imbalance",
+ "overview": "When a neural network labels every voxel (3D pixel) of a brain MRI as \"tumor sub-region\" or \"healthy tissue,\" we need a number that says how good the labeling is. The instinct is to ask \"what fraction of voxels did it get right?\" \u2014 pixel/voxel accuracy. For brain tumors this instinct is badly wrong. A tumor might occupy 0.1% of the scanned volume, so a model that stupidly declares *everything* healthy scores 99.9% accuracy while finding zero tumor. This is the class-imbalance trap, and it is why segmentation is scored with overlap and boundary metrics instead.\n\nThe workhorse is the **Dice similarity coefficient (DSC)**: twice the overlap between prediction and ground truth, divided by the total size of both. It equals the F1 score (harmonic mean of precision and recall) and ignores the huge \"true negative\" background entirely, so it cannot be gamed by predicting all-background. Alongside Dice we report **sensitivity/recall** (of the true tumor, how much did we find?), **precision/PPV** (of what we called tumor, how much really was?), and **specificity** (of healthy tissue, how much did we correctly leave alone?). Specificity is nearly useless here because the background is enormous \u2014 it sits near 1.0 for almost any model. Precision and recall together are informative because they trade off in opposite directions.\n\nOverlap metrics say nothing about *where* the errors are, so we add a **boundary metric**: the Hausdorff distance, and in practice its robust 95th-percentile version **HD95** (in millimetres). It answers \"how far, at worst, is the predicted surface from the true surface?\" \u2014 catching thin tendrils and outlier blobs that barely move the Dice score. Two more subtleties matter enormously in BraTS post-treatment scoring. First, **lesion-wise Dice** (introduced in BraTS 2023) scores each disconnected lesion separately and penalises every missed or spurious lesion with a zero, so a model cannot hide a completely-missed small metastasis behind one large well-segmented tumor. Second, **per-class Dice must always be reported together with how many cases actually contained that class in the ground truth (GT-present counts)**, because empty-versus-empty cases are conventionally scored 1.0 and can silently inflate a class average \u2014 a critical issue for post-treatment classes like the resection cavity or enhancing tumor that are absent in many patients.\n\nThe reference architecture behind almost all of these systems is the U-Net (Ronneberger, Fischer & Brox, MICCAI 2015) and its 3D descendants (nnU-Net), but the architecture is only as trustworthy as the metric used to judge it.",
+ "key_points": [
+  {
+   "point": "Dice similarity coefficient (DSC) = 2\u00b7|A\u2229B| / (|A|+|B|) = 2\u00b7TP / (2\u00b7TP + FP + FN). It measures overlap between the predicted mask A and ground-truth mask B, ranges 0 (no overlap) to 1 (perfect), and \u2014 crucially \u2014 contains no true-negative (TN) term, so the vast healthy background cannot inflate it.",
+   "source": "Dice 1945; standard segmentation reference",
+   "citation_url": "https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient"
+  },
+  {
+   "point": "Dice is mathematically identical to the F1 score: the harmonic mean of precision and recall, 2PR/(P+R). This is why it is a balanced summary of missing tumor (low recall) and over-segmenting (low precision).",
+   "source": "Standard ML reference"
+  },
+  {
+   "point": "Voxel/pixel accuracy = (TP+TN)/(TP+TN+FP+FN) is misleading under imbalance: if positives are a fraction p of all voxels, an all-negative predictor scores accuracy = 1\u2212p. For a tumor at p=0.001 that is 99.9% accuracy with Dice = 0. Never report accuracy alone for segmentation.",
+   "source": "Standard segmentation reference"
+  },
+  {
+   "point": "Sensitivity/recall/TPR = TP/(TP+FN) (fraction of true tumor found); precision/PPV = TP/(TP+FP) (fraction of predicted tumor that is correct); specificity/TNR = TN/(TN+FP) (fraction of healthy tissue correctly spared). In brain segmentation specificity is near 1.0 for almost any model because TN is huge, so precision+recall (or Dice) are the informative pair.",
+   "source": "Standard diagnostic-metric reference"
+  },
+  {
+   "point": "Hausdorff distance H(A,B)=max{h(A,B),h(B,A)} where h(A,B)=max over a in A of min over b in B of ||a\u2212b||. It is the worst-case distance from either boundary to the other. Because a single outlier voxel dominates it, BraTS uses HD95 \u2014 the 95th percentile of the surface distances \u2014 reported in millimetres, with 0 mm being perfect.",
+   "source": "BraTS metrics; HDilemma MICCAI 2024",
+   "citation_url": "https://papers.miccai.org/miccai-2024/paper/2469_paper.pdf"
+  },
+  {
+   "point": "Lesion-wise Dice (BraTS 2023 onward) isolates each disconnected ground-truth lesion (dilating masks ~3 voxels to define components), computes Dice per matched lesion, and scores every false-negative (missed) and false-positive (spurious) lesion as 0. The mean is taken over (TP + FN + FP) lesions, so detecting many small lesions counts as much as one large one. It prevents a large well-segmented tumor from masking missed small lesions that a voxel-wise Dice would hide.",
+   "source": "BraTS-2023-Metrics (rachitsaluja)",
+   "citation_url": "https://github.com/rachitsaluja/BraTS-2023-Metrics"
+  },
+  {
+   "point": "Per-class Dice MUST be reported with GT-present case counts. BraTS convention: if GT and prediction are both empty for a class, Dice = 1.0; if GT is empty but prediction is non-empty, Dice = 0.0. For post-treatment classes absent in many patients (e.g. resection cavity, enhancing tumor), averaging over all cases mixes true segmentation quality with easy empty-vs-empty 1.0s, inflating or distorting the class mean. Always state 'mean Dice = x over n GT-present cases.'",
+   "source": "BraTS 2024 post-treatment challenge",
+   "citation_url": "https://arxiv.org/abs/2405.18368"
+  },
+  {
+   "point": "The BraTS 2024 post-treatment glioma task defines the sub-regions enhancing tumor (ET), non-enhancing tumor core (NETC), surrounding non-enhancing FLAIR hyperintensity (SNFH), and resection cavity (RC); metrics (lesion-wise Dice and HD95) are computed per region, several of which are frequently absent \u2014 making GT-present reporting essential.",
+   "source": "BraTS 2024 post-treatment challenge paper",
+   "citation_url": "https://arxiv.org/abs/2405.18368"
+  },
+  {
+   "point": "The U-Net encoder\u2013decoder with skip connections (Ronneberger, Fischer & Brox, MICCAI 2015) is the reference architecture for biomedical segmentation; its 3D self-configuring successor nnU-Net is the standard BraTS baseline. Architecture choice is secondary to using a metric that reflects clinical goals.",
+   "source": "U-Net, MICCAI 2015",
+   "citation_url": "https://arxiv.org/abs/1505.04597"
+  },
+  {
+   "point": "Jaccard index / IoU = TP/(TP+FP+FN) is the other common overlap metric; Dice and Jaccard are monotonically related by Dice = 2J/(1+J), so Dice \u2265 Jaccard always (they agree only at 0 and 1). Reporting both is redundant; know they are interchangeable rankings.",
+   "source": "Standard segmentation reference",
+   "citation_url": "https://en.wikipedia.org/wiki/Jaccard_index"
+  }
+ ],
+ "equations": [
+  {
+   "name": "Dice similarity coefficient (set form and confusion-matrix form)",
+   "latex": "\\mathrm{DSC}(A,B) = \\frac{2\\,|A \\cap B|}{|A| + |B|} = \\frac{2\\,\\mathrm{TP}}{2\\,\\mathrm{TP} + \\mathrm{FP} + \\mathrm{FN}}",
+   "variables_explained": "A = set of voxels the model predicts as the class; B = set of voxels truly of that class (ground truth); |\u00b7| = number of voxels (cardinality); A\u2229B = voxels in both. TP (true positives) = correctly predicted class voxels = |A\u2229B|; FP (false positives) = predicted class but truly not; FN (false negatives) = truly class but not predicted. Note the absence of any TN term. Range 0 to 1."
+  },
+  {
+   "name": "Jaccard index (IoU) and its relation to Dice",
+   "latex": "J = \\frac{|A\\cap B|}{|A\\cup B|} = \\frac{\\mathrm{TP}}{\\mathrm{TP}+\\mathrm{FP}+\\mathrm{FN}}, \\qquad \\mathrm{DSC} = \\frac{2J}{1+J}",
+   "variables_explained": "J = intersection over union; A\u222aB = voxels in either mask. Same TP/FP/FN as above. Because the denominator counts each disagreeing voxel once (vs Dice weighting TP twice), J \u2264 DSC always."
+  },
+  {
+   "name": "Sensitivity, precision, specificity, accuracy",
+   "latex": "\\text{Recall}=\\frac{\\mathrm{TP}}{\\mathrm{TP}+\\mathrm{FN}},\\quad \\text{Precision}=\\frac{\\mathrm{TP}}{\\mathrm{TP}+\\mathrm{FP}},\\quad \\text{Specificity}=\\frac{\\mathrm{TN}}{\\mathrm{TN}+\\mathrm{FP}},\\quad \\text{Accuracy}=\\frac{\\mathrm{TP}+\\mathrm{TN}}{\\mathrm{TP}+\\mathrm{TN}+\\mathrm{FP}+\\mathrm{FN}}",
+   "variables_explained": "TN (true negatives) = healthy voxels correctly left unlabeled. Recall = sensitivity = TPR = fraction of true class found. Precision = PPV = fraction of predicted class that is correct. Specificity = TNR = fraction of true background correctly spared. Accuracy = overall fraction correct \u2014 dominated by TN when background is large."
+  },
+  {
+   "name": "F1 score (equals Dice)",
+   "latex": "F_1 = \\frac{2\\,P\\,R}{P+R} = \\mathrm{DSC}",
+   "variables_explained": "P = precision, R = recall. The harmonic mean punishes imbalance between P and R (a model with P=1, R=0.01 scores ~0.02, not 0.5). Its equality with voxel-wise Dice is exact, not approximate."
+  },
+  {
+   "name": "Hausdorff distance and HD95",
+   "latex": "H(A,B)=\\max\\{\\,h(A,B),\\,h(B,A)\\,\\},\\quad h(A,B)=\\max_{a\\in \\partial A}\\ \\min_{b\\in \\partial B}\\ \\lVert a-b\\rVert; \\qquad \\mathrm{HD95}= \\max\\{\\,P_{95}\\,d(\\partial A,\\partial B),\\ P_{95}\\,d(\\partial B,\\partial A)\\,\\}",
+   "variables_explained": "\u2202A, \u2202B = boundary (surface) voxels of prediction and ground truth; ||a\u2212b|| = Euclidean distance in mm; h(A,B) = directed Hausdorff distance (worst over A of the nearest-B distance). H is the symmetric max. d(\u2202A,\u2202B) is the set of nearest-surface distances; P_95 takes their 95th percentile, discarding the worst 5% outliers so a single stray voxel does not dominate. Units: mm; 0 = perfect."
+  },
+  {
+   "name": "Lesion-wise Dice (BraTS)",
+   "latex": "\\mathrm{DSC}_{\\text{lesion}} = \\frac{\\displaystyle\\sum_{i \\in \\text{matched}} \\mathrm{DSC}_i}{\\mathrm{TP}_{\\text{les}} + \\mathrm{FN}_{\\text{les}} + \\mathrm{FP}_{\\text{les}}}",
+   "variables_explained": "Sum runs over matched (true-positive) lesions, each contributing its own voxel-wise DSC_i. TP_les = number of correctly detected lesions; FN_les = ground-truth lesions with no prediction (contribute 0); FP_les = predicted lesions with no matching ground truth (contribute 0). Dividing by the total lesion count spreads the penalty so each lesion \u2014 large or tiny \u2014 is weighted equally."
+  },
+  {
+   "name": "Accuracy of an all-negative predictor under prevalence p",
+   "latex": "\\text{Accuracy}_{\\text{all-neg}} = 1 - p, \\qquad p = \\frac{\\mathrm{TP}+\\mathrm{FN}}{N}",
+   "variables_explained": "p = prevalence = fraction of all N voxels that truly belong to the class; N = total voxels. A predictor that labels everything background achieves accuracy 1\u2212p while achieving Dice = 0 and recall = 0 \u2014 the formal statement of the imbalance trap."
+  }
+ ],
+ "derivations": [
+  {
+   "title": "Dice: from the set-overlap definition to the TP/FP/FN form",
+   "steps": [
+    "\\mathrm{DSC}=\\dfrac{2\\,|A\\cap B|}{|A|+|B|} \u2014 Start from the definition: A is the predicted-positive voxel set, B the ground-truth positive set. The metric is twice the overlap over the summed sizes.",
+    "|A\\cap B| = \\mathrm{TP} \u2014 The overlap A\u2229B is exactly the voxels predicted positive AND truly positive, which is the definition of a true positive.",
+    "|A| = \\mathrm{TP} + \\mathrm{FP} \u2014 Everything the model predicted positive is either correct (TP) or wrong (FP, predicted positive but truly negative). So the predicted set size splits into these two counts.",
+    "|B| = \\mathrm{TP} + \\mathrm{FN} \u2014 Everything truly positive is either found (TP) or missed (FN, truly positive but predicted negative). So the ground-truth set size splits into these two counts.",
+    "\\mathrm{DSC}=\\dfrac{2\\,\\mathrm{TP}}{(\\mathrm{TP}+\\mathrm{FP})+(\\mathrm{TP}+\\mathrm{FN})} \u2014 Substitute the three set sizes into the definition.",
+    "\\mathrm{DSC}=\\dfrac{2\\,\\mathrm{TP}}{2\\,\\mathrm{TP}+\\mathrm{FP}+\\mathrm{FN}} \u2014 Collect the two TP terms in the denominator (TP+TP = 2TP). Notice TN never appears \u2014 the healthy background is invisible to Dice, which is precisely why Dice resists the imbalance trap."
+   ]
+  },
+  {
+   "title": "Dice equals the F1 score (harmonic mean of precision and recall)",
+   "steps": [
+    "P=\\dfrac{\\mathrm{TP}}{\\mathrm{TP}+\\mathrm{FP}},\\quad R=\\dfrac{\\mathrm{TP}}{\\mathrm{TP}+\\mathrm{FN}} \u2014 Write precision P and recall R in confusion-matrix form.",
+    "F_1=\\dfrac{2PR}{P+R} \u2014 Definition of F1 as the harmonic mean of P and R.",
+    "PR=\\dfrac{\\mathrm{TP}}{\\mathrm{TP}+\\mathrm{FP}}\\cdot\\dfrac{\\mathrm{TP}}{\\mathrm{TP}+\\mathrm{FN}}=\\dfrac{\\mathrm{TP}^2}{(\\mathrm{TP}+\\mathrm{FP})(\\mathrm{TP}+\\mathrm{FN})} \u2014 Multiply the two fractions: numerators give TP\u00b7TP = TP\u00b2, denominators multiply directly.",
+    "P+R=\\dfrac{\\mathrm{TP}}{\\mathrm{TP}+\\mathrm{FP}}+\\dfrac{\\mathrm{TP}}{\\mathrm{TP}+\\mathrm{FN}}=\\dfrac{\\mathrm{TP}(\\mathrm{TP}+\\mathrm{FN})+\\mathrm{TP}(\\mathrm{TP}+\\mathrm{FP})}{(\\mathrm{TP}+\\mathrm{FP})(\\mathrm{TP}+\\mathrm{FN})} \u2014 Add the fractions over the common denominator (TP+FP)(TP+FN); each numerator is cross-multiplied.",
+    "P+R=\\dfrac{\\mathrm{TP}\\big[(\\mathrm{TP}+\\mathrm{FN})+(\\mathrm{TP}+\\mathrm{FP})\\big]}{(\\mathrm{TP}+\\mathrm{FP})(\\mathrm{TP}+\\mathrm{FN})}=\\dfrac{\\mathrm{TP}(2\\,\\mathrm{TP}+\\mathrm{FP}+\\mathrm{FN})}{(\\mathrm{TP}+\\mathrm{FP})(\\mathrm{TP}+\\mathrm{FN})} \u2014 Factor TP out of the numerator and combine the two TP terms inside the bracket into 2TP+FP+FN.",
+    "F_1=\\dfrac{2\\cdot\\frac{\\mathrm{TP}^2}{(\\mathrm{TP}+\\mathrm{FP})(\\mathrm{TP}+\\mathrm{FN})}}{\\frac{\\mathrm{TP}(2\\mathrm{TP}+\\mathrm{FP}+\\mathrm{FN})}{(\\mathrm{TP}+\\mathrm{FP})(\\mathrm{TP}+\\mathrm{FN})}} \u2014 Substitute the results for PR and P+R into F1 = 2PR/(P+R).",
+    "F_1=\\dfrac{2\\,\\mathrm{TP}^2}{\\mathrm{TP}(2\\,\\mathrm{TP}+\\mathrm{FP}+\\mathrm{FN})} \u2014 The common denominator (TP+FP)(TP+FN) cancels between the top and bottom of the compound fraction.",
+    "F_1=\\dfrac{2\\,\\mathrm{TP}}{2\\,\\mathrm{TP}+\\mathrm{FP}+\\mathrm{FN}}=\\mathrm{DSC} \u2014 Cancel one factor of TP. The result is identical to the Dice formula derived above \u2014 Dice and F1 are the same number."
+   ]
+  },
+  {
+   "title": "Dice and Jaccard are the same ranking: DSC = 2J/(1+J)",
+   "steps": [
+    "J=\\dfrac{\\mathrm{TP}}{\\mathrm{TP}+\\mathrm{FP}+\\mathrm{FN}} \u2014 Start from the Jaccard/IoU definition in count form (intersection TP over union TP+FP+FN).",
+    "1+J = 1 + \\dfrac{\\mathrm{TP}}{\\mathrm{TP}+\\mathrm{FP}+\\mathrm{FN}} = \\dfrac{(\\mathrm{TP}+\\mathrm{FP}+\\mathrm{FN})+\\mathrm{TP}}{\\mathrm{TP}+\\mathrm{FP}+\\mathrm{FN}} \u2014 Put 1 over the same denominator to add it to J.",
+    "1+J = \\dfrac{2\\,\\mathrm{TP}+\\mathrm{FP}+\\mathrm{FN}}{\\mathrm{TP}+\\mathrm{FP}+\\mathrm{FN}} \u2014 Combine the two TP terms in the numerator.",
+    "\\dfrac{2J}{1+J} = \\dfrac{2\\cdot\\frac{\\mathrm{TP}}{\\mathrm{TP}+\\mathrm{FP}+\\mathrm{FN}}}{\\frac{2\\mathrm{TP}+\\mathrm{FP}+\\mathrm{FN}}{\\mathrm{TP}+\\mathrm{FP}+\\mathrm{FN}}} \u2014 Form 2J/(1+J) using the two results.",
+    "\\dfrac{2J}{1+J} = \\dfrac{2\\,\\mathrm{TP}}{2\\,\\mathrm{TP}+\\mathrm{FP}+\\mathrm{FN}} = \\mathrm{DSC} \u2014 The shared denominator (TP+FP+FN) cancels, leaving exactly the Dice formula. Because the map J \u21a6 2J/(1+J) is strictly increasing on [0,1], Dice and Jaccard rank any set of models identically."
+   ]
+  },
+  {
+   "title": "Why voxel accuracy is misleading: the all-background predictor",
+   "steps": [
+    "\\text{Accuracy} = \\dfrac{\\mathrm{TP}+\\mathrm{TN}}{\\mathrm{TP}+\\mathrm{TN}+\\mathrm{FP}+\\mathrm{FN}} \u2014 Definition of accuracy; the denominator is the total voxel count N.",
+    "\\text{Predictor outputs 'background' for every voxel.} \u2014 It never predicts positive, so it produces no positive predictions at all.",
+    "\\mathrm{TP}=0,\\ \\mathrm{FP}=0 \u2014 No voxel is predicted positive, so there can be neither correct nor incorrect positive predictions.",
+    "\\mathrm{FN}=pN,\\quad \\mathrm{TN}=(1-p)N \u2014 Every truly-positive voxel is now missed, so FN equals the total positives pN (where p is prevalence). Every truly-negative voxel is 'correctly' called background, so TN equals all negatives (1\u2212p)N.",
+    "\\text{Accuracy}=\\dfrac{0+(1-p)N}{0+(1-p)N+0+pN}=\\dfrac{(1-p)N}{N}=1-p \u2014 Substitute; the denominator collapses to N and the N cancels.",
+    "p=0.001 \\Rightarrow \\text{Accuracy}=0.999,\\ \\text{but } \\mathrm{DSC}=\\dfrac{2\\cdot 0}{0+0+pN}=0 \u2014 For a tumor filling 0.1% of the scan, accuracy reads a triumphant 99.9% while Dice, recall, and clinical usefulness are all exactly 0. Accuracy rewarded the model for the enormous TN it cannot help getting right."
+   ]
+  }
+ ],
+ "intuitions": [
+  "Dice throws away the true negatives on purpose. The brain scan is mostly 'not this tumor class,' and any model gets that trivially right; counting it (as accuracy does) drowns out the hard part. Dice only looks at the union of 'what I said' and 'what was there,' so it scores the actual disagreement region where the work happens.",
+  "Precision and recall pull in opposite directions, and Dice sits between them. Predict tumor everywhere and recall shoots to 1 while precision collapses; predict only the one voxel you are surest of and precision hits 1 while recall collapses. Because Dice is their harmonic mean, you can only raise it by getting BOTH the extent and the placement right.",
+  "Overlap metrics grade the bulk; boundary metrics grade the edge. Two masks can share a near-identical Dice yet one has a clean surface and the other a 2 cm spurious spike. HD95 is the 'worst realistic case' distance in millimetres \u2014 it catches the spike that Dice, being a volume ratio, barely feels. Report both because they fail in different ways.",
+  "Lesion-wise scoring changes the unit of accounting from 'voxel' to 'lesion.' Voxel-wise Dice lets one big perfectly-segmented tumor drown out a completely missed pea-sized metastasis; lesion-wise gives that miss a full zero of its own, matching how a radiologist thinks ('you missed a lesion') rather than how a volume ratio thinks."
+ ],
+ "gotchas": [
+  "Empty ground truth is a scoring landmine. BraTS convention scores an empty-GT/empty-prediction case as Dice = 1.0 and an empty-GT/non-empty-prediction case as 0.0. If a tumor class is absent in many post-treatment patients, a per-class mean over ALL cases blends real segmentation skill with piles of free 1.0s (or harsh 0.0s). This is exactly why per-class Dice must be published with the GT-present case count, e.g. 'ET Dice 0.75 over 32/50 GT-present cases.'",
+  "Specificity is almost meaningless for tumor segmentation. Because TN (healthy voxels) dwarfs FP, specificity = TN/(TN+FP) is pinned near 1.0 for essentially every model, good or bad. Quoting a 0.999 specificity looks impressive and tells you nothing; use precision (which has FP in a small denominator) instead.",
+  "Raw (max) Hausdorff distance is dangerously outlier-sensitive: one stray misclassified voxel far from the tumor sets the whole score. Always use HD95, and remember HD95 is undefined/conventionally set to a penalty (or excluded) when one mask is empty \u2014 another place empty cases silently distort averages.",
+  "Averaging Dice across cases is not the same as pooling voxels across cases (macro vs micro averaging). A small lesion and a huge lesion count equally in a per-case mean but very unequally in a pooled count. State which you use; BraTS reports per-case (macro) means, so a handful of tiny hard cases can dominate the headline number.",
+  "Dice = F1 only for the two-class (one-vs-rest) case per label. Multi-class segmentation is scored as several one-vs-rest Dice values (one per sub-region), then averaged \u2014 there is no single 'multiclass Dice' that equals accuracy, and mixing the hierarchical BraTS regions (ET \u2282 TC \u2282 WT) with the disjoint label classes is a common reporting error."
+ ],
+ "example_questions": [
+  {
+   "question": "A model segments enhancing tumor in one patient. The ground truth has 100 tumor voxels; the model labels 120 voxels as tumor, of which 90 are truly tumor. Compute TP, FP, FN, then Dice, precision, and recall. Interpret.",
+   "answer": "TP = voxels both predicted and true = 90. FP = predicted tumor but not true = 120 \u2212 90 = 30. FN = true tumor not predicted = 100 \u2212 90 = 10. Dice = 2\u00b7TP/(2\u00b7TP+FP+FN) = 2\u00b790/(180+30+10) = 180/220 = 0.818. Precision = TP/(TP+FP) = 90/120 = 0.750. Recall = TP/(TP+FN) = 90/100 = 0.900. Interpretation: the model finds 90% of the true tumor (good recall) but a quarter of what it calls tumor is wrong (precision 0.75), i.e. it over-segments. Dice 0.818 sits between the two, and equals the F1 score 2\u00b70.75\u00b70.90/(0.75+0.90) = 1.35/1.65 = 0.818 \u2014 a consistency check."
+  },
+  {
+   "question": "A brain volume has 1,000,000 voxels; the resection cavity truly occupies 1,000 of them. Model X predicts 'no cavity' everywhere. Compute its voxel accuracy, specificity, recall, and Dice. What does this show?",
+   "answer": "Predicting all-negative: TP = 0, FP = 0, FN = all true positives = 1000, TN = all true negatives = 1,000,000 \u2212 1000 = 999,000. Accuracy = (TP+TN)/N = (0+999000)/1,000,000 = 0.999 (99.9%). Specificity = TN/(TN+FP) = 999000/999000 = 1.000. Recall = TP/(TP+FN) = 0/1000 = 0. Dice = 2\u00b70/(0+0+1000) = 0. This shows the imbalance trap concretely: a model that detects nothing clinically useful scores 99.9% accuracy and 100% specificity, yet Dice and recall correctly expose it as worthless. Accuracy and specificity were dominated by the 999,000 easy background voxels; Dice ignored them."
+  },
+  {
+   "question": "A patient has two disconnected enhancing lesions: a large one (1000 voxels) and a small one (10 voxels). The model segments the large lesion perfectly and misses the small one entirely. Compute the voxel-wise Dice and the BraTS lesion-wise Dice, and explain the gap.",
+   "answer": "Voxel-wise: pool all voxels. TP = 1000 (large lesion), FN = 10 (missed small lesion), FP = 0. Dice = 2\u00b71000/(2\u00b71000+0+10) = 2000/2010 = 0.995. Lesion-wise: treat each lesion as a unit. Large lesion is a matched true positive with its own Dice = 1.0. Small lesion is a false-negative lesion, scored 0. Denominator = TP_les + FN_les + FP_les = 1 + 1 + 0 = 2. Lesion-wise Dice = (1.0 + 0)/2 = 0.500. The gap (0.995 vs 0.500) is the whole point: voxel-wise Dice barely notices the missed lesion because it contributed only 10 of ~2010 voxels, while lesion-wise Dice halves the score because one of two lesions was missed \u2014 matching the clinical severity of missing a lesion outright."
+  },
+  {
+   "question": "Class 'enhancing tumor' is evaluated over 5 patients. Three have ET present in the ground truth, with per-case Dice 0.80, 0.70, 0.75. Two have no ET at all, and the model correctly predicts empty (Dice = 1.0 by convention each). Report the mean Dice two ways and explain why the GT-present count matters.",
+   "answer": "Mean over ALL 5 cases = (0.80 + 0.70 + 0.75 + 1.0 + 1.0)/5 = 4.25/5 = 0.850. Mean over the 3 GT-present cases only = (0.80 + 0.70 + 0.75)/3 = 2.25/3 = 0.750. The headline 0.85 is inflated by two free empty-vs-empty 1.0s that reflect no segmentation skill \u2014 the model merely (correctly) drew nothing where there was nothing. The honest measure of how well it delineates real enhancing tumor is 0.75 over 3 GT-present cases. Reporting 'Dice 0.85' without the count 3/5 would overstate performance and would swing wildly if the fraction of empty cases changed, which is why per-class Dice must always carry its GT-present case count."
+  }
+ ],
+ "suggested_figures": [
+  "A confusion-matrix / Venn diagram overlaying predicted mask A and ground-truth mask B on a brain slice, with TP (overlap), FP (predicted-only), FN (truth-only), and the huge surrounding TN region shaded \u2014 annotated to show visually which regions each metric (Dice, precision, recall, specificity, accuracy) does and does not count.",
+  "A side-by-side panel of two predictions with near-identical Dice but very different HD95: one with a clean boundary, one with a small spurious blob far away \u2014 with a distance-map inset illustrating how the 95th-percentile surface distance captures the outlier that Dice misses.",
+  "A two-lesion cartoon (one large, one small, disconnected) showing the same prediction scored two ways: voxel-wise Dice \u2248 0.995 vs lesion-wise Dice = 0.50, alongside a small per-class Dice table annotated with GT-present counts to show how empty-vs-empty 1.0 cases shift the class mean."
+ ],
+ "confidence_notes": "All formulas (Dice, Jaccard/IoU, precision/recall/specificity/accuracy, F1=Dice, Dice=2J/(1+J), Hausdorff/HD95, all-negative accuracy=1-p) are standard and were derived/verified algebraically here. The lesion-wise Dice definition (per-lesion Dice averaged over TP+FN+FP lesions, ~3-voxel dilation to define components, FP/FN scored 0) is confirmed against the official BraTS-2023-Metrics repo and challenge descriptions I retrieved. The BraTS 2024 post-treatment sub-region labels (ET, NETC, SNFH, RC) and the empty-GT scoring convention (empty/empty -> 1.0, empty/non-empty -> 0.0) are per the challenge paper (arXiv:2405.18368). Could NOT fully verify one detail: exact HD95 handling of empty masks varies between open-source implementations (documented in the HDilemma MICCAI 2024 paper) - I flagged this as a gotcha rather than asserting one universal rule. The numeric examples use invented but self-consistent numbers for teaching, not real BraTS leaderboard results. U-Net attribution (Ronneberger et al., MICCAI 2015, arXiv:1505.04597) and nnU-Net as the standard baseline are well established; I did not re-fetch the nnU-Net paper this session but the claim is uncontroversial. Note the project-memory caveat that the local reference model (unet_cc.py) is 4-class (merges resection cavity into ET), which differs from the 4-subregion scheme above \u2014 the metric principles are unaffected.\"",
+ "_key": "evaluation-metrics",
+ "_kind": "dl"
+}

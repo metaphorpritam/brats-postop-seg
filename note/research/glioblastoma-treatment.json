@@ -1,0 +1,155 @@
+{
+ "topic": "Glioblastoma and the standard treatment pathway: maximal safe resection, radiotherapy, temozolomide (Stupp protocol), and prognosis",
+ "overview": "Glioblastoma (GBM) is the most common and most aggressive primary malignant brain tumor in adults. Under the current WHO 2021 CNS classification (CNS5), the term \"glioblastoma\" is reserved for IDH-wildtype, grade 4 diffuse astrocytic tumors; tumors that used to be called \"IDH-mutant glioblastoma\" are now classified separately as IDH-mutant astrocytoma, grade 4. GBM is defined by hallmark aggressive features \u2014 microvascular proliferation, necrosis \u2014 or by molecular markers such as TERT promoter mutation, EGFR amplification, or the +7/\u221210 chromosome copy-number signature. It typically presents in older adults (median age at diagnosis ~65 years) and is more common in men than women.\n\nThe backbone of first-line treatment has been essentially unchanged since 2005 and is known as the Stupp protocol, after Roger Stupp, who led the landmark EORTC-NCIC phase III trial. It has three sequential pillars. First, **maximal safe surgical resection**: neurosurgeons remove as much tumor as can be safely taken without causing unacceptable neurological deficit \u2014 \"safe\" is the operative constraint because GBM diffusely infiltrates functioning brain and can never be fully excised. Greater extent of resection is consistently associated with longer survival. Second, **radiotherapy**: fractionated external-beam radiation, standard dose 60 Gy delivered in 30 daily fractions of 2 Gy over about 6 weeks. Third, **temozolomide (TMZ)**, an oral alkylating chemotherapy given concurrently during radiotherapy (75 mg/m\u00b2 daily) and then as 6 or more monthly \"adjuvant\" cycles (150\u2013200 mg/m\u00b2, days 1\u20135 of each 28-day cycle).\n\nThe prognosis remains poor but the Stupp regimen produced a real, reproducible survival gain. In the pivotal trial, adding temozolomide to radiotherapy raised median overall survival from 12.1 to 14.6 months and 2-year survival from ~11% to ~27%; the 5-year analysis showed 9.8% vs 1.9% alive at five years. The single strongest predictor of benefit is **MGMT promoter methylation**: when the MGMT DNA-repair gene is silenced by methylation, tumors cannot easily undo temozolomide's DNA damage, so these patients respond far better (roughly 46% vs 14% two-year survival). Later additions such as Tumor Treating Fields (Optune) added a further survival increment in a randomized trial. Despite all this, recurrence is nearly universal and GBM remains incurable, which is exactly why accurate, reproducible measurement of tumor and resection-cavity volumes on serial MRI \u2014 the goal of the BraTS post-treatment segmentation challenge \u2014 matters clinically.",
+ "key_points": [
+  {
+   "point": "The Stupp protocol is the standard of care for newly diagnosed glioblastoma: maximal safe surgical resection, followed by fractionated radiotherapy with concurrent daily temozolomide, followed by 6+ monthly adjuvant temozolomide cycles.",
+   "source": "StatPearls / NCBI Bookshelf \u2014 Current Standards of Care in Glioblastoma Therapy",
+   "citation_url": "https://www.ncbi.nlm.nih.gov/books/NBK469987/"
+  },
+  {
+   "point": "Standard radiotherapy dose is 60 Gy delivered in 2 Gy fractions over ~6 weeks (30 fractions) for patients under ~70 with good performance status.",
+   "source": "StatPearls / NCBI Bookshelf \u2014 Current Standards of Care in Glioblastoma Therapy",
+   "citation_url": "https://www.ncbi.nlm.nih.gov/books/NBK469987/"
+  },
+  {
+   "point": "Temozolomide dosing: concurrent (concomitant) phase 75 mg/m\u00b2/day for the ~6 weeks of radiotherapy; adjuvant phase 150\u2013200 mg/m\u00b2/day on days 1\u20135 of each 28-day cycle for six maintenance cycles.",
+   "source": "StatPearls / NCBI Bookshelf \u2014 Current Standards of Care in Glioblastoma Therapy",
+   "citation_url": "https://www.ncbi.nlm.nih.gov/books/NBK469987/"
+  },
+  {
+   "point": "In the landmark EORTC-NCIC trial, radiotherapy plus temozolomide vs radiotherapy alone improved median overall survival from 12.1 to 14.6 months (HR 0.6, p<0.001).",
+   "source": "StatPearls / NCBI Bookshelf; EORTC-NCIC 5-year analysis (Stupp et al., Lancet Oncol 2009)",
+   "citation_url": "https://pubmed.ncbi.nlm.nih.gov/19269895/"
+  },
+  {
+   "point": "5-year overall survival: 9.8% (95% CI 6.4\u201314.0) with radiotherapy + temozolomide vs 1.9% (0.6\u20134.4) with radiotherapy alone. 2-year: 27.2% vs 10.9%; 3-year: 16.0% vs 4.4%; 4-year: 12.1% vs 3.0%.",
+   "source": "EORTC-NCIC 5-year analysis (Stupp et al., Lancet Oncol 2009), PubMed 19269895",
+   "citation_url": "https://pubmed.ncbi.nlm.nih.gov/19269895/"
+  },
+  {
+   "point": "MGMT promoter methylation is the strongest predictor of benefit from temozolomide; methylated tumors had ~46% two-year survival vs ~14% for unmethylated tumors when treated with radiation + TMZ.",
+   "source": "EORTC 22981 / Hegi MGMT analysis (summarized via EF-14 review); EORTC-NCIC 5-year analysis",
+   "citation_url": "https://pubmed.ncbi.nlm.nih.gov/19269895/"
+  },
+  {
+   "point": "Extent of resection matters: complete resection of contrast-enhancing tumor gave median survival ~15.2 months vs ~9.8 months for incomplete resection (p<0.001); gross total resection can extend survival to ~20\u201325 months in favorable patients.",
+   "source": "NCI/PMC literature summary (multidisciplinary management reviews)",
+   "citation_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11719842/"
+  },
+  {
+   "point": "Under WHO 2021 (CNS5), glioblastoma is defined as an IDH-wildtype, H3-wildtype diffuse astrocytic glioma (CNS grade 4) with microvascular proliferation, necrosis, and/or the molecular markers TERT promoter mutation, EGFR amplification, or +7/\u221210 copy-number change; IDH-mutant grade 4 tumors are now a separate entity.",
+   "source": "WHO CNS5 2021 classification (Frontiers real-world review; ASTRO ARRO case)",
+   "citation_url": "https://www.frontiersin.org/journals/oncology/articles/10.3389/fonc.2023.1200815/full"
+  },
+  {
+   "point": "Glioblastoma is the most common malignant primary CNS tumor: ~13.7% of all brain tumors and ~52% of malignant ones; overall incidence ~3.2 per 100,000/year (~14,000 US cases/year), higher in men (~4.0 vs 2.5 per 100,000) and rising steeply with age (median ~65 years).",
+   "source": "CBTRUS Statistical Report (2018\u20132022), Neuro-Oncology",
+   "citation_url": "https://academic.oup.com/neuro-oncology/article/27/Supplement_4/iv1/8285946"
+  },
+  {
+   "point": "Tumor Treating Fields (Optune) added to maintenance temozolomide extended median overall survival by ~4.8 months in the randomized EF-14 trial, with benefit across subgroups; a later addition to the Stupp backbone.",
+   "source": "Novocure EF-14 final analysis (JAMA 2017 press summary)",
+   "citation_url": "https://www.novocure.com/jama-publishes-final-analysis-of-ef-14-phase-3-pivotal-trial-of-optune-together-with-temozolomide-demonstrating-unprecedented-survival-results-for-newly-diagnosed-glioblastoma/"
+  },
+  {
+   "point": "The BraTS 2024 post-treatment glioma challenge segments four sub-regions on post-treatment MRI \u2014 enhancing tissue (ET), non-enhancing tumor core (NETC), surrounding non-enhancing FLAIR hyperintensity (SNFH), and resection cavity (RC) \u2014 the resection cavity being a new sub-region reflecting the surgical step of the Stupp pathway.",
+   "source": "BraTS 2024 Challenge paper (arXiv:2405.18368)",
+   "citation_url": "https://arxiv.org/abs/2405.18368"
+  }
+ ],
+ "equations": [
+  {
+   "name": "Linear-quadratic Biologically Effective Dose (BED) of radiotherapy",
+   "latex": "\\text{BED} = n\\,d\\left(1 + \\frac{d}{\\alpha/\\beta}\\right)",
+   "variables_explained": "n = number of fractions (Stupp: 30); d = dose per fraction in Gy (Stupp: 2 Gy); n\u00b7d = total physical dose (60 Gy); \u03b1/\u03b2 = tissue-specific ratio in Gy describing radiosensitivity (\u224810 Gy for rapidly proliferating tumor, \u22483 Gy for late-responding normal brain). BED expresses the biological potency of a fractionation schedule in a common currency so different schedules can be compared."
+  },
+  {
+   "name": "Exponential (constant-hazard) survival function and its median",
+   "latex": "S(t) = e^{-\\lambda t}, \\qquad t_{\\text{med}} = \\frac{\\ln 2}{\\lambda}",
+   "variables_explained": "S(t) = probability a patient is still alive at time t; \u03bb = hazard rate (instantaneous risk of death per unit time, assumed constant); t = time since diagnosis; t_med = median survival, the time at which S(t)=0.5. This simple model links a hazard rate to a median survival."
+  },
+  {
+   "name": "Cox proportional-hazards hazard ratio",
+   "latex": "\\text{HR} = \\frac{\\lambda_{\\text{treat}}(t)}{\\lambda_{\\text{control}}(t)}",
+   "variables_explained": "HR = hazard ratio comparing the treatment arm (radiotherapy + temozolomide) to the control arm (radiotherapy alone); \u03bb_treat and \u03bb_control are the instantaneous death rates in each arm. Proportional hazards assumes this ratio is constant over time. In the Stupp trial HR\u22480.6, i.e. a 40% lower instantaneous risk of death."
+  },
+  {
+   "name": "Mosteller body-surface-area (BSA) formula for chemotherapy dosing",
+   "latex": "\\text{BSA} \\;(\\text{m}^2) = \\sqrt{\\frac{H \\cdot W}{3600}}",
+   "variables_explained": "H = height in cm; W = weight in kg; 3600 = normalizing constant (cm\u00b7kg per m\u00b2). BSA is then multiplied by the mg/m\u00b2 dose (e.g. 75 mg/m\u00b2 concurrent, 150\u2013200 mg/m\u00b2 adjuvant) to get the patient's temozolomide dose in mg."
+  }
+ ],
+ "derivations": [
+  {
+   "title": "Biologically effective dose of the Stupp 60 Gy / 30-fraction radiotherapy schedule, for tumor and for normal brain",
+   "steps": [
+    "\\text{BED} = n\\,d\\left(1 + \\dfrac{d}{\\alpha/\\beta}\\right) \u2014 Start from the linear-quadratic BED formula. The physical dose n\u00b7d is scaled up by a factor that accounts for the extra biological damage done by each fraction's size d.",
+    "n = 30,\\quad d = 2\\ \\text{Gy}\\ \\Rightarrow\\ n\\,d = 30 \\times 2 = 60\\ \\text{Gy} \u2014 Substitute the Stupp schedule. Thirty daily fractions of 2 Gy give the familiar 60 Gy total physical dose.",
+    "\\text{Tumor: } \\alpha/\\beta = 10\\ \\text{Gy}\\ \\Rightarrow\\ \\dfrac{d}{\\alpha/\\beta} = \\dfrac{2}{10} = 0.2 \u2014 For rapidly dividing tumor cells the \u03b1/\u03b2 ratio is about 10 Gy, so the per-fraction correction term is 0.2.",
+    "\\text{BED}_{\\text{tumor}} = 60\\,(1 + 0.2) = 60 \\times 1.2 = 72\\ \\text{Gy}_{10} \u2014 Multiply. The schedule delivers a tumor BED of 72 Gy (subscript 10 records the \u03b1/\u03b2 used).",
+    "\\text{Late normal brain: } \\alpha/\\beta = 3\\ \\text{Gy}\\ \\Rightarrow\\ \\dfrac{d}{\\alpha/\\beta} = \\dfrac{2}{3} \\approx 0.667 \u2014 Late-responding normal tissue has a lower \u03b1/\u03b2 (~3 Gy), so it is relatively MORE sensitive to the size of each fraction.",
+    "\\text{BED}_{\\text{brain}} = 60\\,(1 + 0.667) = 60 \\times 1.667 = 100\\ \\text{Gy}_{3} \u2014 Multiply. Normal brain sees a BED of ~100 Gy\u2083. Because normal tissue accumulates more biological dose per fraction than tumor, keeping fractions small (2 Gy) is what spares the brain \u2014 this is the entire rationale for fractionating rather than giving 60 Gy at once."
+   ]
+  },
+  {
+   "title": "Translating the trial hazard ratio (HR\u22480.6) into an expected median-survival ratio under a constant-hazard model, and seeing why the real gain was smaller",
+   "steps": [
+    "S(t) = e^{-\\lambda t} \u2014 Assume each arm has a constant hazard, so survival decays exponentially. \u03bb is the death rate in that arm.",
+    "0.5 = e^{-\\lambda t_{\\text{med}}} \u2014 The median survival t_med is by definition the time when half the patients remain, i.e. S=0.5.",
+    "\\ln(0.5) = -\\lambda t_{\\text{med}} \\ \\Rightarrow\\ -\\ln 2 = -\\lambda t_{\\text{med}} \u2014 Take the natural log of both sides; ln(0.5) = \u2212ln 2.",
+    "t_{\\text{med}} = \\dfrac{\\ln 2}{\\lambda} \u2014 Solve for the median. Median survival is inversely proportional to the hazard rate: double the hazard, halve the median.",
+    "\\dfrac{t_{\\text{med,treat}}}{t_{\\text{med,control}}} = \\dfrac{\\ln 2/\\lambda_{\\text{treat}}}{\\ln 2/\\lambda_{\\text{control}}} = \\dfrac{\\lambda_{\\text{control}}}{\\lambda_{\\text{treat}}} = \\dfrac{1}{\\text{HR}} \u2014 Form the ratio of medians. The ln2 cancels, leaving the inverse of the hazard ratio (since HR = \u03bb_treat/\u03bb_control).",
+    "\\dfrac{1}{\\text{HR}} = \\dfrac{1}{0.6} \\approx 1.667 \u2014 With HR = 0.6, the model predicts the treatment median should be about 1.67\u00d7 the control median.",
+    "t_{\\text{med,treat}} \\approx 1.667 \\times 12.1 = 20.2\\ \\text{months} \u2014 Apply to the control median of 12.1 months. The idealized prediction is ~20 months.",
+    "\\text{Observed} = 14.6\\ \\text{months} \\ \\ne\\ 20.2\\ \\text{months} \u2014 The trial actually reported 14.6 months. The gap shows the constant-hazard/proportional-hazards assumption is only an approximation: the survival benefit is concentrated in a favorable minority (largely MGMT-methylated patients forming a long tail), so a single median understates where the gain actually lives \u2014 one reason 2-year and 5-year survival ratios (27% vs 11%; 9.8% vs 1.9%) look far more dramatic than the median difference."
+   ]
+  },
+  {
+   "title": "Worked temozolomide dose for a specific patient using body surface area",
+   "steps": [
+    "\\text{BSA} = \\sqrt{\\dfrac{H \\cdot W}{3600}} \u2014 Start from the Mosteller formula. We need BSA before we can convert a mg/m\u00b2 dose into milligrams.",
+    "H = 170\\ \\text{cm},\\quad W = 70\\ \\text{kg}\\ \\Rightarrow\\ H\\cdot W = 170 \\times 70 = 11900 \u2014 Substitute a sample patient's height and weight and multiply.",
+    "\\dfrac{11900}{3600} = 3.306 \u2014 Divide by the constant 3600.",
+    "\\text{BSA} = \\sqrt{3.306} = 1.818\\ \\text{m}^2 \u2014 Take the square root to get the body surface area.",
+    "\\text{Concurrent dose} = 75\\ \\tfrac{\\text{mg}}{\\text{m}^2} \\times 1.818\\ \\text{m}^2 = 136.4\\ \\text{mg/day} \u2014 During radiotherapy TMZ is 75 mg/m\u00b2/day; multiply by BSA. Round to a practical ~135\u2013140 mg capsule combination daily.",
+    "\\text{Adjuvant dose (150 mg/m}^2) = 150 \\times 1.818 = 272.7\\ \\text{mg/day on days 1\u20135} \u2014 In the maintenance phase the dose per m\u00b2 rises (150 mg/m\u00b2, often escalated to 200 mg/m\u00b2 if tolerated), given only on days 1\u20135 of each 28-day cycle, so the same patient takes ~273 mg/day for 5 days, then rests."
+   ]
+  }
+ ],
+ "intuitions": [
+  "\"Maximal SAFE resection\" is a tug-of-war, not a goal of total removal. Glioblastoma cells infiltrate microscopically far beyond what MRI shows, so a surgeon can never cut it all out; they remove the bulk while protecting speech, movement, and vision. More removal helps survival, but only up to the point where taking more would disable the patient \u2014 hence \"safe\" is the binding constraint.",
+  "Fractionating radiation (many small 2 Gy doses instead of one big blast) exploits a biological asymmetry: late-responding normal brain is punished more by large fraction sizes than tumor is. Splitting the 60 Gy into 30 small daily doses lets healthy brain repair between sessions while still accumulating a lethal dose in the tumor \u2014 the BED calculation makes this concrete (72 Gy\u2081\u2080 to tumor vs a tolerable-shaped 100 Gy\u2083 profile to brain).",
+  "Temozolomide works by adding methyl groups to tumor DNA; the MGMT enzyme's job is to erase exactly that damage. When the MGMT gene is switched off by promoter methylation, the tumor loses its eraser, so the drug's damage sticks \u2014 this is why MGMT-methylated patients live markedly longer. It is a rare case where a single molecular switch cleanly predicts who benefits from a drug.",
+  "The median survival (~15 months) is a blunt summary. The real story is in the tails: the treatment roughly doubles-to-triples the fraction of patients reaching 2, 3, and 5 years. A therapy can look modest 'at the median' yet transform the odds of long-term survival for a favorable subgroup."
+ ],
+ "gotchas": [
+  "The WHO 2021 (CNS5) reclassification changed what 'glioblastoma' means. GBM is now, by definition, IDH-wildtype grade 4; tumors formerly labeled 'IDH-mutant glioblastoma' are now 'astrocytoma, IDH-mutant, grade 4' \u2014 a different, generally better-prognosis entity. Older papers (including many quoting survival statistics) mix these together, so pre-2021 survival figures are not directly comparable to current IDH-wildtype-only cohorts.",
+  "Post-treatment MRI is genuinely ambiguous: surgery, radiation, and steroids all cause changes (pseudoprogression, treatment-related enhancement, a fluid-filled resection cavity) that mimic or mask tumor. This is exactly why the BraTS post-treatment challenge added the 'resection cavity' as its own label and separates enhancing tissue from non-enhancing tumor core \u2014 enhancement alone does NOT equal active tumor after treatment.",
+  "Converting a hazard ratio into a median-survival ratio (as in the derivation) assumes proportional hazards and constant risk over time. Glioblastoma violates this \u2014 benefit is front-loaded and concentrated in favorable subgroups \u2014 so the naive prediction (~20 months) overshoots the observed median (14.6 months). Never quote a single derived number as if the model were exact.",
+  "'Six adjuvant cycles' is the trial-defined minimum, not a hard biological cutoff, and dose escalation (150\u2192200 mg/m\u00b2) is contingent on hematologic tolerance. Temozolomide causes myelosuppression (especially thrombocytopenia), so real-world dosing is frequently delayed or reduced \u2014 the textbook mg/m\u00b2 numbers are targets, not guarantees.",
+  "Incidence figures like '3.2 per 100,000' are age-adjusted population rates, not an individual's risk. Because GBM incidence climbs steeply with age (>12 per 100,000 in the 65+ group), a single overall rate hides that this is predominantly a disease of older adults."
+ ],
+ "example_questions": [
+  {
+   "question": "A newly diagnosed glioblastoma patient completes gross total resection and starts the Stupp protocol. State the radiotherapy schedule, compute its biologically effective dose to the tumor (\u03b1/\u03b2 = 10 Gy), and give the concurrent temozolomide dose for a patient with BSA = 1.9 m\u00b2.",
+   "answer": "Radiotherapy schedule: 60 Gy total, given as 30 daily fractions of 2 Gy over ~6 weeks. BED to tumor: BED = n\u00b7d\u00b7(1 + d/(\u03b1/\u03b2)) = 30\u00d72\u00d7(1 + 2/10) = 60\u00d71.2 = 72 Gy\u2081\u2080. Concurrent temozolomide: 75 mg/m\u00b2/day \u00d7 1.9 m\u00b2 = 142.5 mg/day, taken every day (7 days/week) throughout the radiotherapy course. After a ~4-week break, the patient would then begin six adjuvant cycles at 150\u2013200 mg/m\u00b2 on days 1\u20135 of each 28-day cycle (i.e. 285\u2013380 mg/day for this patient)."
+  },
+  {
+   "question": "In the EORTC-NCIC trial, 5-year overall survival was 9.8% with radiotherapy + temozolomide vs 1.9% with radiotherapy alone. Express the added long-term benefit as an absolute difference and as a relative (fold) increase, and explain why this looks larger than the median-survival gain of only ~2.5 months.",
+   "answer": "Absolute difference at 5 years = 9.8% \u2212 1.9% = 7.9 percentage points. Relative (fold) increase = 9.8 / 1.9 \u2248 5.2\u00d7, i.e. temozolomide roughly quintupled the chance of being alive at five years. This dwarfs the median gain (14.6 vs 12.1 months, ~2.5 months) because the benefit is not spread evenly \u2014 it is concentrated in a favorable long-surviving subgroup (largely MGMT-methylated patients). The median measures the 'typical' patient near the middle of the curve, where the two arms are close together; the tail measures the minority who benefit most, where the arms diverge sharply. Both statistics are correct; they describe different parts of the same survival curve."
+  },
+  {
+   "question": "Two glioblastoma patients receive identical Stupp therapy. Patient A's tumor has a methylated MGMT promoter; Patient B's is unmethylated. Which is expected to do better and why, and roughly what two-year survival difference did the trials show?",
+   "answer": "Patient A (MGMT-methylated) is expected to do substantially better. Temozolomide kills tumor cells by methylating their DNA; the MGMT enzyme normally repairs that specific damage. A methylated (silenced) MGMT promoter means the tumor produces little MGMT, cannot repair the drug-induced damage, and is therefore far more sensitive to temozolomide. The trial data showed roughly 46% two-year survival for MGMT-methylated tumors versus about 14% for unmethylated tumors treated with radiation + temozolomide \u2014 MGMT methylation is described as the single strongest predictor of benefit. Patient B still receives the same regimen (there is no better standard first-line option), but derives less benefit from the temozolomide component."
+  }
+ ],
+ "suggested_figures": [
+  "A three-stage timeline of the Stupp protocol: (1) maximal safe resection, (2) 6 weeks of 60 Gy/30-fraction radiotherapy with daily concurrent TMZ 75 mg/m\u00b2, (3) six 28-day adjuvant TMZ cycles (150\u2013200 mg/m\u00b2, days 1\u20135), annotated with a ~4-week break between phases and the typical ~14\u201315 month median-survival marker.",
+  "Two overlaid Kaplan\u2013Meier survival curves (radiotherapy + temozolomide vs radiotherapy alone) with the median crossing at 14.6 vs 12.1 months and callouts at 2-year (27% vs 11%) and 5-year (9.8% vs 1.9%) points, plus a shaded MGMT-methylated subgroup curve to visualize where the long-term benefit concentrates.",
+  "A labeled post-treatment brain MRI schematic showing the four BraTS 2024 sub-regions \u2014 enhancing tissue (ET), non-enhancing tumor core (NETC), surrounding non-enhancing FLAIR hyperintensity (SNFH), and resection cavity (RC) \u2014 mapped onto the surgical + radiotherapy context to connect the clinical pathway to the segmentation task."
+ ],
+ "confidence_notes": "Numbers I verified from retrieved reputable sources: 60 Gy/30 fractions, TMZ 75 mg/m\u00b2 concurrent and 150\u2013200 mg/m\u00b2 adjuvant days 1\u20135, median OS 14.6 vs 12.1 months, HR 0.6, and the exact 2/3/4/5-year survival percentages (27.2/16.0/12.1/9.8% vs 10.9/4.4/3.0/1.9%) \u2014 all confirmed from the StatPearls chapter and the PubMed EORTC-NCIC 5-year analysis (PMID 19269895). WHO CNS5 glioblastoma definition confirmed from the Frontiers review and ASTRO ARRO case. CBTRUS incidence figures (~3.2/100,000; 13.7% of tumors; male:female ~1.6) confirmed from the CBTRUS report summary. The MGMT-methylated 46% vs 14% two-year survival and the median ~21.7 months figure originate in the Hegi/EORTC 22981 analysis; I retrieved these via secondary summaries (the EF-14/Novocure and StatPearls sources) rather than fetching the original Hegi NEJM (NEJMoa043331) full text directly \u2014 the 46%/14% figure is well corroborated but I did not open the primary Hegi paper, so treat the exact 21.7-month median as approximate. The EF-14 Tumor Treating Fields +4.8-month benefit comes from a Novocure company press release summarizing the JAMA 2017 publication; directionally reliable but industry-sourced, so ideally confirm against the primary Stupp 2017 JAMA article. The BSA-dosing and BED worked examples are standard textbook methods I computed myself (Mosteller formula and the linear-quadratic model), not disease-specific trial data. The hazard-ratio-to-median derivation is illustrative under an exponential assumption that glioblastoma does not truly satisfy; I flagged this explicitly rather than presenting the ~20-month figure as real. Extent-of-resection survival numbers (15.2 vs 9.8 months) come from a PMC review summary; the original is the Lacroix et al. dataset, which I did not fetch directly.",
+ "_key": "glioblastoma-treatment",
+ "_kind": "medical"
+}

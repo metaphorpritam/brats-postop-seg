@@ -1,0 +1,170 @@
+{
+ "topic": "Convolutions and CNNs: the convolution operation, 2D vs 3D convolutions, kernels/strides/padding, receptive field, and counting the parameters of a convolutional layer",
+ "overview": "A **convolutional neural network (CNN)** is a neural network whose core operation is the *convolution*: sliding a small window of learnable weights, called a **kernel** or **filter**, across an image (or volume) and, at every position, computing a weighted sum of the pixels it covers. That single weighted-sum-plus-bias produces one number in an **output feature map**. Because the *same* small set of weights is reused at every spatial location (this is called *weight sharing*), a CNN can detect a pattern \u2014 an edge, a texture, later a tumor boundary \u2014 no matter where in the image it appears, and it does so with dramatically fewer parameters than a fully-connected network. This combination of *local connectivity* and *weight sharing* is what makes CNNs both efficient and well suited to images.\n\nA convolution is defined by a handful of hyperparameters. The **kernel size** (e.g. 3\u00d73) sets how large a neighborhood each output looks at. The **stride** sets how far the window jumps between positions (stride 2 halves the output resolution). **Padding** adds a border of zeros so the window can reach the edges and so the output can keep the same spatial size as the input. The number of **filters** sets how many output channels (feature maps) the layer produces. Stacking many such layers lets early layers detect simple local patterns and deeper layers combine them into large, abstract structures.\n\nTwo facts matter most for this teaching note. First, the **receptive field**: any one number deep in the network summarizes a region of the *original* image, and that region grows layer by layer. This is why a stack of small 3\u00d73 kernels can \"see\" a large area while staying cheap \u2014 the insight popularized by VGG (Simonyan & Zisserman, 2014). Second, **parameter counting**: a conv layer's weight count is `(kernel volume \u00d7 input channels + 1 bias) \u00d7 number of filters`, and it does *not* depend on the image size \u2014 a property that makes CNNs scale to large medical volumes.\n\nFor the BraTS project the crucial twist is **3D convolution**. Brain MRI is a stack of 2D slices forming a 3D volume, and the four MRI sequences (T1, T1ce, T2, FLAIR) are the *input channels*. A 3D kernel (e.g. 3\u00d73\u00d73) slides in all three spatial directions, so it captures how tissue changes *between* slices, not just within one \u2014 important for a 3D structure like a tumor. This is exactly the design used by 3D U-Net (\u00c7i\u00e7ek et al., 2016), the volumetric successor to the original U-Net (Ronneberger, Fischer & Brox, 2015). The cost is that 3D kernels have far more weights and far higher memory use than their 2D counterparts, which is the central engineering tension in the project.",
+ "key_points": [
+  {
+   "point": "A convolution slides a small learnable kernel over the input and, at every position, outputs the dot product of the kernel with the patch it covers plus a bias. The two defining properties are LOCAL CONNECTIVITY (each output sees only a small patch) and WEIGHT SHARING (the same kernel weights are reused at every position), which is what gives CNNs translation equivariance and few parameters.",
+   "source": "CS231n Convolutional Networks notes (Stanford)",
+   "citation_url": "https://cs231n.github.io/convolutional-networks/"
+  },
+  {
+   "point": "What deep-learning libraries call 'convolution' is technically CROSS-CORRELATION: the kernel is applied without the flip that the strict mathematical convolution requires. Because the kernel weights are learned, the flip is irrelevant to the result, so the distinction does not matter in practice.",
+   "source": "Goodfellow, Bengio & Courville, Deep Learning (2016), Ch. 9",
+   "citation_url": "https://www.deeplearningbook.org/contents/convnets.html"
+  },
+  {
+   "point": "Output spatial size for one dimension is floor((W - F + 2P)/S) + 1, where W=input size, F=kernel size, P=padding, S=stride. 'SAME' padding (P=(F-1)/2 for odd F, stride 1) keeps output size equal to input size; 'VALID' padding (P=0) shrinks it.",
+   "source": "CS231n Convolutional Networks notes (Stanford)",
+   "citation_url": "https://cs231n.github.io/convolutional-networks/"
+  },
+  {
+   "point": "The number of learnable parameters in a conv layer is (F_h * F_w * C_in + 1) * C_out for 2D, i.e. (filter weights + 1 bias) per filter, times the number of filters. Crucially this is INDEPENDENT of the input image height and width \u2014 a direct consequence of weight sharing.",
+   "source": "CS231n / Baeldung CNN parameter count",
+   "citation_url": "https://cs231n.github.io/convolutional-networks/"
+  },
+  {
+   "point": "For 3D convolution the kernel gains a depth dimension: parameters = (F_d * F_h * F_w * C_in + 1) * C_out. A 3\u00d73\u00d73 kernel therefore has 27 weights per input channel versus 9 for a 3\u00d73 2D kernel \u2014 3\u00d7 more per channel \u2014 which is why 3D CNNs are far more memory- and compute-hungry.",
+   "source": "\u00c7i\u00e7ek et al., 3D U-Net (2016), arXiv:1606.06650",
+   "citation_url": "https://arxiv.org/abs/1606.06650"
+  },
+  {
+   "point": "The RECEPTIVE FIELD is the region of the original input that influences one activation. It grows with depth: stacking two 3\u00d73 (stride-1) convs gives a 5\u00d75 receptive field, three give 7\u00d77. VGG's key argument is that a stack of small kernels reaches the same receptive field as one big kernel with fewer parameters and more non-linearities.",
+   "source": "Simonyan & Zisserman, VGG (2014), arXiv:1409.1556",
+   "citation_url": "https://arxiv.org/abs/1409.1556"
+  },
+  {
+   "point": "The original U-Net (Ronneberger, Fischer & Brox, 2015) is the canonical segmentation CNN: a contracting (encoder) path of convolutions + pooling to capture context, a symmetric expanding (decoder) path to recover resolution, and SKIP CONNECTIONS copying encoder feature maps to the decoder for precise localization. It used unpadded 3\u00d73 convs, so a 572\u00d7572 input yields a 388\u00d7388 output.",
+   "source": "Ronneberger, Fischer & Brox, U-Net (2015), arXiv:1505.04597",
+   "citation_url": "https://arxiv.org/abs/1505.04597"
+  },
+  {
+   "point": "In multi-modal MRI segmentation like BraTS, the different MRI sequences (e.g. T1, T1ce/contrast-enhanced, T2, FLAIR) are fed as separate INPUT CHANNELS of the first conv layer, exactly as R, G, B are channels of a colour photo. A first 3D conv with C_in=4 therefore has 4\u00d7 the per-filter weights of a single-channel input.",
+   "source": "BraTS benchmark (Menze et al., 2015, IEEE TMI)",
+   "citation_url": "https://pubmed.ncbi.nlm.nih.gov/25494501/"
+  }
+ ],
+ "equations": [
+  {
+   "name": "2D discrete convolution (cross-correlation) of one output channel",
+   "latex": "Y(i,j) \\;=\\; b \\;+\\; \\sum_{c=1}^{C_{in}} \\sum_{u=0}^{F_h-1} \\sum_{v=0}^{F_w-1} W(c,u,v)\\, X\\big(c,\\; iS+u-P,\\; jS+v-P\\big)",
+   "variables_explained": "Y(i,j) = value of the output feature map at row i, column j. b = scalar bias for this filter. C_in = number of input channels. F_h, F_w = kernel height and width. W(c,u,v) = learnable kernel weight for channel c at offset (u,v). X = the (zero-padded) input. S = stride. P = padding. The triple sum is a weighted sum over the local patch across all input channels."
+  },
+  {
+   "name": "Output spatial size (per dimension)",
+   "latex": "O \\;=\\; \\left\\lfloor \\dfrac{W - F + 2P}{S} \\right\\rfloor + 1",
+   "variables_explained": "O = output size along one axis. W = input size along that axis. F = kernel size. P = zero-padding added on each side. S = stride. The floor accounts for strides that do not divide evenly. Apply independently to height, width (and depth for 3D)."
+  },
+  {
+   "name": "'Same' padding for odd kernel, stride 1",
+   "latex": "P \\;=\\; \\dfrac{F-1}{2} \\quad\\Longrightarrow\\quad O = W",
+   "variables_explained": "For an odd kernel size F and stride S=1, choosing P=(F-1)/2 makes the output size equal the input size. E.g. F=3 gives P=1; F=5 gives P=2. This is what most modern CNNs use so spatial size is controlled only by pooling/strided layers."
+  },
+  {
+   "name": "Parameter count of a 2D convolutional layer",
+   "latex": "N_{2D} \\;=\\; \\big(F_h \\cdot F_w \\cdot C_{in} + 1\\big)\\cdot C_{out}",
+   "variables_explained": "N = number of learnable parameters. F_h, F_w = kernel height/width. C_in = input channels. The '+1' is one bias per filter. C_out = number of filters = number of output channels. Note the absence of any image-size term."
+  },
+  {
+   "name": "Parameter count of a 3D convolutional layer",
+   "latex": "N_{3D} \\;=\\; \\big(F_d \\cdot F_h \\cdot F_w \\cdot C_{in} + 1\\big)\\cdot C_{out}",
+   "variables_explained": "Same as 2D but the kernel now has a depth extent F_d, so the kernel volume is F_d\u00b7F_h\u00b7F_w. Everything else is identical. This is the relevant formula for volumetric MRI in BraTS."
+  },
+  {
+   "name": "Receptive field growth across stacked layers",
+   "latex": "R_{\\ell} \\;=\\; R_{\\ell-1} + (F_{\\ell}-1)\\prod_{i=1}^{\\ell-1} S_i",
+   "variables_explained": "R_l = receptive field (in input pixels) of a unit at layer l; R_0 = 1. F_l = kernel size of layer l. S_i = stride of layer i. The product is the cumulative stride of all earlier layers, i.e. how many input pixels one step at layer l corresponds to. For all-stride-1 layers this simplifies to R_l = R_{l-1} + (F_l - 1)."
+  },
+  {
+   "name": "FLOPs (multiply-adds) of a 2D conv layer",
+   "latex": "\\text{MACs} \\;=\\; H_{out}\\cdot W_{out}\\cdot C_{out}\\cdot\\big(F_h\\cdot F_w\\cdot C_{in}\\big)",
+   "variables_explained": "MACs = multiply-accumulate operations. H_out, W_out = output height/width. Unlike parameter count, compute cost DOES scale with output spatial size, because the (shared) kernel is applied once per output position. This is why 3D volumes are expensive even when parameter counts look modest."
+  }
+ ],
+ "derivations": [
+  {
+   "title": "Deriving the output-size formula O = floor((W - F + 2P)/S) + 1",
+   "steps": [
+    "Start with a 1D input of length W. To let the kernel reach the borders, we pad P zeros on each side, giving a padded length: W' = W + 2P.  Here W = original input length, P = padding per side, W' = padded length.",
+    "A kernel of size F must fit entirely inside the padded signal. If its left edge sits at index p (with p = 0 for the first valid position), the kernel occupies indices p, p+1, ..., p+F-1, so we require p + F - 1 \\le W' - 1, i.e. p \\le W' - F.  This gives the largest allowed starting index p_{max} = W' - F.",
+    "With stride S the kernel starts at positions p = 0, S, 2S, 3S, .... These are the only places we compute an output. We need the count of such p that satisfy 0 \\le p \\le W' - F.",
+    "The valid starting positions are p = kS for integer k \\ge 0 with kS \\le W' - F, i.e. k \\le (W' - F)/S. The largest such integer is k_{max} = \\left\\lfloor (W' - F)/S \\right\\rfloor.  The floor is needed because S may not divide (W' - F) exactly; positions that would overshoot are simply not taken.",
+    "The number of positions is k = 0, 1, ..., k_{max}, which is k_{max} + 1 values. Hence the output length is O = \\left\\lfloor (W' - F)/S \\right\\rfloor + 1.",
+    "Substitute W' = W + 2P back in to get the final formula: O = \\left\\lfloor \\dfrac{W - F + 2P}{S} \\right\\rfloor + 1.  Sanity check: W=5, F=3, P=0, S=1 gives \\lfloor (5-3)/1 \\rfloor + 1 = 2 + 1 = 3, the well-known 3-output case of a 3-tap filter on a length-5 signal."
+   ]
+  },
+  {
+   "title": "Deriving 'same' padding P = (F-1)/2 for stride 1",
+   "steps": [
+    "We want the output to equal the input: set O = W in O = \\lfloor (W - F + 2P)/S \\rfloor + 1 with S = 1 (no floor issue since S=1). So W = (W - F + 2P) + 1.",
+    "Subtract W from both sides: 0 = -F + 2P + 1.  This isolates the padding-dependent part.",
+    "Solve for P: 2P = F - 1, therefore P = \\dfrac{F-1}{2}.  For this to be an integer P we need F odd, which is why CNN kernels are almost always odd-sized (3, 5, 7).",
+    "Check with F = 3: P = (3-1)/2 = 1. Then O = \\lfloor (W - 3 + 2)/1 \\rfloor + 1 = (W - 1) + 1 = W. Output size preserved, as required."
+   ]
+  },
+  {
+   "title": "Counting parameters of a conv layer, with a worked 2D example",
+   "steps": [
+    "Consider a single filter. It must have one weight for every element of the local patch it covers. The patch spans F_h rows, F_w columns, and ALL C_in input channels, so the filter holds F_h \\cdot F_w \\cdot C_{in} weights.  Variables: F_h, F_w = kernel height/width; C_in = input channels.",
+    "Each filter also has exactly one bias term (a single scalar added after the weighted sum), so one filter has F_h \\cdot F_w \\cdot C_{in} + 1 parameters.",
+    "A conv layer has C_out filters, one per output channel, and each filter is independent with its own weights and bias. Multiply: N = (F_h \\cdot F_w \\cdot C_{in} + 1)\\cdot C_{out}.  Note nothing in this expression depends on the image height or width \u2014 weight sharing means the same filter is reused at every position.",
+    "Worked example: an RGB-like input with C_in = 3 channels, a layer of C_out = 32 filters of size 3\u00d73, stride 1, 'same' padding. Weights per filter = 3 \\cdot 3 \\cdot 3 = 27. Add 1 bias: 28 per filter.",
+    "Total parameters = 28 \\times 32 = 896. Independently, the output feature map has size O = \\lfloor (64 - 3 + 2)/1 \\rfloor + 1 = 64 for a 64\u00d764 input, and 32 channels, so the output tensor is 64\u00d764\u00d732 \u2014 but the 896 parameter count would be identical for a 512\u00d7512 input."
+   ]
+  },
+  {
+   "title": "Worked 3D parameter count for a BraTS-style first layer, and the 2D-vs-3D contrast",
+   "steps": [
+    "BraTS input: a volume with the four MRI sequences as channels, so C_in = 4, and (say) C_out = 32 filters of size 3\u00d73\u00d73, the standard 3D U-Net first block.  Variables: F_d = F_h = F_w = 3, C_in = 4, C_out = 32.",
+    "Kernel volume = F_d \\cdot F_h \\cdot F_w = 3 \\cdot 3 \\cdot 3 = 27 weights per input channel.",
+    "Weights per filter = 27 \\cdot C_{in} = 27 \\cdot 4 = 108. Add 1 bias = 109 parameters per filter.",
+    "Total = 109 \\times 32 = 3488 parameters for this 3D layer.",
+    "Compare a 2D layer with the same channels and a 3\u00d73 kernel: per filter = 3 \\cdot 3 \\cdot 4 + 1 = 37, total 37 \\times 32 = 1184. The 3D layer has 3488/1184 \\approx 2.95\u00d7 more parameters \u2014 essentially the ratio 27/9 = 3 of the kernel volumes \u2014 illustrating why 3D convolutions cost roughly 3\u00d7 the weights (and, because they run over a whole extra spatial axis, far more compute and memory) than their 2D analogues."
+   ]
+  },
+  {
+   "title": "Deriving the receptive field of stacked convolutions (why two 3\u00d73 = one 5\u00d75)",
+   "steps": [
+    "Use the recurrence R_{\\ell} = R_{\\ell-1} + (F_{\\ell}-1)\\prod_{i<\\ell} S_i with R_0 = 1. For plain stacked convs take every stride S_i = 1, so the product is 1 and the recurrence simplifies to R_{\\ell} = R_{\\ell-1} + (F_{\\ell}-1).  R_l = receptive field at layer l in input pixels; F_l = kernel size at layer l.",
+    "Layer 0 (the input pixel itself): R_0 = 1.",
+    "After one 3\u00d73 conv (F=3): R_1 = R_0 + (3-1) = 1 + 2 = 3. One output sees a 3\u00d73 patch \u2014 obvious.",
+    "After a second 3\u00d73 conv: R_2 = R_1 + (3-1) = 3 + 2 = 5. Two stacked 3\u00d73 convs therefore see a 5\u00d75 region of the input.",
+    "After a third: R_3 = 5 + 2 = 7, matching a single 7\u00d77 kernel's reach.",
+    "Parameter comparison (VGG's argument): two 3\u00d73 convs on C channels cost 2 \\cdot (3\\cdot3\\cdot C)\\cdot C = 18C^2 weights (ignoring bias) for a 5\u00d75 receptive field, whereas one 5\u00d75 conv costs (5\\cdot5\\cdot C)\\cdot C = 25C^2. The stack is cheaper (18C^2 < 25C^2) AND inserts an extra non-linearity, which is why modern CNNs favour stacks of small kernels."
+   ]
+  }
+ ],
+ "intuitions": [
+  "A kernel is a little 'pattern detector' that reports how strongly its pattern appears at each location. Because the exact same detector is dragged across the whole image (weight sharing), a feature learned in one corner is automatically recognised everywhere \u2014 that is why CNNs need so few parameters compared with fully-connected nets, and why the parameter count is blind to image size.",
+  "Depth buys size for free. Any single number deep in the network summarizes a large patch of the original image (its receptive field), even though every individual layer only ever looks at a tiny 3\u00d73 window. The network sees big structures not by using big kernels but by stacking many small ones \u2014 like understanding a paragraph by reading overlapping windows of a few words at a time.",
+  "Channels are 'feature slots', not spatial dimensions. The 4 MRI sequences enter as 4 input channels, and a layer's C_out is how many different features it looks for. A filter always spans ALL input channels at once, so it can learn cross-modal patterns (e.g. 'bright on FLAIR but dark on T1') in a single weighted sum.",
+  "2D vs 3D is about whether the kernel can move between slices. A 2D conv treats each MRI slice independently; a 3D conv's kernel also extends through the slice axis, so it can 'feel' that a bright blob continues into the next slice \u2014 genuine 3D context \u2014 at the price of roughly 3\u00d7 the weights and much more memory."
+ ],
+ "gotchas": [
+  "The parameter count does NOT include the image height/width, but the COMPUTE (FLOPs) and activation MEMORY very much do \u2014 they scale with the output spatial size. A 3D conv can have a modest parameter count yet blow up GPU memory because it stores a full H\u00d7W\u00d7D\u00d7C_out activation volume. This is the core reason BraTS training uses patches/tiles rather than whole volumes.",
+  "'Convolution' in every DL framework (PyTorch, TF) is actually cross-correlation: no kernel flip. Do not expect the textbook flipped-kernel behaviour; since weights are learned it makes no difference to accuracy, but it matters if you hand-check math against a signal-processing reference.",
+  "Padding choice silently changes output size and can shrink it away. U-Net's original 'valid' (unpadded) 3\u00d73 convs turn a 572\u00d7572 input into a 388\u00d7388 output, so encoder and decoder feature maps are different sizes and must be cropped before concatenation. Most modern reimplementations switch to 'same' padding to avoid this.",
+  "Don't forget the bias, and don't forget to multiply the per-channel kernel volume by C_in. A common error is computing 3*3*32 = 288 for a 3\u00d73, 32-filter layer while ignoring that each filter also spans all C_in input channels (and the +1 bias). Always: (F_h\u00b7F_w\u00b7C_in + 1)\u00b7C_out. Also note: if the layer is followed by BatchNorm the bias is often disabled (bias=False) because BN's shift makes it redundant."
+ ],
+ "example_questions": [
+  {
+   "question": "A 3D convolutional layer takes an input volume of shape 128\u00d7128\u00d7128 with 4 channels (the four MRI sequences). It uses 32 filters of size 3\u00d73\u00d73, stride 1, and 'same' padding. (a) How many learnable parameters does it have? (b) What is the shape of the output tensor?",
+   "answer": "(a) Per filter the kernel volume is 3\u00b73\u00b73 = 27, spanning all C_in = 4 channels: 27\u00b74 = 108 weights, plus 1 bias = 109 parameters per filter. With C_out = 32 filters: 109 \u00d7 32 = 3488 parameters. (b) 'Same' padding for a 3\u00d73\u00d73 kernel at stride 1 uses P = (3-1)/2 = 1 on each side, so each spatial dimension is preserved: O = floor((128 - 3 + 2)/1) + 1 = 128. The number of output channels equals the number of filters, 32. Output shape = 128\u00d7128\u00d7128\u00d732 (i.e. 32 feature-map volumes)."
+  },
+  {
+   "question": "A 2D conv layer receives a 224\u00d7224\u00d73 image and applies 64 filters of size 7\u00d77 with stride 2 and padding 3 (this is the first layer of ResNet). Give the output spatial size and the parameter count.",
+   "answer": "Output size per axis: O = floor((224 - 7 + 2\u00b73)/2) + 1 = floor((224 - 7 + 6)/2) + 1 = floor(223/2) + 1 = floor(111.5) + 1 = 111 + 1 = 112. So the output is 112\u00d7112\u00d764. Parameters: per filter = 7\u00b77\u00b73 + 1 = 147 + 1 = 148; times 64 filters = 148 \u00d7 64 = 9472 parameters. (Note the large 112\u00d7112\u00d764 activation despite a fairly small parameter count \u2014 compute/memory scale with spatial size, parameters do not.)"
+  },
+  {
+   "question": "Why do modern CNNs (and 3D U-Nets) prefer stacking three 3\u00d73 convolutions instead of using one 7\u00d77 convolution, given both cover the same region?",
+   "answer": "Receptive field: with stride-1 stacking, R grows by (F-1)=2 per 3\u00d73 layer, so three of them give R = 1 + 2 + 2 + 2 = 7 \u2014 identical reach to a single 7\u00d77 kernel. Parameters (per output channel, C input channels, ignoring bias): three 3\u00d73 layers cost 3\u00b7(3\u00b73\u00b7C)\u00b7C = 27C\u00b2 weights, whereas one 7\u00d77 layer costs (7\u00b77\u00b7C)\u00b7C = 49C\u00b2. The stack uses about 27/49 \u2248 55% of the parameters. It also inserts two extra non-linearities (ReLUs) between the layers, making the function more expressive. So stacking small kernels gives the same field of view with fewer weights and more representational power \u2014 the VGG (2014) insight that underlies most current architectures."
+  }
+ ],
+ "suggested_figures": [
+  "A single annotated 'sliding kernel' diagram: a 3\u00d73 kernel positioned over one patch of a small input grid, with arrows showing the element-wise multiply-and-sum producing one output cell, and a second position showing how stride moves the window \u2014 with padding drawn as a grey zero-border. This makes local connectivity, stride, and padding concrete in one picture.",
+  "A receptive-field staircase: three stacked 3\u00d73 conv layers drawn left-to-right, shading how one deep activation traces back to a 3\u00d73, then 5\u00d75, then 7\u00d77 region of the input \u2014 visually proving 'two 3\u00d73 = one 5\u00d75'.",
+  "A side-by-side 2D-vs-3D convolution schematic on MRI: on the left a 3\u00d73 kernel sliding within one axial slice; on the right a 3\u00d73\u00d73 kernel spanning three adjacent slices, with the 4 MRI sequences shown as stacked input channels feeding the first filter \u2014 highlighting why 3D kernels have ~3\u00d7 the weights and capture through-slice context."
+ ],
+ "confidence_notes": "All formulas (output size, same-padding, 2D/3D parameter counts, receptive-field recurrence, FLOPs) are standard and were verified by hand with the worked numeric checks shown; they match the CS231n notes and the Deep Learning textbook. The U-Net 572\u2192388 output figure and 'valid convolution' design are from the original paper (arXiv:1505.04597). The 3D U-Net 3\u00d73\u00d73 / channel-doubling design is from \u00c7i\u00e7ek et al. (arXiv:1606.06650). One project-specific detail I could NOT verify from a source and stated only as a representative convention: the exact BraTS input patch size (I used 128\u00d7128\u00d7128) and first-layer filter count (32) are illustrative \u2014 the actual values depend on this repo's chosen config, not a fixed standard. The specific BraTS MRI sequence names (T1, T1ce, T2, FLAIR) as four input channels reflect the standard BraTS protocol (Menze et al., 2015) but the repo's exact channel ordering/count should be confirmed against its data-loading code. The VGG parameter-comparison arithmetic (27C\u00b2 vs 49C\u00b2) ignores bias terms, which is the conventional way that comparison is presented.\"",
+ "_key": "cnns-convolutions",
+ "_kind": "dl"
+}

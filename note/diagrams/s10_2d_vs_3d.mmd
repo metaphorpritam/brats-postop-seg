@@ -1,0 +1,5 @@
+flowchart TB
+    S1["single MRI slice"] --> K2["2D convolution<br/>3×3 kernel<br/>9 weights / channel"]
+    V["3 adjacent slices<br/>(a small volume)"] --> K3["3D convolution<br/>3×3×3 kernel<br/>27 weights / channel"]
+    K2 -.- N["3D uses 27 vs 9 weights per channel<br/>(3× more) to capture cross-slice depth"]
+    K3 -.- N

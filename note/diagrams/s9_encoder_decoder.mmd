@@ -1,0 +1,5 @@
+flowchart LR
+  I[Input 128] --> E1[64] --> E2[32] --> B[8<br/>max context]
+  B --> D2[32] --> D1[64] --> O[Output 128<br/>label map]
+  E1 -. skip .-> D1
+  E2 -. skip .-> D2

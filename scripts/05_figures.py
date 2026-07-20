@@ -43,6 +43,7 @@ Usage:
 """
 from __future__ import annotations
 
+import argparse
 import contextlib
 import json
 import sys
@@ -269,6 +270,14 @@ def _verify_png(path: Path) -> tuple[int, int]:
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser(description="Render the A/B overlay montage for TEST cases.")
+    ap.add_argument("--cases", default=None,
+                    help="comma-separated case IDs (default: the module CASES set).")
+    ap.add_argument("--out", default="combined_overlay.png",
+                    help="filename for the combined montage under reports/figures/.")
+    args = ap.parse_args()
+    cases = tuple(c.strip() for c in args.cases.split(",")) if args.cases else CASES
+
     for ck in (CKPT_A, CKPT_B):
         if not ck.exists():
             raise SystemExit(f"checkpoint not found: {ck}")
@@ -277,7 +286,7 @@ def main() -> None:
         d["label"].split("/")[-1].replace("-seg.nii.gz", ""): d
         for d in build_datalist("b", "test")
     }
-    missing = [c for c in CASES if c not in test_items]
+    missing = [c for c in cases if c not in test_items]
     if missing:
         raise SystemExit(f"cases not in TEST split: {missing}")
 
@@ -311,7 +320,7 @@ def main() -> None:
     # Cache per-case rendered slices so the montage reuses the per-case inference.
     rendered: list[dict] = []
 
-    for cid in CASES:
+    for cid in cases:
         item = test_items[cid]
         bg_vol, seg_vol = _native_arrays(item)
         j0, z0 = _best_slice(seg_vol)
@@ -375,7 +384,7 @@ def main() -> None:
         frameon=False, fontsize=10, bbox_to_anchor=(0.5, -0.005),
     )
     fig.tight_layout(rect=(0.04, 0.03, 1, 0.94))
-    combined = FIGURES_DIR / "combined_overlay.png"
+    combined = FIGURES_DIR / args.out
     fig.savefig(combined, dpi=140, bbox_inches="tight")
     plt.close(fig)
     w, h = _verify_png(combined)

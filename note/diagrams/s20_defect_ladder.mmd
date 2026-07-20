@@ -1,0 +1,11 @@
+flowchart LR
+  a1["D1 bilinear labels"] --> b1["nearest-neighbour labels"]
+  a2["D3 plain cross-entropy"] --> b2["DiceCE + balanced crops"]
+  a3["D4 select on accuracy"] --> b3["select on mean-fg Dice"]
+  a4["D5 global-max norm"] --> b4["per-modality z-score"]
+  a5["D6 fixed slice stride"] --> b5["foreground 96³ patches"]
+  a6["D9 uncached loader"] --> b6["PersistentDataset cache"]
+  classDef a fill:#fdece4,stroke:#D55E00,color:#000;
+  classDef b fill:#e4eff8,stroke:#0072B2,color:#000;
+  class a1,a2,a3,a4,a5,a6 a;
+  class b1,b2,b3,b4,b5,b6 b;

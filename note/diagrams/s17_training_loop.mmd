@@ -1,0 +1,6 @@
+flowchart LR
+    A["Whole volume<br/>240x240x155 x4"] --> B["Class-balanced<br/>patch crop"]
+    B --> C["Forward pass<br/>bf16 autocast"]
+    C --> D["Loss<br/>Dice + CE"]
+    D --> E["AdamW step<br/>+ cosine LR"]
+    E -->|next step| B

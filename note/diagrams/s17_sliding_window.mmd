@@ -1,0 +1,5 @@
+flowchart LR
+    A["Full volume"] --> B["Tile into<br/>overlapping<br/>patches"]
+    B --> C["Network<br/>per patch"]
+    C --> D["Gaussian<br/>weighted blend"]
+    D --> E["Whole-brain<br/>prediction"]

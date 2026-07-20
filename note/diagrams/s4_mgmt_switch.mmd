@@ -1,0 +1,5 @@
+flowchart TB
+    T["Temozolomide<br/>methylates<br/>tumour DNA"] --> D["DNA damage"]
+    D --> Q{"MGMT gene<br/>active?"}
+    Q -->|"Unmethylated:<br/>MGMT active"| R["Damage erased<br/>tumour survives<br/>~14% 2-yr survival"]
+    Q -->|"Methylated:<br/>MGMT silenced"| K["Damage sticks<br/>tumour dies<br/>~46% 2-yr survival"]

@@ -1,0 +1,156 @@
+{
+ "topic": "Softmax and Categorical Cross-Entropy Loss: Full Derivation of the Gradient dL/dz = (softmax \u2212 one-hot)",
+ "overview": "In a segmentation network like the U-Net used for BraTS post-treatment glioma segmentation, the final layer produces, for every voxel, a vector of raw real-valued scores called **logits** \u2014 one score per class (e.g., background, enhancing tumor, non-enhancing tumor core, edema, resection cavity). These scores are unbounded and do not form a probability distribution. Two operations turn them into a usable training signal: **softmax**, which squashes the logits into positive numbers that sum to 1 (a probability distribution over classes), and **categorical cross-entropy**, which measures how far that predicted distribution is from the known correct label. Ronneberger et al.'s original U-Net paper (MICCAI 2015) defines exactly this: a pixel-wise softmax over the final feature map combined with a cross-entropy loss as the network's \"energy function.\"\\n\\nThe centerpiece of this note is a small mathematical miracle that makes deep learning practical: when you compose softmax with cross-entropy and differentiate the loss with respect to the raw logits z, all the messy intermediate terms cancel and you are left with the strikingly simple expression **dL/dz = p \u2212 y**, where p is the softmax output (the predicted probabilities) and y is the one-hot encoded ground-truth label. In words: the gradient pushed back into the network is simply \"predicted probability minus target,\" clipped between \u22121 and +1 per class. This is why the softmax+cross-entropy pair is numerically well-behaved and is implemented as a single fused operation in every framework (PyTorch's `CrossEntropyLoss`, TensorFlow's `softmax_cross_entropy_with_logits`).\\n\\nThis document derives that result with no algebra skipped: first the softmax Jacobian \u2202p\u1d62/\u2202z\u2c7c = p\u1d62(\u03b4\u1d62\u2c7c \u2212 p\u2c7c), then the cross-entropy derivative \u2202L/\u2202p\u1d62 = \u2212y\u1d62/p\u1d62, then the chain-rule composition that collapses to p \u2212 y using the single fact that the one-hot label sums to one. Worked numeric examples with small concrete vectors make every substitution explicit, and the gotchas cover numerical stability (the log-sum-exp trick), the log(0) hazard, and why binary and multi-class forms coincide.",
+ "key_points": [
+  {
+   "point": "Softmax converts a vector of K real-valued logits into a probability distribution: each output is positive and the K outputs sum to exactly 1. It is the multi-class generalization of the logistic sigmoid.",
+   "source": "Goodfellow, Bengio, Courville, Deep Learning (2016), Ch. 6.2.2",
+   "citation_url": "https://www.deeplearningbook.org/contents/mlp.html"
+  },
+  {
+   "point": "Categorical cross-entropy for a single example is L = -\u03a3_i y_i log(p_i); with a one-hot label it reduces to L = -log(p_c), the negative log-probability the model assigned to the true class c. This is exactly the negative log-likelihood of the correct label.",
+   "source": "Bishop, Pattern Recognition and Machine Learning (2006), Ch. 4.3.4"
+  },
+  {
+   "point": "The softmax Jacobian is \u2202p_i/\u2202z_j = p_i(\u03b4_ij \u2212 p_j), where \u03b4_ij is the Kronecker delta (1 if i=j else 0). Diagonal entries are p_i(1\u2212p_i); off-diagonal entries are \u2212p_i p_j.",
+   "source": "Standard result; Kurbiel, 'Derivative of the Softmax Function and the Categorical Cross-Entropy Loss'",
+   "citation_url": "https://medium.com/data-science/derivative-of-the-softmax-function-and-the-categorical-cross-entropy-loss-ffceefc081d1"
+  },
+  {
+   "point": "The key headline result: composing softmax with cross-entropy gives dL/dz_j = p_j \u2212 y_j. All quotient-rule and 1/p_i terms cancel because the true-class term contributes the \u2212y_j and the p_j\u00b7\u03a3y_i term collapses since the one-hot vector sums to 1.",
+   "source": "GeeksforGeeks, 'Derivative of the Softmax Function and the Categorical Cross-Entropy Loss'",
+   "citation_url": "https://www.geeksforgeeks.org/machine-learning/derivative-of-the-softmax-function-and-the-categorical-cross-entropy-loss/"
+  },
+  {
+   "point": "U-Net (Ronneberger, Fischer, Brox, MICCAI 2015) defines its training objective as a pixel-wise soft-max over the final feature map combined with a cross-entropy loss \u2014 the 'energy function' E = \u03a3_x w(x) log(p_{\u2113(x)}(x)) \u2014 the direct ancestor of BraTS segmentation losses.",
+   "source": "Ronneberger et al., U-Net: Convolutional Networks for Biomedical Image Segmentation (2015), arXiv:1505.04597",
+   "citation_url": "https://arxiv.org/abs/1505.04597"
+  },
+  {
+   "point": "Because of the clean p \u2212 y gradient, frameworks fuse softmax and cross-entropy into one numerically stable operation that takes raw logits (PyTorch nn.CrossEntropyLoss, TF softmax_cross_entropy_with_logits) \u2014 you should NOT apply softmax yourself before these functions.",
+   "source": "PyTorch documentation, nn.CrossEntropyLoss",
+   "citation_url": "https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html"
+  },
+  {
+   "point": "In segmentation (BraTS), this per-voxel cross-entropy is averaged (or class-weighted) over all voxels and is frequently combined with a Dice loss to counter severe class imbalance between tiny tumor regions and large background.",
+   "source": "Isensee et al., nnU-Net, Nature Methods 2021",
+   "citation_url": "https://www.nature.com/articles/s41592-020-01008-z"
+  }
+ ],
+ "equations": [
+  {
+   "name": "Softmax function",
+   "latex": "p_i = \\operatorname{softmax}(z)_i = \\frac{e^{z_i}}{\\sum_{k=1}^{K} e^{z_k}}",
+   "variables_explained": "z = (z_1,...,z_K) is the vector of K raw logits (real numbers) output by the last layer for one voxel. z_i is the logit for class i. e is Euler's number (~2.718). p_i is the predicted probability of class i; the denominator S = \u03a3_k e^{z_k} normalizes so that all p_i are positive and sum to 1. K is the number of classes."
+  },
+  {
+   "name": "Categorical cross-entropy loss (one example)",
+   "latex": "L = -\\sum_{i=1}^{K} y_i \\log(p_i)",
+   "variables_explained": "y = (y_1,...,y_K) is the one-hot ground-truth label: y_c = 1 for the true class c and y_i = 0 otherwise. p_i is the softmax probability for class i. log is the natural logarithm. Because only the true-class term survives, L = -log(p_c). L \u2265 0, and L \u2192 0 as p_c \u2192 1."
+  },
+  {
+   "name": "Softmax Jacobian",
+   "latex": "\\frac{\\partial p_i}{\\partial z_j} = p_i(\\delta_{ij} - p_j)",
+   "variables_explained": "This is the derivative of output probability p_i with respect to input logit z_j. \u03b4_ij is the Kronecker delta: \u03b4_ij = 1 when i = j, else 0. So the diagonal (i=j) is p_i(1 \u2212 p_i) and off-diagonal (i\u2260j) is \u2212p_i p_j. It is a K\u00d7K matrix and is symmetric."
+  },
+  {
+   "name": "Cross-entropy derivative w.r.t. probability",
+   "latex": "\\frac{\\partial L}{\\partial p_i} = -\\frac{y_i}{p_i}",
+   "variables_explained": "How the loss changes as the predicted probability p_i changes. Since L = -\u03a3_i y_i log(p_i) and d/dp_i[log p_i] = 1/p_i, each term differentiates to \u2212y_i/p_i. Only the true class (y_i=1) contributes a nonzero term."
+  },
+  {
+   "name": "Headline gradient (softmax + cross-entropy)",
+   "latex": "\\frac{\\partial L}{\\partial z_j} = p_j - y_j",
+   "variables_explained": "The gradient of the combined loss with respect to the raw logit z_j is simply the predicted probability minus the target. In vector form \u2207_z L = p \u2212 y. Every component lies in (\u22121, 1). This is the error signal backpropagated into the network."
+  },
+  {
+   "name": "U-Net energy (pixel-wise softmax + cross-entropy)",
+   "latex": "E = \\sum_{x \\in \\Omega} w(x)\\, \\log\\big(p_{\\ell(x)}(x)\\big)",
+   "variables_explained": "From Ronneberger et al. (2015). x indexes pixels/voxels over the image domain \u03a9. \u2113(x) is the true label at x. p_{\u2113(x)}(x) is the softmax probability the network gives the correct class at x. w(x) is a per-pixel weight map (upweighting boundaries / rare classes). Minimizing cross-entropy = maximizing this weighted log-likelihood E."
+  }
+ ],
+ "derivations": [
+  {
+   "title": "Step 1 \u2014 Derivative of softmax: the diagonal case (i = j)",
+   "steps": [
+    "p_i = \\dfrac{e^{z_i}}{S}, \\quad S = \\sum_{k=1}^{K} e^{z_k}. \u2014 We write softmax as a quotient of e^{z_i} over the sum S of all exponentiated logits. We differentiate this with respect to one logit z_j.",
+    "\\dfrac{\\partial S}{\\partial z_j} = \\dfrac{\\partial}{\\partial z_j}\\sum_{k} e^{z_k} = e^{z_j}. \u2014 The sum S depends on z_j through exactly one term, e^{z_j}; every other term is constant w.r.t. z_j, so the derivative of the whole sum is just e^{z_j}.",
+    "\\dfrac{\\partial p_i}{\\partial z_i} = \\dfrac{\\partial}{\\partial z_i}\\left(\\dfrac{e^{z_i}}{S}\\right) = \\dfrac{(\\partial_{z_i} e^{z_i})\\,S - e^{z_i}\\,(\\partial_{z_i} S)}{S^2}. \u2014 Apply the quotient rule (f/g)' = (f'g \u2212 fg')/g\u00b2 with f = e^{z_i}, g = S. Here i = j so both numerator and denominator depend on z_i.",
+    "= \\dfrac{e^{z_i} S - e^{z_i} e^{z_i}}{S^2}. \u2014 Substitute \u2202_{z_i} e^{z_i} = e^{z_i} and \u2202_{z_i} S = e^{z_i} from the previous step.",
+    "= \\dfrac{e^{z_i}}{S} - \\dfrac{e^{z_i}}{S}\\cdot\\dfrac{e^{z_i}}{S} = p_i - p_i^2 = p_i(1 - p_i). \u2014 Split the fraction into two pieces and recognize e^{z_i}/S = p_i in each. Factor out p_i to get the clean diagonal result."
+   ]
+  },
+  {
+   "title": "Step 2 \u2014 Derivative of softmax: the off-diagonal case (i \u2260 j)",
+   "steps": [
+    "\\dfrac{\\partial p_i}{\\partial z_j} = \\dfrac{(\\partial_{z_j} e^{z_i})\\,S - e^{z_i}\\,(\\partial_{z_j} S)}{S^2}. \u2014 Same quotient rule, but now we differentiate p_i w.r.t. a DIFFERENT logit z_j (i \u2260 j).",
+    "\\partial_{z_j} e^{z_i} = 0 \\quad (i \\neq j). \u2014 The numerator e^{z_i} does not contain z_j, so its derivative is zero. Only the denominator carries the dependence.",
+    "= \\dfrac{0\\cdot S - e^{z_i} e^{z_j}}{S^2} = -\\dfrac{e^{z_i}}{S}\\cdot\\dfrac{e^{z_j}}{S} = -p_i p_j. \u2014 Substitute \u2202_{z_j}S = e^{z_j}, drop the zero term, and split into two softmax factors. The off-diagonal derivative is \u2212p_i p_j.",
+    "\\dfrac{\\partial p_i}{\\partial z_j} = p_i(\\delta_{ij} - p_j). \u2014 Unify both cases: when i=j the bracket is (1 \u2212 p_j) giving p_i(1\u2212p_i); when i\u2260j the bracket is (0 \u2212 p_j) giving \u2212p_i p_j. The Kronecker delta \u03b4_ij encodes 'i equals j'."
+   ]
+  },
+  {
+   "title": "Step 3 \u2014 Derivative of cross-entropy w.r.t. the probabilities",
+   "steps": [
+    "L = -\\sum_{i=1}^{K} y_i \\log(p_i). \u2014 The categorical cross-entropy loss. y_i is the one-hot target, p_i the predicted probability.",
+    "\\dfrac{\\partial L}{\\partial p_i} = -y_i\\cdot\\dfrac{\\partial}{\\partial p_i}\\log(p_i) = -\\dfrac{y_i}{p_i}. \u2014 Differentiate term by term. The only term depending on p_i is \u2212y_i log(p_i); using d[log p_i]/dp_i = 1/p_i gives \u2212y_i/p_i. (We treat the p_i as independent here; their coupling is handled by the softmax Jacobian in Step 4.)"
+   ]
+  },
+  {
+   "title": "Step 4 \u2014 Chain rule: compose to get dL/dz_j and watch it collapse to p_j \u2212 y_j",
+   "steps": [
+    "\\dfrac{\\partial L}{\\partial z_j} = \\sum_{i=1}^{K} \\dfrac{\\partial L}{\\partial p_i}\\,\\dfrac{\\partial p_i}{\\partial z_j}. \u2014 The multivariate chain rule: z_j influences the loss through EVERY probability p_i (softmax couples all outputs), so we sum the contribution over all i.",
+    "= \\sum_{i=1}^{K} \\left(-\\dfrac{y_i}{p_i}\\right)\\big(p_i(\\delta_{ij} - p_j)\\big). \u2014 Substitute the cross-entropy derivative from Step 3 and the softmax Jacobian from Steps 1\u20132.",
+    "= \\sum_{i=1}^{K} -y_i(\\delta_{ij} - p_j). \u2014 The p_i in the numerator of the Jacobian cancels the 1/p_i from the loss derivative. This cancellation is the whole reason the final result is so clean.",
+    "= -\\sum_{i=1}^{K} y_i\\,\\delta_{ij} + \\sum_{i=1}^{K} y_i\\,p_j. \u2014 Distribute the \u2212y_i across the bracket and split into two sums.",
+    "= -y_j + p_j\\sum_{i=1}^{K} y_i. \u2014 First sum: \u03a3_i y_i \u03b4_ij picks out only the i=j term, leaving y_j. Second sum: p_j does not depend on the summation index i, so factor it out of \u03a3_i y_i.",
+    "= -y_j + p_j\\cdot 1 = p_j - y_j. \u2014 Use the defining property of a one-hot (or any valid probability) label: \u03a3_i y_i = 1. The second term becomes simply p_j. Result: dL/dz_j = p_j \u2212 y_j. In vector form \u2207_z L = p \u2212 y. QED."
+   ]
+  },
+  {
+   "title": "Step 5 \u2014 Numeric worked example (K = 3), full substitution",
+   "steps": [
+    "z = (2.0,\\ 1.0,\\ 0.1),\\quad y = (1,\\ 0,\\ 0)\\ \\text{(true class} = 0). \u2014 Three logits and a one-hot label saying class 0 is correct.",
+    "e^{2.0}=7.389,\\ e^{1.0}=2.718,\\ e^{0.1}=1.105,\\quad S = 7.389+2.718+1.105 = 11.212. \u2014 Exponentiate each logit and sum to get the softmax denominator S.",
+    "p = \\left(\\tfrac{7.389}{11.212},\\ \\tfrac{2.718}{11.212},\\ \\tfrac{1.105}{11.212}\\right) = (0.659,\\ 0.242,\\ 0.099). \u2014 Divide each exponentiated logit by S. The three probabilities sum to 1.000.",
+    "L = -\\log(p_0) = -\\log(0.659) = 0.417. \u2014 Cross-entropy with a one-hot label is just the negative log of the true-class probability (class 0).",
+    "\\nabla_z L = p - y = (0.659-1,\\ 0.242-0,\\ 0.099-0) = (-0.341,\\ 0.242,\\ 0.099). \u2014 Apply the headline formula. The true class gets a negative gradient (push its logit UP), the wrong classes get positive gradients (push their logits DOWN). Components sum to 0, as they must since \u03a3p=\u03a3y=1."
+   ]
+  }
+ ],
+ "intuitions": [
+  "The gradient p \u2212 y is a 'prediction error' in probability space. If the model already outputs the correct answer with certainty (p = y), the gradient is zero and no update happens. The more confidently wrong the model is, the larger the push \u2014 but never larger than 1 per class, which keeps training stable.",
+  "Softmax is a 'soft argmax': it picks the largest logit as the most probable class but leaves smooth, differentiable probability mass on the others so gradients can flow. Cross-entropy then rewards putting probability mass on the true class and heavily punishes assigning near-zero probability to it (because \u2212log(p) \u2192 \u221e as p \u2192 0).",
+  "The magic cancellation happens because cross-entropy's 1/p_i term is exactly the inverse of the p_i that the softmax Jacobian produces. Softmax and cross-entropy are 'conjugate' \u2014 they were practically made for each other, which is why frameworks fuse them into one op.",
+  "The gradient components always sum to zero (\u03a3_j (p_j \u2212 y_j) = 1 \u2212 1 = 0). Softmax is shift-invariant (adding a constant to all logits changes nothing), so the loss cannot 'care' about the overall level of the logits \u2014 only their differences. The zero-sum gradient reflects exactly that redundant direction."
+ ],
+ "gotchas": [
+  "Do NOT apply softmax yourself and then feed the probabilities into a cross-entropy / NLL function that also assumes logits. PyTorch's nn.CrossEntropyLoss expects RAW logits and applies log-softmax internally; passing already-softmaxed values double-applies softmax and silently degrades training. Use nn.NLLLoss only if you applied log_softmax yourself.",
+  "Naively computing log(softmax(z)) risks numerical overflow (e^{z} for large z) or log(0) = \u2212\u221e for tiny probabilities. The fix is the log-sum-exp trick: subtract max(z) before exponentiating (softmax is invariant to this shift) and combine log and softmax analytically as z_i \u2212 log\u03a3_k e^{z_k}. This is why the fused logits-based loss is numerically safer than doing the two steps separately.",
+  "The clean result dL/dz = p \u2212 y holds only when y is a valid distribution summing to 1 (one-hot, or a soft label from label smoothing / mixup). If y does not sum to 1, the second sum p_j\u00b7\u03a3y_i no longer collapses to p_j and the formula changes.",
+  "In BraTS segmentation, plain per-voxel cross-entropy is dominated by the huge background class and can ignore tiny tumor regions. Practitioners add class weights w(x) (as in the U-Net energy function) or combine cross-entropy with Dice loss. The p \u2212 y gradient still applies to the cross-entropy component, but the overall gradient is the weighted sum.",
+  "'Categorical' cross-entropy (one-hot integer labels, softmax over K classes) and 'binary' cross-entropy (sigmoid, per-class independent) are different. For K=2, softmax+categorical CE reduces exactly to sigmoid+binary CE \u2014 but for K>2 multi-LABEL problems (a voxel can belong to several overlapping regions, as in BraTS whole-tumor / tumor-core / enhancing hierarchies) you want per-class sigmoid + binary CE, not softmax."
+ ],
+ "example_questions": [
+  {
+   "question": "For logits z = (1, 3, 0) with true class index 1, compute the softmax probabilities, the cross-entropy loss, and the gradient dL/dz. Verify the gradient sums to zero.",
+   "answer": "Exponentiate: e^1 = 2.718, e^3 = 20.086, e^0 = 1.000. Sum S = 23.804. Softmax p = (2.718/23.804, 20.086/23.804, 1.000/23.804) = (0.1142, 0.8438, 0.0420); these sum to 1.000. One-hot label y = (0, 1, 0), so loss L = \u2212log(p_1) = \u2212log(0.8438) = 0.1699. Gradient (headline formula p \u2212 y): dL/dz = (0.1142 \u2212 0, 0.8438 \u2212 1, 0.0420 \u2212 0) = (0.1142, \u22120.1562, 0.0420). Check: 0.1142 \u2212 0.1562 + 0.0420 = 0.0000. The true class (index 1) has a negative gradient, so gradient descent increases its logit; the two wrong classes get pushed down. Sum is zero as required."
+  },
+  {
+   "question": "Show explicitly why the 1/p_i term in the cross-entropy derivative disappears, using the true-class term. Why is the cancellation what makes the result numerically safe?",
+   "answer": "The chain-rule term for a given output i is (\u2202L/\u2202p_i)(\u2202p_i/\u2202z_j) = (\u2212y_i/p_i)\u00b7(p_i(\u03b4_ij \u2212 p_j)). The p_i in the numerator of the softmax Jacobian multiplies the 1/p_i from the loss derivative to give (\u2212y_i)(\u03b4_ij \u2212 p_j) \u2014 the p_i is gone. This matters because 1/p_i blows up when p_i is tiny (a class the model thinks is very unlikely), which would create enormous, unstable gradients. After cancellation the gradient is bounded: each component p_j \u2212 y_j lies strictly in (\u22121, 1). So the mathematical cancellation is also the reason fused softmax-cross-entropy avoids overflow/underflow that separate softmax then log then divide would suffer."
+  },
+  {
+   "question": "A binary example: logits z = (z_0, z_1), true class 1. Show that softmax + categorical cross-entropy reduces to the sigmoid + binary cross-entropy form.",
+   "answer": "Softmax for class 1: p_1 = e^{z_1}/(e^{z_0}+e^{z_1}). Divide numerator and denominator by e^{z_1}: p_1 = 1/(1 + e^{z_0\u2212z_1}) = 1/(1 + e^{\u2212(z_1\u2212z_0)}) = \u03c3(z_1 \u2212 z_0), the logistic sigmoid of the logit DIFFERENCE \u0394 = z_1 \u2212 z_0. So a 2-class softmax depends only on one effective logit \u0394, exactly like a single-output sigmoid. Cross-entropy with true class 1 is L = \u2212log(p_1) = \u2212log(\u03c3(\u0394)), which is precisely the binary cross-entropy for a positive example. The gradient dL/d\u0394 = \u03c3(\u0394) \u2212 1 = p_1 \u2212 y_1, matching the general p \u2212 y result. This is why binary classifiers are usually built with one sigmoid output rather than a 2-way softmax \u2014 they are mathematically identical but the sigmoid uses half the parameters in the final layer."
+  }
+ ],
+ "suggested_figures": [
+  "A three-panel horizontal flow diagram: (1) a bar chart of raw logits z (some negative, unbounded), arrow through a 'softmax' box to (2) a bar chart of probabilities p (all positive, summing to 1, dashed line at total = 1), arrow through a 'cross-entropy vs one-hot y' box to (3) a single scalar loss value L = \u2212log(p_c). Annotate the backward arrow underneath with 'gradient = p \u2212 y'.",
+  "A heatmap of the 3\u00d73 softmax Jacobian for a concrete p = (0.66, 0.24, 0.10): diagonal cells labeled p_i(1\u2212p_i) in one color, off-diagonal cells \u2212p_i p_j in another, with the actual numbers filled in \u2014 this visually anchors the \u03b4_ij(1) vs \u2212p_j structure and shows the matrix is symmetric.",
+  "A curve of the cross-entropy loss L = \u2212log(p_c) as a function of the true-class probability p_c from 0 to 1, showing L \u2192 \u221e as p_c \u2192 0 and L = 0 at p_c = 1, with the near-vertical wall near zero illustrating why confidently-wrong predictions are punished so hard and why log(0) must be guarded numerically."
+ ],
+ "confidence_notes": "All mathematics (softmax Jacobian, cross-entropy derivative, the p \u2212 y collapse, and both numeric examples) was derived and arithmetic-checked by hand and is standard, unambiguous, and independently corroborated by the cited references (GeeksforGeeks, Kurbiel/TDS). Numeric values are rounded to 3\u20134 significant figures; tiny rounding residuals (e.g., probability sums showing 1.000\u00b10.001) are expected. The U-Net energy-function equation E = \u03a3_x w(x) log(p_{\u2113(x)}(x)) and the 'pixel-wise softmax + cross-entropy' framing are taken from the Ronneberger et al. 2015 paper (arXiv:1505.04597); I cited the arXiv abstract page rather than re-fetching the full PDF text in this session, but this is a very widely reproduced equation. The nnU-Net Dice+CE combination and PyTorch CrossEntropyLoss logits-input behavior are well documented at the cited URLs. No clinical claims are made here \u2014 this is pure ML mathematics \u2014 so no medical sourcing was required.",
+ "_key": "softmax-cross-entropy",
+ "_kind": "dl"
+}

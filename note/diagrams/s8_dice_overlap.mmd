@@ -1,0 +1,8 @@
+flowchart LR
+    A["Model mask A<br/>|A| = 12000"] --> TP["Overlap TP<br/>9000 voxels"]
+    B["Reference B<br/>|B| = 10000"] --> TP
+    A --> FP["FP = 3000<br/>model only"]
+    B --> FN["FN = 1000<br/>reference only"]
+    TP --> D["DSC = 2·9000 /<br/>(2·9000+3000+1000)<br/>= 0.82"]
+    FP --> D
+    FN --> D

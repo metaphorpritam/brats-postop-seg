@@ -1,0 +1,18 @@
+flowchart TB
+  subgraph ENC[Encoder — zoom out]
+    E1[Level 1<br/>full res<br/>64 ch]
+    E2[Level 2<br/>1/2 res<br/>128 ch]
+    E3[Level 3<br/>1/4 res<br/>256 ch]
+  end
+  B[Bottleneck<br/>coarsest<br/>1024 ch]
+  subgraph DEC[Decoder — zoom in]
+    D3[Level 3<br/>1/4 res]
+    D2[Level 2<br/>1/2 res]
+    D1[Level 1<br/>full res]
+  end
+  O[Per-voxel<br/>label map]
+  E1 -->|pool| E2 -->|pool| E3 --> B
+  B -->|up-conv| D3 -->|up-conv| D2 -->|up-conv| D1 --> O
+  E1 -. skip .-> D1
+  E2 -. skip .-> D2
+  E3 -. skip .-> D3

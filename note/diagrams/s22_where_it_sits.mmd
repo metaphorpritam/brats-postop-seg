@@ -1,0 +1,3 @@
+flowchart LR
+  P["Controlled A/B study<br/>(this project)<br/>data-pipeline quality"] -->|informs| C["Clinical-grade segmentation<br/>nnU-Net ensembles<br/>lesion-wise · full dataset"]
+  C -->|deployed for| U["Volumetrics · treatment monitoring<br/>(§8 clinical use)"]

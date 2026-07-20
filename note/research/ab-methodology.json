@@ -1,0 +1,163 @@
+{
+ "topic": "Controlled A/B Experiment Methodology in ML: Ablation vs A/B, Confound Control, Holding Architecture Constant, Seeds, and Reporting Uncertainty (\"The Delta Is the Deliverable\")",
+ "overview": "When a deep-learning project claims \"change X improves segmentation,\" the claim is only trustworthy if the experiment was designed so that X is the *only* thing that could have caused the observed improvement. That is the entire job of controlled experiment methodology in ML. Two closely related tools do this. An **A/B experiment** runs two full pipelines that differ in exactly one deliberate way (say, a new loss function) and compares them. An **ablation study** does the mirror image: it starts from a complete system and *removes* one component at a time to measure how much that component was contributing. Ablation borrows its name and logic from experimental neuroscience/surgery \u2014 remove a part, observe the change in behaviour \u2014 and in modern AI it is the standard way to justify that each piece of a model actually earns its place ([Wikipedia: Ablation](https://en.wikipedia.org/wiki/Ablation_(artificial_intelligence)), [Baeldung](https://www.baeldung.com/cs/ml-ablation-study)).\n\nThe central threat to both is the **confound**: a variable that changes alongside your treatment and could explain the result instead. If you switch to a new loss *and* also make the network deeper *and* also train longer, and the Dice score goes up, you cannot attribute the gain to any one of them. The discipline of confound control is to freeze everything you are not testing \u2014 the architecture, the data splits, the optimizer, the augmentations, the number of training steps \u2014 so the pipelines are identical except for the single knob under study. Holding the architecture constant is the most important of these freezes in a segmentation project, because architecture is such a large lever that even small unintended changes to it can swamp the effect you are trying to measure. The classic U-Net paper is a useful anchor here: its encoder\u2013decoder-with-skip-connections design is a stable, well-understood backbone you can hold fixed while varying one factor at a time ([Ronneberger, Fischer & Brox, MICCAI 2015](https://link.springer.com/chapter/10.1007/978-3-319-24574-4_28)).\n\nThe subtle part is that deep learning is **stochastic**. Random weight initialization, shuffling order, dropout masks, and nondeterministic GPU kernels mean that training the *same* code twice with different random seeds gives different scores. A single before/after number can therefore be pure luck. Henderson et al.'s \"Deep Reinforcement Learning that Matters\" is the cautionary tale: holding everything fixed and changing only the random seed produced non-overlapping learning curves \u2014 different seeds looked like different algorithms ([arXiv:1709.06560](https://arxiv.org/abs/1709.06560)). The fix is to run each condition over several seeds and report a **distribution** \u2014 mean \u00b1 standard deviation, or better, a confidence interval \u2014 not one point. Uncertainty reporting is now treated as a basic requirement of credible ML results ([Reproducibility in ML for Health, arXiv:1907.01463](https://arxiv.org/pdf/1907.01463)).\n\nAll of this culminates in a single organizing idea: **\"the delta is the deliverable.\"** The scientifically meaningful output of an A/B run is not the raw score of the new model (which depends on the dataset, the metric definition, luck, and a hundred frozen choices) but the *difference* between the two arms and the uncertainty around that difference. Because the two arms share all the frozen nuisance factors, those factors largely cancel in the subtraction, leaving a clean estimate of the treatment effect. Pairing the arms on the *same seeds* strengthens this cancellation enormously. This note builds up the algebra that makes \"the delta cancels the confounds\" a precise statement, and shows with small worked numbers why a paired delta can be several times more precise than either arm measured alone.",
+ "key_points": [
+  {
+   "point": "An A/B experiment compares two complete pipelines that differ in exactly ONE deliberate factor; an ablation study starts from a full system and REMOVES one component at a time to measure its contribution. They are two directions of the same idea \u2014 change one thing, hold the rest fixed.",
+   "source": "Wikipedia: Ablation (artificial intelligence); Baeldung on Computer Science"
+  },
+  {
+   "point": "Ablation in AI is named after the surgical/neuroscience practice of removing tissue and observing the resulting change in function; the AI version removes features, layers, or modules and quantifies the drop in performance to justify that a component earns its place.",
+   "source": "Wikipedia: Ablation (artificial intelligence)"
+  },
+  {
+   "point": "A confound is any variable that changes together with the treatment and could explain the outcome instead. Controlled experiments neutralize confounds by freezing everything except the single factor under test (data splits, optimizer, LR schedule, augmentations, training steps, and especially the architecture).",
+   "source": "Standard experimental-design principle; deepgram AI glossary on ablation"
+  },
+  {
+   "point": "Holding the architecture constant is the highest-leverage freeze in a segmentation study. The U-Net encoder\u2013decoder with skip connections (Ronneberger et al., MICCAI 2015) is a stable, well-characterized backbone precisely because it can be held fixed while one factor (loss, augmentation, class scheme) is varied.",
+   "source": "Ronneberger, Fischer & Brox, U-Net, MICCAI 2015, LNCS 9351, pp. 234\u2013241"
+  },
+  {
+   "point": "Deep-learning training is stochastic: random init, shuffling, dropout, and nondeterministic GPU kernels make two identical runs differ. Henderson et al. showed that changing ONLY the random seed produced non-overlapping RL learning curves \u2014 a single before/after number can be pure luck.",
+   "source": "Henderson et al., 'Deep Reinforcement Learning that Matters', arXiv:1709.06560"
+  },
+  {
+   "point": "Because a single run is a random draw, you must run each condition over several seeds and report a distribution \u2014 mean \u00b1 SD, or a confidence interval \u2014 and state which sources of randomness the error bars capture (init, split, sampling).",
+   "source": "Reproducibility in Machine Learning for Health, arXiv:1907.01463"
+  },
+  {
+   "point": "The confidence interval for a mean of n runs uses the t-distribution: x\u0304 \u00b1 t*_{n-1} \u00b7 s/\u221an, with degrees of freedom n\u22121. The t (not z) critical value is required because \u03c3 is estimated from the same small sample, which the wider t-distribution accounts for.",
+   "source": "Penn State STAT ONLINE S.2 Confidence Intervals; STAT 415 Lesson 2.5"
+  },
+  {
+   "point": "'The delta is the deliverable': the reportable result of an A/B run is the DIFFERENCE between arms plus its uncertainty, not either arm's raw score. Since both arms share all frozen nuisance factors, those factors cancel in the subtraction, isolating the treatment effect.",
+   "source": "Synthesis of controlled-experiment methodology (potential-outcomes / paired-difference reasoning)"
+  },
+  {
+   "point": "Pairing the two arms on the SAME seeds induces positive correlation between them; the variance of their difference is Var(A)+Var(B)\u22122\u00b7Cov(A,B), so positive covariance shrinks the delta's variance, often making a paired A/B far more sensitive than an unpaired one.",
+   "source": "Standard result: variance of a difference / paired-samples design"
+  },
+  {
+   "point": "Reporting norms: give the mean and SD (or CI) over multiple runs, state exactly what varied between runs, and describe how the error bars were computed; only 5 or fewer seeds were common in surveyed deep-RL papers, which is often too few for reliable conclusions.",
+   "source": "Henderson et al., arXiv:1709.06560; reproducibility guidance arXiv:1907.01463"
+  }
+ ],
+ "equations": [
+  {
+   "name": "Additive decomposition of a run's score (the model behind A/B)",
+   "latex": "Y_{c}(s) = \\mu + \\delta\\,\\mathbb{1}[c = B] + \\beta_{s} + \\varepsilon_{c,s}",
+   "variables_explained": "Y_c(s) is the measured metric (e.g. Dice) for condition c \u2208 {A, B} using random seed s. \u03bc is the baseline mean performance of arm A. \u03b4 is the true treatment effect (the causal quantity we want). 1[c=B] is an indicator that equals 1 for the treatment arm B and 0 for the control arm A. \u03b2_s is the seed effect \u2014 the shared 'luck of the draw' from initialization/shuffling that a given seed s imposes on BOTH arms. \u03b5_{c,s} is residual noise specific to condition c under seed s (mean 0)."
+  },
+  {
+   "name": "Paired per-seed difference (why the delta cancels confounds)",
+   "latex": "D(s) = Y_{B}(s) - Y_{A}(s) = \\delta + \\bigl(\\varepsilon_{B,s} - \\varepsilon_{A,s}\\bigr)",
+   "variables_explained": "D(s) is the delta on a single shared seed s. The shared seed term \u03b2_s and the shared baseline \u03bc are identical in both arms and subtract to zero, leaving \u03b4 plus a small residual. This is the algebraic statement that a same-seed A/B isolates \u03b4."
+  },
+  {
+   "name": "Standard error of the mean",
+   "latex": "\\mathrm{SE}(\\bar{x}) = \\frac{s}{\\sqrt{n}}, \\qquad s^{2} = \\frac{1}{n-1}\\sum_{i=1}^{n}(x_i-\\bar{x})^2",
+   "variables_explained": "x\u0304 is the sample mean of n run scores. s is the sample standard deviation (using n\u22121 in the denominator, Bessel's correction). n is the number of seeds/runs. SE is how much the MEAN itself would wobble if you repeated the whole n-run experiment; it shrinks like 1/\u221an."
+  },
+  {
+   "name": "t-based confidence interval for the mean",
+   "latex": "\\bar{x} \\pm t^{*}_{n-1}\\,\\frac{s}{\\sqrt{n}}",
+   "variables_explained": "t*_{n-1} is the critical value of the Student-t distribution with n\u22121 degrees of freedom for the chosen confidence level (e.g. 2.776 for 95% with n=5). The interval is the set of mean values statistically compatible with the data; t (wider than z) compensates for estimating s from the same small sample."
+  },
+  {
+   "name": "Variance of a difference (paired vs. unpaired)",
+   "latex": "\\operatorname{Var}(\\bar{A}-\\bar{B}) = \\operatorname{Var}(\\bar{A}) + \\operatorname{Var}(\\bar{B}) - 2\\,\\operatorname{Cov}(\\bar{A},\\bar{B})",
+   "variables_explained": "\u0100, B\u0304 are the mean scores of the two arms. Var(\u00b7) is variance; Cov(\u0100,B\u0304) is their covariance across the shared randomness. When arms are run on the SAME seeds they move together (Cov > 0), so the \u22122Cov term REDUCES the variance of the delta. Unpaired (independent) arms have Cov = 0 and lose this benefit."
+  },
+  {
+   "name": "Paired-difference confidence interval (the deliverable)",
+   "latex": "\\bar{D} \\pm t^{*}_{n-1}\\,\\frac{s_{D}}{\\sqrt{n}}, \\qquad \\bar{D}=\\frac{1}{n}\\sum_{s=1}^{n} D(s)",
+   "variables_explained": "D\u0304 is the mean of the per-seed deltas D(s). s_D is the sample SD of those deltas. If this interval excludes 0, the treatment effect \u03b4 is statistically distinguishable from 'no effect' at the chosen confidence level. This interval IS the deliverable of an A/B run."
+  }
+ ],
+ "derivations": [
+  {
+   "title": "Why a same-seed A/B cancels confounds and isolates the treatment effect \u03b4",
+   "steps": [
+    "Y_{A}(s) = \\mu + \\beta_{s} + \\varepsilon_{A,s} \u2014 Write the score of the control arm A on seed s. It is the baseline mean \u03bc, plus the seed-specific shared effect \u03b2_s (init/shuffle luck common to any model trained with this seed), plus arm-A residual noise \u03b5_{A,s}. Note there is no \u03b4 term because A is the control (indicator = 0).",
+    "Y_{B}(s) = \\mu + \\delta + \\beta_{s} + \\varepsilon_{B,s} \u2014 Write the score of the treatment arm B on the SAME seed s. It is identical to A's expression except it gains the true treatment effect \u03b4 (indicator = 1). Crucially \u03bc and \u03b2_s are the SAME symbols as in A's line, because we froze the architecture, data, optimizer, and used the same seed \u2014 that is what 'holding everything constant' buys us.",
+    "D(s) = Y_{B}(s) - Y_{A}(s) = (\\mu + \\delta + \\beta_{s} + \\varepsilon_{B,s}) - (\\mu + \\beta_{s} + \\varepsilon_{A,s}) \u2014 Subtract the two runs seed-by-seed to form the paired delta. Substitute both expansions directly.",
+    "D(s) = \\delta + (\\varepsilon_{B,s} - \\varepsilon_{A,s}) \u2014 Cancel terms: \u03bc \u2212 \u03bc = 0 and \u03b2_s \u2212 \u03b2_s = 0. Every shared nuisance factor (baseline level and the entire seed effect) has vanished. What remains is the quantity we actually care about, \u03b4, plus a small difference of residual noises. This is the precise meaning of 'the delta cancels the confounds.'",
+    "\\mathbb{E}[D(s)] = \\delta + \\mathbb{E}[\\varepsilon_{B,s}] - \\mathbb{E}[\\varepsilon_{A,s}] = \\delta \u2014 Take expectations over seeds. Because residual noise has mean zero, the expected per-seed delta equals exactly \u03b4: the paired difference is an unbiased estimator of the treatment effect. Averaging D(s) over many seeds therefore converges to \u03b4, while averaging the raw Y_B(s) would leave \u03bc and the seed distribution tangled in.",
+    "\\text{If instead the architecture also changed: } Y_{B}(s)=\\mu+\\delta+\\gamma+\\beta_{s}+\\varepsilon_{B,s}\\Rightarrow D(s)=\\delta+\\gamma+\\ldots \u2014 Show the failure mode. If an uncontrolled confound \u03b3 (e.g. a deeper network) rides along with the treatment, it does NOT cancel and is absorbed into the delta. You would measure \u03b4+\u03b3 and mistakenly attribute all of it to the treatment. This is exactly why every non-treatment factor must be frozen."
+   ]
+  },
+  {
+   "title": "Deriving SE = s/\u221an from the variance of a sum of independent runs",
+   "steps": [
+    "\\bar{x} = \\frac{1}{n}\\sum_{i=1}^{n} X_i \u2014 Define the sample mean of n run scores X_1,\u2026,X_n, treated as independent random draws each with true variance \u03c3\u00b2.",
+    "\\operatorname{Var}(\\bar{x}) = \\operatorname{Var}\\!\\left(\\frac{1}{n}\\sum_{i=1}^{n} X_i\\right) = \\frac{1}{n^{2}}\\operatorname{Var}\\!\\left(\\sum_{i=1}^{n} X_i\\right) \u2014 Apply the scaling rule Var(aZ)=a\u00b2Var(Z) with a = 1/n, pulling the constant out as 1/n\u00b2.",
+    "\\operatorname{Var}\\!\\left(\\sum_{i=1}^{n} X_i\\right) = \\sum_{i=1}^{n}\\operatorname{Var}(X_i) = n\\sigma^{2} \u2014 For INDEPENDENT runs the variance of a sum is the sum of variances (all cross-covariances are 0). Each of the n terms contributes \u03c3\u00b2, giving n\u03c3\u00b2.",
+    "\\operatorname{Var}(\\bar{x}) = \\frac{1}{n^{2}}\\cdot n\\sigma^{2} = \\frac{\\sigma^{2}}{n} \u2014 Substitute the previous line. The n\u00b2 in the denominator meets the n in the numerator, leaving \u03c3\u00b2/n.",
+    "\\mathrm{SE}(\\bar{x}) = \\sqrt{\\operatorname{Var}(\\bar{x})} = \\frac{\\sigma}{\\sqrt{n}} \u2014 Take the square root to return to the units of the metric. This is the standard error: the typical wobble of the MEAN.",
+    "\\widehat{\\mathrm{SE}}(\\bar{x}) = \\frac{s}{\\sqrt{n}} \u2014 In practice \u03c3 is unknown, so replace it with the sample standard deviation s. Because s is itself estimated from the same n points, the subsequent confidence interval must use the t-distribution (df = n\u22121) rather than the normal z to stay honest about that extra uncertainty."
+   ]
+  },
+  {
+   "title": "Why pairing on shared seeds shrinks the delta's variance (worked with numbers)",
+   "steps": [
+    "\\text{Data (Dice over 5 shared seeds). A: }0.80,0.82,0.79,0.83,0.81;\\quad B:0.82,0.85,0.80,0.86,0.83 \u2014 Set up two arms measured on the same five seeds. B is the treatment arm. We will compute the delta's precision two ways: unpaired (ignoring the shared seeds) and paired (exploiting them).",
+    "\\bar{A}=0.81,\\ \\ \\bar{B}=0.832,\\quad s_A^{2}=0.00025,\\ \\ s_B^{2}=0.00057 \u2014 Means: (0.80+0.82+0.79+0.83+0.81)/5 = 0.81 and (0.82+0.85+0.80+0.86+0.83)/5 = 0.832. Sample variances with n\u22121=4: for A, \u03a3(dev\u00b2)=0.0010 \u21d2 0.0010/4 = 0.00025; for B, \u03a3(dev\u00b2)=0.00228 \u21d2 0.00228/4 = 0.00057.",
+    "\\mathrm{SE}_{\\text{unpaired}} = \\sqrt{\\tfrac{s_A^{2}}{n}+\\tfrac{s_B^{2}}{n}} = \\sqrt{\\tfrac{0.00025}{5}+\\tfrac{0.00057}{5}} = \\sqrt{0.000164} \\approx 0.0128 \u2014 If we (wrongly) treated the arms as independent, this is the standard error of the difference of means: about 0.0128 Dice.",
+    "D(s):\\ 0.02,\\,0.03,\\,0.01,\\,0.03,\\,0.02;\\quad \\bar{D}=0.022 \u2014 Now go paired: subtract arm A from arm B seed-by-seed. The deltas are tightly clustered around 0.022 because both arms rose and fell together across seeds.",
+    "s_D^{2} = \\frac{1}{4}\\sum(D(s)-\\bar{D})^{2} = \\frac{0.00028}{4} = 0.00007,\\quad s_D \\approx 0.00837 \u2014 Deviations of the deltas from 0.022 are \u22120.002, 0.008, \u22120.012, 0.008, \u22120.002; their squares sum to 0.00028; divide by n\u22121=4.",
+    "\\mathrm{SE}_{\\text{paired}} = \\frac{s_D}{\\sqrt{n}} = \\frac{0.00837}{\\sqrt{5}} \\approx 0.00374 \u2014 The paired standard error is about 0.00374 \u2014 roughly 3.4\u00d7 smaller than the unpaired 0.0128, from the SAME data, purely by exploiting shared seeds.",
+    "\\operatorname{Cov}(A,B) = \\tfrac{1}{4}\\sum(A_i-\\bar A)(B_i-\\bar B) = \\tfrac{0.0015}{4}=0.000375,\\ \\ \\rho=\\tfrac{0.000375}{0.01581\\cdot0.02387}\\approx0.99 \u2014 Compute the covariance to see WHY: the arms are almost perfectly correlated (\u03c1 \u2248 0.99). Check via the identity: s_D\u00b2 = s_A\u00b2+s_B\u00b2\u22122Cov = 0.00025+0.00057\u22122(0.000375) = 0.00007, exactly matching the direct paired variance. The \u22122Cov term is what collapses the noise.",
+    "95\\%\\ \\text{CI for }\\delta:\\ 0.022 \\pm 2.776\\times0.00374 = 0.022 \\pm 0.0104 = [0.0116,\\ 0.0324] \u2014 Finally, form the deliverable. With t*_{4,\\,0.95}=2.776, the paired 95% interval for the treatment effect excludes 0, so B is significantly better. The unpaired interval, 0.022 \u00b1 2.776\u00d70.0128 = \u00b10.0355 = [\u22120.0135, 0.0575], INCLUDES 0 and would have called the same result inconclusive. Same experiment, opposite verdict \u2014 because the delta, computed with pairing, is the deliverable."
+   ]
+  },
+  {
+   "title": "Worked 95% confidence interval for a single arm's mean Dice",
+   "steps": [
+    "x = \\{0.80,\\ 0.82,\\ 0.79,\\ 0.83,\\ 0.81\\},\\quad n=5 \u2014 Five seed runs of one model. We want a 95% CI for its mean Dice.",
+    "\\bar{x} = \\frac{0.80+0.82+0.79+0.83+0.81}{5} = \\frac{4.05}{5} = 0.81 \u2014 Compute the sample mean.",
+    "\\sum (x_i-\\bar x)^2 = (-0.01)^2+(0.01)^2+(-0.02)^2+(0.02)^2+0^2 = 0.0010 \u2014 Sum of squared deviations from 0.81.",
+    "s^{2} = \\frac{0.0010}{n-1} = \\frac{0.0010}{4} = 0.00025,\\quad s = 0.01581 \u2014 Sample variance divides by n\u22121 = 4 (Bessel's correction); s is its square root.",
+    "\\mathrm{SE} = \\frac{s}{\\sqrt{n}} = \\frac{0.01581}{\\sqrt{5}} = \\frac{0.01581}{2.2361} = 0.00707 \u2014 Standard error of the mean.",
+    "t^{*}_{4,\\,0.95} = 2.776 \u2014 Critical t value for df = n\u22121 = 4 at 95% confidence (two-sided). It exceeds the normal z = 1.96 because n is small and s is estimated.",
+    "\\text{CI} = 0.81 \\pm 2.776\\times0.00707 = 0.81 \\pm 0.0196 = [0.790,\\ 0.830] \u2014 The reported result is 'Dice 0.81 \u00b1 0.016 (SD), 95% CI [0.790, 0.830]'. Reporting the interval, not just 0.81, tells a reader how much of the number is signal versus seed luck."
+   ]
+  }
+ ],
+ "intuitions": [
+  "Think of an A/B experiment as a courtroom: the treatment is the accused, and every uncontrolled variable is 'reasonable doubt.' Freezing the architecture, data, and optimizer removes alternative suspects, so when the score changes you can convict the one factor you varied. An ablation is the same trial run backwards \u2014 you remove a component and see whether the system misses it.",
+  "The reason pairing on shared seeds is so powerful: the seed decides a big chunk of a run's score (which local minimum you fall into), and it hits BOTH arms the same way. Subtracting the two arms on the same seed is like weighing two people while they both stand on the same bobbing boat \u2014 the boat's motion cancels and you measure the true weight difference, not the waves.",
+  "'The delta is the deliverable' because the raw score is contaminated by choices you'd rather forget: the exact dataset, the metric's definition, the number of epochs, the hardware. All of those inflate or deflate BOTH arms together, so they wash out of the difference. The difference is the only part of the number that is actually about your idea.",
+  "A single before/after comparison in deep learning is like judging two dice by rolling each once. Henderson et al. showed that just changing the random seed can move results as much as changing the whole algorithm \u2014 so without several seeds and error bars, you are reporting the roll, not the die."
+ ],
+ "gotchas": [
+  "Changing more than one thing at once. If the new loss function is introduced together with a deeper network or longer training, the improvement \u03b4 becomes \u03b4+\u03b3 and is unattributable. The whole method collapses the moment a second factor moves \u2014 freeze everything you are not testing.",
+  "Reporting SD when you mean SE, or vice versa. SD (s) describes spread of individual runs; SE (s/\u221an) describes wobble of the mean and always looks smaller. Error bars are meaningless unless the caption states which one they are and what randomness they capture (init? data split? both?).",
+  "Using the normal z-value (1.96) instead of the t-value for small n. With 5 seeds the correct 95% multiplier is 2.776, not 1.96 \u2014 using z makes intervals ~40% too narrow and manufactures false significance. Always use t*_{n\u22121} when \u03c3 is estimated from the sample.",
+  "Too few seeds. Surveyed deep-RL papers commonly used \u22645 seeds, often too few to separate signal from seed noise. With high run-to-run variance, a 3-seed 'win' can vanish on re-run; power grows only like \u221an, so doubling precision costs 4\u00d7 the runs.",
+  "Unpaired analysis of a paired design. If you ran both arms on the same seeds but then compare them with an unpaired/independent-samples test, you throw away the covariance term (\u22122Cov) that was doing most of the noise cancellation \u2014 turning a significant delta into an inconclusive one, as the worked example shows.",
+  "Seed hacking / cherry-picking. Running many seeds and reporting only the best for the new model (or the worst for the baseline) fabricates a delta. Seeds must be fixed in advance and applied identically to both arms."
+ ],
+ "example_questions": [
+  {
+   "question": "A team compares a Dice loss (arm A) against a Dice+boundary loss (arm B) on the SAME 4 seeds, holding the U-Net architecture and data splits fixed. Per-seed deltas (B\u2212A) are 0.015, 0.020, 0.010, 0.019. Compute the mean delta, its standard error, and a 95% CI, then state the conclusion.",
+   "answer": "Mean delta: D\u0304 = (0.015+0.020+0.010+0.019)/4 = 0.064/4 = 0.016. Deviations from 0.016: \u22120.001, 0.004, \u22120.006, 0.003; squares: 0.000001, 0.000016, 0.000036, 0.000009, sum = 0.000062. Sample variance s_D\u00b2 = 0.000062/(4\u22121) = 0.0000207; s_D = 0.004549. SE = s_D/\u221an = 0.004549/\u221a4 = 0.004549/2 = 0.002274. Critical value t*_{3,0.95} = 3.182. Margin = 3.182 \u00d7 0.002274 = 0.007236. 95% CI = 0.016 \u00b1 0.0072 = [0.0088, 0.0232]. Since the interval excludes 0, the boundary term gives a statistically significant Dice improvement of about +0.016 (95% CI [0.009, 0.023]). Because the architecture and splits were frozen and seeds were shared, this delta is a clean estimate of the loss-function effect."
+  },
+  {
+   "question": "Explain, using the score-decomposition model, why an ablation that removes 'attention gates' from a segmentation network and a full A/B that adds 'attention gates' should report the same magnitude of effect, and what would break that equivalence.",
+   "answer": "Model each run as Y = \u03bc + \u03b4\u00b71[gates present] + \u03b2_s + \u03b5. The A/B ADDS gates: D_add(s) = Y_with \u2212 Y_without = \u03b4 + (\u03b5\u2212\u03b5'). The ablation REMOVES gates from the full system: D_abl(s) = Y_full \u2212 Y_full-minus-gates = \u03b4 + (\u03b5\u2212\u03b5'). Both are estimating the same \u03b4 (the causal contribution of the gates), with \u03bc and the seed term \u03b2_s cancelling in each case, so in expectation E[D_add] = E[D_abl] = \u03b4 \u2014 the two report the same magnitude (ablation as a drop, A/B as a gain). What breaks the equivalence: interactions/confounds. If gates only help IN THE PRESENCE of some other component C, then removing gates from the full system (which contains C) and adding gates to a stripped baseline (which may lack C) probe different \u03b4 values \u2014 \u03b4 becomes context-dependent. Then the additive model is wrong (there is a \u03b4_{gates\u00d7C} interaction term that does not cancel), and the ablation and A/B legitimately disagree. This is why single-factor changes and a fixed surrounding architecture are essential."
+  },
+  {
+   "question": "Two seeds give arm A scores 0.78 and 0.86 (mean 0.82) and arm B scores 0.80 and 0.88 (mean 0.84). A colleague reports 'B is better by 0.02' with no uncertainty. Why is this claim not yet credible, and what is the minimal fix?",
+   "answer": "The per-run spread is enormous relative to the delta: within arm A the two runs differ by 0.08, four times the claimed 0.02 improvement, so the seed-to-seed noise dwarfs the effect. With only n=2 the standard error is huge and the t-multiplier is large (t*_{1,0.95} = 12.71), so any honest CI on the 0.02 delta will comfortably include 0 \u2014 the difference is indistinguishable from luck. Minimal fixes: (1) run BOTH arms on the SAME seeds and analyze the paired per-seed deltas, so the shared seed effect (which is causing the 0.78-vs-0.86 swing) cancels; here the paired deltas are 0.80\u22120.78 = 0.02 and 0.88\u22120.86 = 0.02, i.e. a rock-steady +0.02 on every seed \u2014 far more convincing than the raw means suggested. (2) Increase the number of seeds so the standard error (\u221d 1/\u221an) and the t-multiplier both shrink, and report mean delta \u00b1 CI. The claim becomes credible only once the DELTA's uncertainty, not the raw score, is shown to exclude 0."
+  }
+ ],
+ "suggested_figures": [
+  "A two-panel 'confound control' diagram: left panel shows a WRONG comparison where three arrows (loss, depth, epochs) all change between A and B and feed into one score-change box labeled '\u03b4+\u03b3+... unattributable'; right panel shows the CORRECT single-factor change with only the loss arrow moving and everything else greyed/frozen, feeding a box labeled '\u03b4 isolated'.",
+  "A paired-seeds 'cancellation' plot: x-axis = seed index (1..5), two connected lines for arm A and arm B that wiggle up and down together (showing the shared seed effect \u03b2_s), with vertical brackets marking the near-constant gap D(s) between them; caption: 'the lines wobble together; the gap is stable \u2014 that gap is the deliverable.'",
+  "A precision comparison bar/interval chart: two horizontal 95% confidence intervals for the SAME delta of 0.022 \u2014 a wide 'unpaired' interval that crosses 0 (inconclusive) and a narrow 'paired' interval that clears 0 (significant) \u2014 visually demonstrating how pairing on shared seeds converts a null result into a real one."
+ ],
+ "confidence_notes": "All statistical formulas (SE = s/\u221an, t-interval x\u0304 \u00b1 t*_{n-1}\u00b7s/\u221an with df = n\u22121, Var(A\u2212B) = Var(A)+Var(B)\u22122Cov) are standard and verified against Penn State STAT ONLINE. All numeric worked examples were computed by hand for this note using invented but internally consistent Dice values; the t critical values used (t*_{4,0.95}=2.776, t*_{3,0.95}=3.182, t*_{1,0.95}=12.71) are standard textbook values. The score-decomposition model Y = \u03bc + \u03b4\u00b71[\u00b7] + \u03b2_s + \u03b5 is a standard fixed-effects/ANOVA-style teaching model I use to make 'confound cancellation' precise; it is a pedagogical idealization (assumes additivity and no treatment\u00d7seed interaction), not a claim from a specific cited paper. Citations verified: U-Net (Ronneberger, Fischer & Brox, MICCAI 2015, LNCS 9351 pp. 234\u2013241); Henderson et al. 'Deep RL that Matters' arXiv:1709.06560 (seed-only non-overlapping curves, \u22645 seeds common). The phrase 'the delta is the deliverable' is a widely used methodological slogan, not a citable single-source term; I present it as an organizing idea rather than attributing it to a specific author.\"",
+ "_key": "ab-methodology",
+ "_kind": "dl"
+}

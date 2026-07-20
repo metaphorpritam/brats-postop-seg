@@ -175,6 +175,12 @@ spatial agreement with GT, which is the minority-class recovery the delta measur
 
 ![Ground truth vs Track A vs Track B overlays on three test cases](reports/figures/combined_overlay.png)
 
+**Three more held-out cases**, same layout — again Track A drops the rare RC (amber) and NETC
+(blue), which Track B recovers (in case `00469` Track A predicts only SNFH and misses the RC
+entirely):
+
+![Three additional ground-truth vs Track A vs Track B overlays on held-out test cases](reports/figures/combined_overlay_2.png)
+
 <sub>Display note: the tracks infer in different geometries (A: warped 128²×48; B:
 foreground-cropped RAS via sliding window) and are resampled to a common array space for
 viewing. Inference is faithful; only the display is resampled.</sub>

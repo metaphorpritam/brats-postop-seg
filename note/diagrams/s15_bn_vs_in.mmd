@@ -1,0 +1,6 @@
+flowchart TB
+  T[Activation block<br/>N x C x space]
+  T --> BN[Batch norm:<br/>average over<br/>batch + space<br/>per channel]
+  T --> IN[Instance norm:<br/>average over<br/>space only<br/>per sample+channel]
+  BN --> B1[shares stats<br/>across images<br/>batch-size dependent]
+  IN --> I1[per-image stats<br/>batch-size<br/>independent]

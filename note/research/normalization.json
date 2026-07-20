@@ -1,0 +1,167 @@
+{
+ "topic": "Two kinds of \"normalization\" in MRI deep learning: (a) intensity normalization of the input MRI \u2014 per-modality z-score over brain voxels vs naive global-max scaling \u2014 and (b) network normalization layers (batch norm vs instance norm)",
+ "overview": "The word \"normalization\" gets used for two completely different jobs in an MRI segmentation pipeline, and conflating them is a common source of confusion. The first job is **input intensity normalization**: MRI voxel values have no absolute physical meaning (unlike CT's Hounsfield units), so the same tissue can read 140 on one scan and 330 on another depending on the scanner, coil, and sequence settings. Before a network ever sees the data, we must put every volume onto a comparable numeric scale. The second job is **normalization layers inside the network** (batch norm, instance norm), which re-center and re-scale the intermediate activations during training to keep gradients well-behaved and speed up learning. Same word, different layer of the stack.\n\nFor input intensity, two candidate recipes are contrasted here. **Naive global-max scaling** divides every voxel by the single brightest voxel in the image, squeezing values into [0, 1]. It is fragile: one hyperintense outlier (fat, a metal artifact, a bias-field hotspot) sets the scale for everything, and it is not invariant to the additive/multiplicative shifts that plague MRI, so identical tissue lands on different normalized values across scanners. **Per-modality z-score** instead subtracts the mean and divides by the standard deviation, computed *only over brain (nonzero foreground) voxels*, separately for each MRI sequence (T1, T1c, T2, FLAIR). Z-score is provably invariant to any positive affine rescaling of intensities \u2014 exactly the kind of scanner-to-scanner variation MRI exhibits \u2014 which is why the self-configuring nnU-Net framework, the dominant BraTS baseline, uses per-patient z-score for MRI (reserving global clipping/normalization for CT).\n\nFor the network layers, the trade-off is about **batch size**. Batch normalization estimates its mean and variance across the whole mini-batch; with the tiny batches forced by large 3D medical volumes (often 2), those estimates are noisy and unreliable. Instance normalization computes statistics per-sample, per-channel over spatial locations only, so it is completely independent of batch size and of how bright any *other* volume in the batch happens to be. That is precisely why nnU-Net swaps batch norm for instance norm throughout its U-Nets.\n\nBoth ideas share the same underlying arithmetic \u2014 subtract a mean, divide by a standard deviation \u2014 so learning the z-score algebra once pays off in both places. The rest of this note gives the formulas, proves the two properties that make z-score the right choice (zero-mean/unit-variance output and affine invariance), and works small numeric examples for both the input scaling and the batch-vs-instance-norm contrast.",
+ "key_points": [
+  {
+   "point": "MRI intensities are not quantitative: unlike CT Hounsfield units, MRI signal has no fixed physical scale, so the same tissue can take very different raw values across scanners, sequences, and sessions. This is the root reason input intensity normalization is mandatory before training.",
+   "source": "nnU-Net (Isensee et al., Nature Methods 2021 / arXiv:1809.10486)",
+   "citation_url": "https://arxiv.org/pdf/1809.10486"
+  },
+  {
+   "point": "nnU-Net applies per-patient, per-modality z-score normalization for MRI (mean 0, std 1), while using clipping to a percentile range plus a global dataset-level normalization for CT \u2014 because CT values ARE quantitative and comparable across scans. Normalization strategy is chosen automatically per modality during dataset fingerprinting.",
+   "source": "nnU-Net self-configuring framework",
+   "citation_url": "https://arxiv.org/pdf/1809.10486"
+  },
+  {
+   "point": "For brain MRI, when use_mask_for_norm is set, nnU-Net computes the z-score statistics using ONLY the nonzero (foreground/brain) voxels and then resets all background voxels to 0. This prevents the huge black background from dominating the mean and variance.",
+   "source": "nnU-Net BraTS configuration / GitHub",
+   "citation_url": "https://github.com/MIC-DKFZ/nnUNet/discussions/2363"
+  },
+  {
+   "point": "Batch normalization does not perform well at small batch sizes; nnU-Net therefore replaces batch norm with instance normalization for ALL its U-Net models, and pairs it with leaky ReLU (slope 0.01). Medical 3D training often runs at batch size as low as 2 due to memory, making batch statistics unreliable.",
+   "source": "nnU-Net design (Isensee et al.) / nnU-Net for BraTS (arXiv:2011.00848)",
+   "citation_url": "https://arxiv.org/pdf/2011.00848"
+  },
+  {
+   "point": "Batch Normalization normalizes each channel using mean/variance pooled over the batch AND spatial dimensions, and was introduced to reduce 'internal covariate shift' and accelerate training. It keeps running averages of these statistics for use at inference.",
+   "source": "Ioffe & Szegedy 2015, 'Batch Normalization'",
+   "citation_url": "https://arxiv.org/abs/1502.03167"
+  },
+  {
+   "point": "Instance Normalization normalizes each sample and each channel independently, over spatial locations only (H\u00d7W or D\u00d7H\u00d7W). It is batch-size independent and was originally introduced for style transfer, where per-image contrast should be removed \u2014 an argument that transfers directly to per-volume MRI intensity variation.",
+   "source": "Ulyanov, Vedaldi & Lempitsky 2016, 'Instance Normalization'",
+   "citation_url": "https://arxiv.org/abs/1607.08022"
+  },
+  {
+   "point": "The U-Net encoder-decoder with skip connections is the base architecture for BraTS-style segmentation; it trains end-to-end from few annotated images using heavy data augmentation, and won the ISBI 2015 cell-tracking challenge.",
+   "source": "Ronneberger, Fischer & Brox 2015, U-Net, MICCAI pp. 234-241",
+   "citation_url": "https://link.springer.com/chapter/10.1007/978-3-319-24574-4_28"
+  },
+  {
+   "point": "Z-score standardization is invariant to any positive affine rescaling of the inputs (x -> a\u00b7x + b, a>0): the standardized values are unchanged. This is the mathematical reason z-score neutralizes scanner-dependent brightness/contrast shifts that global-max scaling cannot.",
+   "source": "Standard result (population standardization); see any probability/statistics text"
+  },
+  {
+   "point": "Global-max scaling divides by a single extreme value, so it is dominated by outliers and is NOT shift-invariant; identical tissue across two scanners maps to different normalized values, and a bright artifact wastes most of the [0,1] dynamic range.",
+   "source": "Contrast argument; consistent with nnU-Net's rationale for preferring z-score for MRI",
+   "citation_url": "https://arxiv.org/pdf/1809.10486"
+  }
+ ],
+ "equations": [
+  {
+   "name": "Per-voxel z-score (intensity) normalization over the brain mask",
+   "latex": "\\hat{x}_i = \\frac{x_i - \\mu_{\\mathcal{B}}}{\\sigma_{\\mathcal{B}} + \\epsilon}, \\qquad \\mu_{\\mathcal{B}} = \\frac{1}{|\\mathcal{B}|}\\sum_{j\\in\\mathcal{B}} x_j, \\qquad \\sigma_{\\mathcal{B}} = \\sqrt{\\frac{1}{|\\mathcal{B}|}\\sum_{j\\in\\mathcal{B}} (x_j-\\mu_{\\mathcal{B}})^2}",
+   "variables_explained": "x_i is the raw intensity at voxel i for one MRI modality; \\mathcal{B} is the set of brain (nonzero foreground) voxels; |\\mathcal{B}| is how many there are; \\mu_{\\mathcal{B}} and \\sigma_{\\mathcal{B}} are the mean and standard deviation computed over the brain mask only; \\epsilon is a tiny constant (e.g. 1e-8) preventing division by zero; \\hat{x}_i is the normalized intensity. Computed separately for each modality (T1, T1c, T2, FLAIR)."
+  },
+  {
+   "name": "Naive global-max normalization",
+   "latex": "\\tilde{x}_i = \\frac{x_i}{\\max_{j} x_j}",
+   "variables_explained": "x_i is the raw intensity at voxel i; \\max_j x_j is the single brightest voxel in the whole image. The output \\tilde{x}_i lies in [0,1] (for nonnegative inputs). Note the scale is fixed by one extreme voxel and the transform has no subtraction, so it cannot remove additive/brightness offsets."
+  },
+  {
+   "name": "Affine-invariance property of z-score",
+   "latex": "y_i = a\\,x_i + b,\\; a>0 \\;\\;\\Longrightarrow\\;\\; \\hat{y}_i = \\frac{y_i-\\mu_y}{\\sigma_y} = \\frac{x_i-\\mu_x}{\\sigma_x} = \\hat{x}_i",
+   "variables_explained": "a>0 is a multiplicative gain and b an additive offset (together, a scanner-dependent affine change of the intensity scale); \\mu_y,\\sigma_y are the mean/std of the transformed data and \\mu_x,\\sigma_x of the original. The equation states the standardized values are identical \u2014 z-score erases (a,b)."
+  },
+  {
+   "name": "Batch Normalization (per channel c; statistics over batch N and spatial locations)",
+   "latex": "\\hat{x}_{n,c,p} = \\frac{x_{n,c,p}-\\mu_c}{\\sqrt{\\sigma_c^2+\\epsilon}},\\quad \\mu_c=\\frac{1}{N|P|}\\sum_{n=1}^{N}\\sum_{p\\in P} x_{n,c,p},\\quad \\sigma_c^2=\\frac{1}{N|P|}\\sum_{n=1}^{N}\\sum_{p\\in P}(x_{n,c,p}-\\mu_c)^2,\\quad y_{n,c,p}=\\gamma_c\\hat{x}_{n,c,p}+\\beta_c",
+   "variables_explained": "x_{n,c,p} is the activation for sample n, channel c, spatial location p; P is the set of spatial locations, |P| its size; N is the batch size. \\mu_c,\\sigma_c^2 pool over BOTH the batch and space, so different images in the batch share statistics. \\gamma_c,\\beta_c are learned per-channel scale/shift; \\epsilon guards the denominator. At inference, running averages of \\mu_c,\\sigma_c^2 are used."
+  },
+  {
+   "name": "Instance Normalization (per sample n AND channel c; statistics over spatial locations only)",
+   "latex": "\\hat{x}_{n,c,p} = \\frac{x_{n,c,p}-\\mu_{n,c}}{\\sqrt{\\sigma_{n,c}^2+\\epsilon}},\\quad \\mu_{n,c}=\\frac{1}{|P|}\\sum_{p\\in P} x_{n,c,p},\\quad \\sigma_{n,c}^2=\\frac{1}{|P|}\\sum_{p\\in P}(x_{n,c,p}-\\mu_{n,c})^2,\\quad y_{n,c,p}=\\gamma_c\\hat{x}_{n,c,p}+\\beta_c",
+   "variables_explained": "Same symbols as batch norm, but the mean \\mu_{n,c} and variance \\sigma_{n,c}^2 carry BOTH indices n and c: each sample is normalized on its own, with no pooling across the batch. Hence the result is independent of batch size N and of the other images. \\gamma_c,\\beta_c are learned scale/shift shared across samples."
+  }
+ ],
+ "derivations": [
+  {
+   "title": "Derivation 1 \u2014 Z-score output has mean 0 and standard deviation 1",
+   "steps": [
+    "Setup: given N values x_1,\\dots,x_N with mean \\mu=\\frac{1}{N}\\sum_{i=1}^N x_i and standard deviation \\sigma=\\sqrt{\\frac{1}{N}\\sum_{i=1}^N (x_i-\\mu)^2}, define the standardized value z_i=\\frac{x_i-\\mu}{\\sigma}. We prove its mean is 0 and its variance is 1. (We drop \\epsilon here; it only nudges the denominator for safety.)",
+    "Compute the mean of the z_i:\\; \\bar{z}=\\frac{1}{N}\\sum_{i=1}^N z_i=\\frac{1}{N}\\sum_{i=1}^N \\frac{x_i-\\mu}{\\sigma}. Substituting the definition of z_i is the only change.",
+    "Pull the constant \\frac{1}{\\sigma} out of the sum (it does not depend on i):\\; \\bar{z}=\\frac{1}{\\sigma}\\cdot\\frac{1}{N}\\sum_{i=1}^N (x_i-\\mu). Factoring a constant out of a finite sum is allowed and changes nothing else.",
+    "Split the sum over the subtraction:\\; \\frac{1}{N}\\sum_{i=1}^N (x_i-\\mu)=\\frac{1}{N}\\sum_{i=1}^N x_i-\\frac{1}{N}\\sum_{i=1}^N \\mu. The first term is exactly \\mu by definition; the second is \\frac{1}{N}\\cdot N\\mu=\\mu because \\mu is added N times.",
+    "Therefore the bracket equals \\mu-\\mu=0, giving \\bar{z}=\\frac{1}{\\sigma}\\cdot 0=0. The mean of the standardized data is 0. Why it matters: centering removes any absolute-brightness offset.",
+    "Now the variance of the z_i. Since \\bar{z}=0, \\operatorname{Var}(z)=\\frac{1}{N}\\sum_{i=1}^N (z_i-\\bar{z})^2=\\frac{1}{N}\\sum_{i=1}^N z_i^2. We just replaced \\bar{z} by 0.",
+    "Substitute z_i=\\frac{x_i-\\mu}{\\sigma} and square:\\; \\operatorname{Var}(z)=\\frac{1}{N}\\sum_{i=1}^N \\frac{(x_i-\\mu)^2}{\\sigma^2}=\\frac{1}{\\sigma^2}\\cdot\\frac{1}{N}\\sum_{i=1}^N (x_i-\\mu)^2. Again \\frac{1}{\\sigma^2} is a constant pulled out of the sum.",
+    "Recognize \\frac{1}{N}\\sum_{i=1}^N (x_i-\\mu)^2=\\sigma^2 (the definition of the variance we started from). Hence \\operatorname{Var}(z)=\\frac{\\sigma^2}{\\sigma^2}=1, so the standard deviation is \\sqrt{1}=1. Conclusion: z-score always outputs mean 0, std 1, regardless of the original units."
+   ]
+  },
+  {
+   "title": "Derivation 2 \u2014 Z-score is invariant to a positive affine rescaling y=a\u00b7x+b (the scanner-shift argument)",
+   "steps": [
+    "Model the scanner change: suppose a second scanner records y_i=a\\,x_i+b for every voxel, where a>0 is a gain (contrast) and b an offset (brightness). We show the z-scores of y equal the z-scores of x, i.e. the standardization cancels a and b.",
+    "Mean of y:\\; \\mu_y=\\frac{1}{N}\\sum_{i=1}^N (a x_i+b)=a\\Big(\\frac{1}{N}\\sum_{i=1}^N x_i\\Big)+\\frac{1}{N}\\sum_{i=1}^N b=a\\mu_x+b. We used linearity of the sum and that b added N times averages to b.",
+    "Center y:\\; y_i-\\mu_y=(a x_i+b)-(a\\mu_x+b)=a x_i - a\\mu_x=a(x_i-\\mu_x). The +b and -b cancel, so the offset b disappears already at the centering step.",
+    "Variance of y:\\; \\sigma_y^2=\\frac{1}{N}\\sum_{i=1}^N (y_i-\\mu_y)^2=\\frac{1}{N}\\sum_{i=1}^N a^2 (x_i-\\mu_x)^2=a^2\\Big(\\frac{1}{N}\\sum_{i=1}^N (x_i-\\mu_x)^2\\Big)=a^2\\sigma_x^2. We substituted the centered form and pulled the constant a^2 out.",
+    "Standard deviation of y:\\; \\sigma_y=\\sqrt{a^2\\sigma_x^2}=|a|\\,\\sigma_x=a\\,\\sigma_x, using a>0 so |a|=a.",
+    "Form the z-score of y and substitute the two results:\\; \\hat{y}_i=\\frac{y_i-\\mu_y}{\\sigma_y}=\\frac{a(x_i-\\mu_x)}{a\\,\\sigma_x}. The centering gave the numerator; the variance step gave the denominator.",
+    "Cancel the common factor a (nonzero):\\; \\hat{y}_i=\\frac{x_i-\\mu_x}{\\sigma_x}=\\hat{x}_i. The gain a cancels and b was already gone \u2014 so both scanner parameters vanish. Interpretation: any two acquisitions related by a linear intensity change produce identical z-scored inputs, which is exactly what we want the network to see. (Global-max scaling \\tilde{x}=x/\\max x fails this: it has no subtraction, so a nonzero b survives.)"
+   ]
+  },
+  {
+   "title": "Derivation 3 \u2014 Worked numeric z-score vs global-max on a toy brain (full substitution)",
+   "steps": [
+    "Take five brain voxels of one modality: x=\\{100,120,140,160,180\\} (background zeros excluded by the mask). N=5.",
+    "Mean:\\; \\mu=\\frac{100+120+140+160+180}{5}=\\frac{700}{5}=140. Sum is 700, divided by 5.",
+    "Deviations x_i-\\mu:\\; \\{-40,-20,0,20,40\\}. Squares:\\; \\{1600,400,0,400,1600\\}, summing to 4000.",
+    "Variance:\\; \\sigma^2=\\frac{4000}{5}=800; standard deviation \\sigma=\\sqrt{800}\\approx 28.284.",
+    "Z-scores \\hat{x}_i=(x_i-140)/28.284:\\; \\{-1.414,\\,-0.707,\\,0,\\,0.707,\\,1.414\\}. Check: mean 0, and \\frac{1}{5}(1.414^2+0.707^2+0+0.707^2+1.414^2)=\\frac{1}{5}(2+0.5+0+0.5+2)=1, std 1. Matches Derivation 1.",
+    "Now the SAME tissue on a second scanner with y=2x+50:\\; y=\\{250,290,330,370,410\\}. Mean \\mu_y=2\\cdot140+50=330; \\sigma_y=2\\cdot28.284=56.568 (from Derivation 2).",
+    "Z-scores of y:\\; (250-330)/56.568=-1.414,\\; (290-330)/56.568=-0.707,\\; 0,\\; 0.707,\\; 1.414 \u2014 identical to the first scanner. Z-score made the two scanners agree.",
+    "Contrast with global-max. Scanner 1: divide by 180 -> \\{0.556,0.667,0.778,0.889,1.000\\}. Scanner 2: divide by 410 -> \\{0.610,0.707,0.805,0.902,1.000\\}. These differ voxel-by-voxel, so the same tissue is fed to the network as different numbers. Global-max failed to align the scanners.",
+    "Outlier stress test: add one bright artifact voxel x=1000 to scanner 1. Global-max now divides by 1000, crushing the real brain voxels to \\{0.10,0.12,0.14,0.16,0.18\\} \u2014 the tissue occupies only 8% of the [0,1] range, wasted by a single voxel. Z-score over the brain mask is barely perturbed because it standardizes the whole distribution rather than pinning to one extreme."
+   ]
+  },
+  {
+   "title": "Derivation 4 \u2014 Batch norm vs instance norm on a 2-image toy (why small batch hurts BN)",
+   "steps": [
+    "Setup: batch of N=2 images, C=1 channel, spatial 2\u00d72. Image A activations \\{1,2,3,4\\}; Image B activations \\{10,20,30,40\\} (B is a much brighter/higher-contrast volume, mimicking a different scanner). We compare instance norm (per image) with batch norm (pooled). Ignore learned \\gamma,\\beta (set \\gamma=1,\\beta=0) and \\epsilon.",
+    "INSTANCE NORM, Image A: \\mu_A=\\frac{1+2+3+4}{4}=2.5. Deviations \\{-1.5,-0.5,0.5,1.5\\}, squares \\{2.25,0.25,0.25,2.25\\} sum 5, \\sigma_A^2=5/4=1.25, \\sigma_A\\approx1.118.",
+    "Normalized A:\\; \\{(1-2.5),(2-2.5),(3-2.5),(4-2.5)\\}/1.118=\\{-1.342,-0.447,0.447,1.342\\}.",
+    "INSTANCE NORM, Image B: \\mu_B=\\frac{10+20+30+40}{4}=25. Deviations \\{-15,-5,5,15\\}, squares \\{225,25,25,225\\} sum 500, \\sigma_B^2=125, \\sigma_B\\approx11.18. Normalized B:\\; \\{-15,-5,5,15\\}/11.18=\\{-1.342,-0.447,0.447,1.342\\}.",
+    "Key observation: instance norm maps A and B to the SAME normalized pattern \\{-1.342,-0.447,0.447,1.342\\}. Each volume's own brightness/contrast was removed independently \u2014 batch size never entered the calculation.",
+    "BATCH NORM pools all 8 values \\{1,2,3,4,10,20,30,40\\}. Mean \\mu=\\frac{110}{8}=13.75.",
+    "Variance: deviations from 13.75 squared sum to 1517.5 (namely 162.5625+138.0625+115.5625+95.0625+14.0625+39.0625+264.0625+689.0625), so \\sigma^2=\\frac{1517.5}{8}=189.6875, \\sigma\\approx13.773.",
+    "Batch-normalized: Image A's value 1 -> (1-13.75)/13.773=-0.926; A's value 4 -> -0.708. Image B's value 10 -> -0.272; B's value 40 -> (40-13.75)/13.773=+1.906.",
+    "Observation: under BN, Image A sits almost entirely below 0 and Image B mostly above 0 \u2014 the two images are NOT put on a common footing, because the shared batch mean (13.75) is dragged by whichever image is brighter. With batch size 2 this statistic is noisy and unstable from step to step. This is the concrete reason nnU-Net prefers instance norm at the tiny batch sizes 3D MRI forces."
+   ]
+  }
+ ],
+ "intuitions": [
+  "Two different rulers, same measuring trick. Input z-score and instance norm do the same arithmetic (subtract a mean, divide by a std) but on different things: z-score standardizes the raw voxels of one volume before training; instance norm standardizes the hidden activations of one channel during training. Learn 'subtract mean, divide by std' once and you understand both.",
+  "Z-score is a 'shape' description, global-max is a 'brightest-point' description. Z-score asks 'how many standard deviations from typical brain is this voxel?' \u2014 a relative, distribution-aware answer that survives changing the units. Global-max asks 'what fraction of the single brightest voxel is this?' \u2014 an answer hostage to one pixel. MRI has no absolute units, so the shape description is the meaningful one.",
+  "Batch norm makes an image's normalization depend on its neighbors in the batch; instance norm makes it self-contained. At batch size 2, BN essentially lets a bright volume distort a dim volume's statistics \u2014 like grading a student on the class average when the class has two students. IN grades each volume on its own curve, so it is immune to batch size and to the luck of the draw.",
+  "Per-modality and per-brain-mask both matter. Compute z-score separately for T1, T1c, T2, FLAIR because their intensity distributions differ, and over brain voxels only because the enormous black background would otherwise pull the mean toward 0 and inflate the std with background-vs-brain contrast, drowning out the within-brain contrast the tumor lives in."
+ ],
+ "gotchas": [
+  "Including the background in the statistics ruins z-score. If you compute \\mu,\\sigma over the whole volume, the tens of thousands of zero background voxels dominate: \\mu drifts toward 0 and \\sigma mostly encodes the brain-vs-air jump, not tissue contrast. Always mask to nonzero/foreground voxels, then set background back to 0 (what nnU-Net's use_mask_for_norm does).",
+  "Z-score does NOT fix nonlinear MRI artifacts. The invariance proof assumes a linear map y=a\u00b7x+b. Real MRI bias fields are smooth multiplicative fields that vary spatially, and intensity non-standardness can be nonlinear; z-score won't remove those. Bias-field correction (e.g. N4) and/or histogram matching are separate steps, not replaced by z-score.",
+  "Global-max's [0,1] range is deceptive comfort. Bounded output looks 'safe', but a single hyperintense voxel (fat, motion/metal artifact, bias hotspot) sets the denominator and compresses all real tissue into a sliver of the range; and because there is no subtraction, an additive brightness offset b passes straight through unnormalized. Bounded \u2260 standardized.",
+  "Batch norm at inference uses stored running averages, not the current batch \u2014 a train/eval mismatch that bites at small batch sizes and with distribution shift; instance norm behaves identically in train and eval (always per-sample), removing that failure mode. Don't assume a BN model and an IN model are interchangeable at test time.",
+  "Instance norm can erase signal you want to keep. Because it removes each channel's per-image mean and contrast, if absolute intensity level were genuinely informative (as in CT), IN would throw it away \u2014 which is exactly why nnU-Net keeps IN for MRI but treats CT differently (clipping + dataset-level normalization)."
+ ],
+ "example_questions": [
+  {
+   "question": "A FLAIR volume has brain-voxel intensities with mean 480 and standard deviation 90. A hyperintense tumor-edema voxel reads 750; a normal-appearing white-matter voxel reads 435. Give the z-score-normalized values and interpret them. Then say what naive global-max normalization would give if the brightest voxel in the volume is 1200.",
+   "answer": "Z-score uses \\hat{x}=(x-\\mu)/\\sigma with \\mu=480, \\sigma=90. Edema voxel: (750-480)/90 = 270/90 = +3.0 \u2014 three standard deviations above typical brain, i.e. strongly hyperintense (edema/tumor signal on FLAIR). White-matter voxel: (435-480)/90 = -45/90 = -0.5 \u2014 half a standard deviation below the mean, i.e. near-typical tissue slightly darker than average. The numbers are unitless and comparable across scanners. Global-max (divide by 1200): edema -> 750/1200 = 0.625; white matter -> 435/1200 = 0.3625. These are compressed into a narrow band, carry no 'how unusual is this?' meaning, and would change entirely if the brightest voxel were, say, an artifact at 2000 (edema then 0.375). The z-score answer (+3.0, -0.5) is the interpretable, scanner-robust one."
+  },
+  {
+   "question": "Prove that if you z-score a set of intensities and then apply the linear scanner change y = 3x + 100 to the ORIGINAL intensities and z-score those, you get the same result. Use x = {2, 4, 6}.",
+   "answer": "Original: \\mu_x=(2+4+6)/3=4. Deviations {-2,0,2}, squares {4,0,4} sum 8, \\sigma_x^2=8/3, \\sigma_x=\\sqrt{8/3}\\approx1.633. Z-scores: (2-4)/1.633=-1.225, (4-4)/1.633=0, (6-4)/1.633=+1.225. Transformed y=3x+100={106,112,118}. \\mu_y=3\\cdot4+100=112 (matches (106+112+118)/3=336/3=112). Deviations {-6,0,6}, squares {36,0,36} sum 72, \\sigma_y^2=24, \\sigma_y=\\sqrt{24}\\approx4.899 \u2014 note \\sqrt{24}=3\\sqrt{8/3}=3\\sigma_x, as the a=3 gain predicts. Z-scores of y: (106-112)/4.899=-1.225, (112-112)/4.899=0, (118-112)/4.899=+1.225 \u2014 identical to the original z-scores. The gain 3 cancelled in numerator/denominator and the offset 100 cancelled in centering, confirming affine invariance (Derivation 2)."
+  },
+  {
+   "question": "You train a 3D U-Net on 128\u00d7128\u00d7128 patches and can only fit batch size 2 in GPU memory. Your labmate insists on batch normalization 'because it's standard.' Explain quantitatively, using the batch-norm mean estimate, why this is risky and what to use instead.",
+   "answer": "Batch norm estimates each channel's mean as \\mu_c=\\frac{1}{N|P|}\\sum_{n,p}x_{n,c,p}. Here N=2 images provide the only samples for the batch-level average, and the two volumes may have very different intensity/activation levels (different patients/scanners). As shown in Derivation 4, with values {1,2,3,4} and {10,20,30,40} the pooled batch mean is 13.75, which is dominated by the brighter image and leaves the dimmer image's activations all pushed negative \u2014 and this estimate swings wildly from batch to batch (a different pairing gives a different mean/var). The result is noisy gradients and a train/eval statistics mismatch (inference uses running averages that never saw such tiny, high-variance batches cleanly). Fix: use instance normalization, which computes \\mu_{n,c} per sample over spatial locations only. In Derivation 4 both images mapped to the identical normalized pattern {-1.342,-0.447,0.447,1.342} regardless of batch size. This is exactly nnU-Net's choice \u2014 swap batch norm for instance norm (with leaky ReLU) precisely because medical 3D training runs at batch sizes as low as 2."
+  }
+ ],
+ "suggested_figures": [
+  "Two-panel 'same tissue, two scanners' figure: left, raw histograms of a FLAIR volume from Scanner A and Scanner B (offset/scaled apart); right, the same two histograms after per-brain-mask z-score, now overlapping \u2014 visually proving affine invariance. Overlay the outlier case to show global-max crushing the brain into a sliver of [0,1].",
+  "A 'where do the statistics come from?' tensor diagram for an N\u00d7C\u00d7H\u00d7W (or N\u00d7C\u00d7D\u00d7H\u00d7W) activation block, with colored shading showing that batch norm averages over the batch+spatial cells of one channel while instance norm averages over spatial cells of one (sample, channel) pair \u2014 the single clearest way to see the batch-size dependence difference.",
+  "A pipeline strip locating the two normalizations in the stack: raw 4-modality MRI -> [brain mask + per-modality z-score] -> patch -> U-Net encoder/decoder with [instance-norm layers] highlighted -> segmentation. Reinforces that 'normalization' happens at two very different places."
+ ],
+ "confidence_notes": "All formulas and the two proofs (zero-mean/unit-variance and affine invariance) are standard mathematics and were re-derived and numerically checked here; the Derivation 3 and 4 arithmetic was computed by hand and cross-checked (batch-norm variance sum 1517.5 -> var 189.6875 -> std 13.773 verified). Factual/software claims are sourced: nnU-Net uses per-patient per-modality z-score for MRI over the nonzero mask and swaps batch norm for instance norm (arXiv:1809.10486; nnU-Net BraTS arXiv:2011.00848; GitHub discussion for use_mask_for_norm). Batch-norm and instance-norm definitions match the original papers (Ioffe & Szegedy arXiv:1502.03167; Ulyanov et al. arXiv:1607.08022) and the U-Net attribution is Ronneberger et al. MICCAI 2015. One caveat I could not pin to a single canonical citation: the exact epsilon value and whether population (1/N) vs sample (1/(N-1)) variance is used differ by implementation \u2014 I used the population (1/N) convention throughout, which is what nnU-Net/most DL frameworks use for these normalizations; a reader checking a specific codebase should confirm the variance convention there. The 'global-max is standard practice somewhere' framing is used only as a pedagogical foil (the naive baseline), not attributed to nnU-Net, which does not use global-max for MRI.\"}",
+ "_key": "normalization",
+ "_kind": "dl"
+}

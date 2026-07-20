@@ -1,0 +1,5 @@
+flowchart TB
+  A["Raw 4-modality MRI"] --> B["<b>Input normalization</b><br/>brain mask + per-modality z-score"]
+  B --> C["Patch (crop)"]
+  C --> D["U-Net<br/><b>network normalization</b><br/>instance-norm layers inside"]
+  D --> E["Segmentation"]

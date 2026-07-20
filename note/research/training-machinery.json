@@ -1,0 +1,166 @@
+{
+ "topic": "Training machinery for BraTS post-treatment glioma segmentation: AdamW, cosine-annealing LR, patch-based class-balanced training, sliding-window inference, and bf16 mixed precision (and why bf16 needs no GradScaler)",
+ "overview": "Training a 3D segmentation network on brain-tumor MRI is as much an engineering problem as a modeling one. A single BraTS case is roughly 240x240x155 voxels across four co-registered MRI channels (T1, T1-contrast, T2, FLAIR), far too large to feed to a 3D convolutional network as one block on a normal GPU. The \"training machinery\" is the set of standard, well-tested choices that make such training fast, stable, and memory-feasible: which optimizer updates the weights (AdamW), how the learning rate changes over time (cosine annealing), how the giant volume is chopped into digestible pieces that still contain enough tumor to learn from (patch-based training with class-balanced crops), how those pieces are stitched back into a whole-brain prediction at test time (sliding-window inference), and what numerical format the arithmetic runs in (bf16 mixed precision).\n\nNone of these are specific to brain tumors; they are the default recipe in modern medical-image segmentation, popularized largely by the nnU-Net framework, which is built on the original U-Net architecture (Ronneberger et al., 2015). Understanding them explains almost every training-time decision in the project: why the loss curve descends the way it does, why the model only ever sees small cropped cubes yet must predict on whole brains, and why the code can drop a piece of boilerplate \u2014 the gradient scaler \u2014 that FP16 training would require.\n\nTwo ideas do most of the conceptual work. First, class balancing matters because tumor tissue occupies a tiny fraction of the brain; a purely random crop is usually almost entirely healthy tissue or empty background, so the network would learn to output \"no tumor,\" score high on voxel accuracy, and be clinically useless. Forcing a fraction of crops to be centered on tumor voxels fixes the class statistics the network trains on. Second, the choice of bf16 over fp16 is about dynamic range, not just speed: bf16 keeps FP32's full exponent range, so tiny gradients do not underflow to zero, which is exactly why the loss-scaling trick (GradScaler) that FP16 needs becomes unnecessary.\n\nThis note gives the compact formulas, correct step-by-step derivations, and small worked numeric examples for each piece, plus the intuitions and traps that trip people up.",
+ "key_points": [
+  {
+   "point": "AdamW is Adam with DECOUPLED weight decay: instead of folding an L2 penalty into the gradient (which Adam's per-parameter scaling would distort), AdamW subtracts eta*lambda*theta directly from the weights. This makes weight decay behave as true regularization and is the standard optimizer for transformers and modern segmentation nets.",
+   "source": "Loshchilov & Hutter, 'Decoupled Weight Decay Regularization', ICLR 2019",
+   "citation_url": "https://arxiv.org/abs/1711.05101"
+  },
+  {
+   "point": "Adam maintains exponential moving averages of the gradient (first moment m) and squared gradient (second moment v), applies bias correction, and takes a step scaled by m_hat / (sqrt(v_hat)+eps). Default betas=(0.9,0.999), eps=1e-8.",
+   "source": "Kingma & Ba, 'Adam: A Method for Stochastic Optimization', ICLR 2015",
+   "citation_url": "https://arxiv.org/abs/1412.6980"
+  },
+  {
+   "point": "Cosine annealing decays the learning rate along a half-cosine from eta_max to eta_min over the schedule, spending a long time near the max early and near the min late; formula eta_t = eta_min + 0.5*(eta_max-eta_min)*(1+cos(pi*T_cur/T_max)). Introduced with warm restarts as SGDR.",
+   "source": "Loshchilov & Hutter, 'SGDR: Stochastic Gradient Descent with Warm Restarts', ICLR 2017",
+   "citation_url": "https://arxiv.org/abs/1608.03983"
+  },
+  {
+   "point": "U-Net is the encoder-decoder-with-skip-connections architecture underlying most BraTS pipelines; its skip connections carry high-resolution spatial detail across the bottleneck, which is essential for precise tumor boundaries.",
+   "source": "Ronneberger, Fischer & Brox, 'U-Net: Convolutional Networks for Biomedical Image Segmentation', MICCAI 2015",
+   "citation_url": "https://arxiv.org/abs/1505.04597"
+  },
+  {
+   "point": "Patch-based training with foreground oversampling is the nnU-Net default: a fixed fraction (commonly one third) of the patches in each batch are forced to contain a randomly chosen foreground class, guaranteeing the network sees tumor in most steps despite severe class imbalance.",
+   "source": "Isensee et al., 'nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation', Nature Methods 2021",
+   "citation_url": "https://www.nature.com/articles/s41592-020-01008-z"
+  },
+  {
+   "point": "Sliding-window inference tiles the full volume with overlapping patches of the training patch size, runs the network on each, and blends overlapping predictions (typically with Gaussian/importance weighting that downweights patch edges) to remove seam artifacts. Implemented as sliding_window_inference in MONAI.",
+   "source": "MONAI documentation (sliding_window_inference); nnU-Net inference",
+   "citation_url": "https://docs.monai.io/en/stable/inferers.html"
+  },
+  {
+   "point": "bf16 (bfloat16) uses 1 sign + 8 exponent + 7 mantissa bits, giving it the SAME exponent range as FP32 (~1.2e-38 to ~3.4e38) but coarser precision; fp16 uses 1+5+10 bits, giving fine precision but a narrow range (smallest normal ~6.1e-5).",
+   "source": "PyTorch AMP blog, 'What Every User Should Know About Mixed Precision Training in PyTorch'",
+   "citation_url": "https://pytorch.org/blog/what-every-user-should-know-about-mixed-precision-training-in-pytorch/"
+  },
+  {
+   "point": "Because bf16 shares FP32's dynamic range, small gradients do not underflow to zero, so loss scaling (torch.cuda.amp.GradScaler) is unnecessary; with fp16 the same gradients would underflow, which is why FP16 AMP needs GradScaler to multiply the loss by a large factor before backprop and unscale afterward.",
+   "source": "PyTorch AMP docs / blog; NVIDIA mixed-precision guidance",
+   "citation_url": "https://pytorch.org/docs/stable/amp.html"
+  }
+ ],
+ "equations": [
+  {
+   "name": "AdamW parameter update (full)",
+   "latex": "\\begin{aligned} g_t &= \\nabla_\\theta \\mathcal{L}(\\theta_{t-1}) \\\\ m_t &= \\beta_1 m_{t-1} + (1-\\beta_1)\\, g_t \\\\ v_t &= \\beta_2 v_{t-1} + (1-\\beta_2)\\, g_t^2 \\\\ \\hat m_t &= \\frac{m_t}{1-\\beta_1^{\\,t}}, \\qquad \\hat v_t = \\frac{v_t}{1-\\beta_2^{\\,t}} \\\\ \\theta_t &= \\theta_{t-1} - \\eta_t\\left( \\frac{\\hat m_t}{\\sqrt{\\hat v_t}+\\epsilon} + \\lambda\\,\\theta_{t-1}\\right) \\end{aligned}",
+   "variables_explained": "g_t is the gradient at step t; m_t, v_t are the exponential moving averages of the gradient and squared gradient (first/second moments); beta_1, beta_2 in [0,1) are their decay rates (defaults 0.9, 0.999); m_hat, v_hat are bias-corrected estimates; eta_t is the (scheduled) learning rate; epsilon is a small constant (1e-8) preventing division by zero; lambda is the weight-decay coefficient; theta are the network weights. The key AdamW feature is that the lambda*theta term is added OUTSIDE the sqrt(v_hat) scaling \u2014 decoupled from the adaptive gradient term."
+  },
+  {
+   "name": "Adam (original) coupled L2 for contrast",
+   "latex": "g_t \\leftarrow g_t + \\lambda\\,\\theta_{t-1}, \\qquad \\theta_t = \\theta_{t-1} - \\eta_t\\,\\frac{\\hat m_t}{\\sqrt{\\hat v_t}+\\epsilon}",
+   "variables_explained": "In classic Adam+L2, the penalty is injected into the gradient g_t, so it then gets divided by sqrt(v_hat). Parameters with large historical gradients (large v_hat) receive a SMALLER effective decay \u2014 an unintended coupling. AdamW removes exactly this coupling; symbols are as above."
+  },
+  {
+   "name": "Cosine-annealing learning rate (single cycle)",
+   "latex": "\\eta_t = \\eta_{\\min} + \\tfrac{1}{2}\\,(\\eta_{\\max}-\\eta_{\\min})\\left(1+\\cos\\!\\left(\\pi\\,\\frac{T_{\\mathrm{cur}}}{T_{\\max}}\\right)\\right)",
+   "variables_explained": "eta_t is the learning rate at step/epoch t; eta_max is the initial (peak) LR, eta_min the floor (often 0); T_cur is elapsed steps since the last restart (here just t); T_max is the total length of the cosine cycle. At T_cur=0 the cosine is +1 giving eta_max; at T_cur=T_max the cosine is -1 giving eta_min."
+  },
+  {
+   "name": "Cosine annealing with warm restarts (SGDR)",
+   "latex": "\\eta_t = \\eta_{\\min} + \\tfrac{1}{2}(\\eta_{\\max}-\\eta_{\\min})\\left(1+\\cos\\!\\left(\\pi\\,\\frac{T_{\\mathrm{cur}}}{T_i}\\right)\\right),\\qquad T_i = T_{\\mathrm{mult}}\\cdot T_{i-1}",
+   "variables_explained": "Same as above but the cycle length T_i grows by a factor T_mult after each restart; at each restart T_cur resets to 0 and the LR jumps back to eta_max (a 'warm restart' that keeps the weights but re-energizes the search). Many BraTS pipelines use a single cycle (no restarts), i.e. the previous equation."
+  },
+  {
+   "name": "Class-balanced (foreground-oversampled) crop sampling",
+   "latex": "P(\\text{patch centered on foreground}) = p_{fg},\\qquad P(\\text{class}=c \\mid \\text{foreground}) = \\tfrac{1}{C_{fg}}",
+   "variables_explained": "p_fg is the fixed fraction of patches forced to contain foreground (nnU-Net uses p_fg = 1/3). With probability 1-p_fg the patch center is a uniformly random voxel (background allowed). Given a foreground patch, a foreground class c is chosen uniformly among the C_fg foreground classes, then a random voxel of that class becomes the patch center. This decouples the training class distribution from the raw voxel frequencies."
+  },
+  {
+   "name": "Sliding-window tiling count and aggregation",
+   "latex": "N_d = \\left\\lceil \\frac{D_d - P_d}{S_d} \\right\\rceil + 1,\\qquad S_d = P_d\\,(1-r),\\qquad \\hat y(x) = \\frac{\\sum_k w_k(x)\\,\\hat y_k(x)}{\\sum_k w_k(x)}",
+   "variables_explained": "For axis d: D_d is the image size, P_d the patch size, r the overlap fraction (e.g. 0.5), S_d the stride, and N_d the number of windows along that axis; the total number of windows is the product over axes. For output blending, hat y_k is patch k's prediction, w_k(x) its weight at voxel x (uniform, or a Gaussian centered on the patch that downweights edges), and hat y(x) the normalized blended prediction."
+  },
+  {
+   "name": "FP16 loss scaling (what bf16 avoids)",
+   "latex": "g_t^{scaled} = \\frac{1}{S}\\,\\nabla_\\theta\\big(S\\cdot \\mathcal{L}\\big) = \\nabla_\\theta \\mathcal{L}",
+   "variables_explained": "S is a large scale factor (e.g. 2^16). FP16 AMP multiplies the loss by S so that small gradients land inside FP16's representable range during backprop, then divides (unscales) the resulting gradients by S before the optimizer step; GradScaler also dynamically adjusts S and skips steps when it detects inf/NaN. bf16's wide exponent range makes S=1 safe, so this machinery is dropped."
+  }
+ ],
+ "derivations": [
+  {
+   "title": "Why bias correction: deriving m_hat_t = m_t / (1 - beta_1^t)",
+   "steps": [
+    "m_t = \\beta_1 m_{t-1} + (1-\\beta_1) g_t  \u2014 the update rule for the first moment, an exponential moving average of the gradients. m_0 is initialized to 0.",
+    "m_t = (1-\\beta_1)\\sum_{i=1}^{t} \\beta_1^{\\,t-i} g_i  \u2014 unrolling the recursion from m_0 = 0. Each past gradient g_i is weighted by (1-beta_1) times beta_1 raised to how many steps ago it was, so recent gradients dominate.",
+    "\\mathbb{E}[m_t] = (1-\\beta_1)\\sum_{i=1}^{t} \\beta_1^{\\,t-i}\\,\\mathbb{E}[g_i]  \u2014 take expectations of both sides (expectation is linear). We now need the expected gradient.",
+    "\\mathbb{E}[m_t] \\approx \\mathbb{E}[g]\\,(1-\\beta_1)\\sum_{i=1}^{t}\\beta_1^{\\,t-i}  \u2014 assume the gradient distribution is roughly stationary so E[g_i] \u2248 E[g] can be pulled out of the sum. (Adam's paper makes exactly this stationarity approximation.)",
+    "\\sum_{i=1}^{t}\\beta_1^{\\,t-i} = \\sum_{j=0}^{t-1}\\beta_1^{\\,j} = \\frac{1-\\beta_1^{\\,t}}{1-\\beta_1}  \u2014 substitute j = t - i to get a standard finite geometric series, then apply the geometric-sum formula (valid since 0 <= beta_1 < 1).",
+    "\\mathbb{E}[m_t] \\approx \\mathbb{E}[g]\\,(1-\\beta_1)\\cdot\\frac{1-\\beta_1^{\\,t}}{1-\\beta_1} = \\mathbb{E}[g]\\,(1-\\beta_1^{\\,t})  \u2014 the (1-beta_1) factors cancel. So the raw average m_t is biased toward 0 by the factor (1 - beta_1^t), which is severe when t is small (early training).",
+    "\\hat m_t = \\frac{m_t}{1-\\beta_1^{\\,t}} \\;\\Rightarrow\\; \\mathbb{E}[\\hat m_t] \\approx \\mathbb{E}[g]  \u2014 dividing by (1 - beta_1^t) removes the bias, giving an (approximately) unbiased estimate of the true gradient mean. The identical argument on v_t gives v_hat_t = v_t/(1-beta_2^t). As t grows, beta_1^t -> 0 and the correction fades to 1."
+   ]
+  },
+  {
+   "title": "Cosine schedule endpoints and midpoint (worked with numbers)",
+   "steps": [
+    "\\eta_t = \\eta_{\\min} + \\tfrac{1}{2}(\\eta_{\\max}-\\eta_{\\min})\\big(1+\\cos(\\pi\\,T_{cur}/T_{\\max})\\big)  \u2014 start from the single-cycle formula. Take a concrete BraTS-style setting: eta_max = 3e-4, eta_min = 0, T_max = 100 epochs.",
+    "T_{cur}=0:\\;\\; \\cos(0)=1 \\Rightarrow \\eta = 0 + \\tfrac12(3\\times10^{-4})(1+1) = 3\\times10^{-4}  \u2014 at the very start the LR equals the peak eta_max, as intended.",
+    "T_{cur}=25:\\;\\; \\cos(\\pi\\cdot0.25)=\\cos(45^\\circ)=0.7071 \\Rightarrow \\eta = \\tfrac12(3\\times10^{-4})(1.7071) = 2.56\\times10^{-4}  \u2014 after a quarter of the cycle the LR has only dropped ~15%, showing the schedule lingers near the top early on.",
+    "T_{cur}=50:\\;\\; \\cos(\\pi\\cdot0.5)=\\cos(90^\\circ)=0 \\Rightarrow \\eta = \\tfrac12(3\\times10^{-4})(1) = 1.5\\times10^{-4}  \u2014 the halfway point sits at exactly the midpoint LR (average of eta_max and eta_min).",
+    "T_{cur}=75:\\;\\; \\cos(135^\\circ)=-0.7071 \\Rightarrow \\eta = \\tfrac12(3\\times10^{-4})(0.2929) = 4.39\\times10^{-5}  \u2014 by three-quarters the LR has collapsed to ~15% of peak; the decay is now steep, letting the model settle.",
+    "T_{cur}=100:\\;\\; \\cos(\\pi)=-1 \\Rightarrow \\eta = \\tfrac12(3\\times10^{-4})(0) = 0  \u2014 the cycle ends exactly at eta_min = 0. The overall shape is 'slow at the ends, fast in the middle', the opposite emphasis of linear decay."
+   ]
+  },
+  {
+   "title": "Why fp16 needs GradScaler but bf16 does not (dynamic-range numeric argument)",
+   "steps": [
+    "\\text{fp16 smallest positive normal} = 2^{-14} \\approx 6.10\\times10^{-5}  \u2014 fp16 has 5 exponent bits; its smallest normal magnitude is 2^-14. Below this it enters subnormals (down to 2^-24 \u2248 5.96e-8) with rapidly degrading precision, then hits zero.",
+    "\\text{bf16 smallest positive normal} = 2^{-126} \\approx 1.18\\times10^{-38}  \u2014 bf16 keeps all 8 exponent bits of fp32, so its smallest normal is ~30 orders of magnitude smaller than fp16's. Its range matches fp32; only mantissa precision (7 bits) is sacrificed.",
+    "\\text{Take a realistic small gradient } g = 1\\times10^{-7}.  \u2014 deep-net gradients of 1e-7 or smaller are common, especially with many layers or small-magnitude features.",
+    "g=10^{-7} < 6.10\\times10^{-5} \\Rightarrow \\text{underflows fp16 normals}  \u2014 in fp16 this value falls into the subnormal range or rounds to 0, so information is lost or the gradient vanishes and that weight stops learning.",
+    "S\\cdot g = 2^{16}\\cdot10^{-7} = 65536\\times10^{-7} \\approx 6.55\\times10^{-3}  \u2014 fp16's fix (GradScaler) multiplies the loss by S=2^16 so the backprop'd gradient becomes ~6.6e-3, comfortably inside fp16's normal range; after backward it is divided by S to recover the true value before the step.",
+    "10^{-7} > 1.18\\times10^{-38} \\Rightarrow \\text{representable in bf16 with } S=1  \u2014 the same gradient is far above bf16's underflow limit, so no scaling is needed. The loss-scaling machinery (GradScaler.scale / .unscale_ / dynamic backoff on inf/NaN) is therefore omitted for bf16; the only cost is bf16's coarser 7-bit mantissa, which weight/optimizer state kept in fp32 compensates for."
+   ]
+  },
+  {
+   "title": "Counting sliding-window patches for a BraTS volume (worked)",
+   "steps": [
+    "N_d = \\lceil (D_d - P_d)/S_d \\rceil + 1, \\quad S_d = P_d(1-r)  \u2014 general tiling count per axis, with overlap fraction r. Use a whole-brain volume D = (240,240,155), patch P = (128,128,128), overlap r = 0.5.",
+    "S = 128\\times(1-0.5) = 64  \u2014 the stride is half the patch, so consecutive windows overlap by 64 voxels along each axis.",
+    "N_x = \\lceil (240-128)/64 \\rceil + 1 = \\lceil 1.75 \\rceil + 1 = 2 + 1 = 3  \u2014 three windows span the 240-voxel X axis. The same arithmetic gives N_y = 3.",
+    "N_z = \\lceil (155-128)/64 \\rceil + 1 = \\lceil 0.422 \\rceil + 1 = 1 + 1 = 2  \u2014 two windows cover the 155-voxel Z axis.",
+    "N_{total} = N_x\\times N_y\\times N_z = 3\\times3\\times2 = 18  \u2014 the network runs 18 forward passes for this one case; each overlapping voxel is predicted by multiple windows and the results are blended by the weighted-average formula, with Gaussian weights making edge predictions (least reliable, since they saw the least context) contribute least."
+   ]
+  }
+ ],
+ "intuitions": [
+  "AdamW = 'per-parameter adaptive step size' + 'honest weight decay'. The m_hat/(sqrt(v_hat)+eps) term gives each weight its own effective learning rate \u2014 parameters with consistently large gradients take smaller, steadier steps \u2014 while decoupling weight decay ensures the shrink-toward-zero pressure is the same for every weight instead of being secretly scaled down for the busy ones.",
+  "Cosine annealing is 'explore hot, then cool slowly to lock in'. A high LR early lets the optimizer roam and find a good basin; the long, smooth cool-down lets it settle into a flat minimum without the abrupt cliffs of step schedules. The shape spends most of its time near the extremes and passes quickly through the middle.",
+  "Class-balanced cropping fixes the question the network is asked. Raw brain volumes are ~99% not-tumor, so uniform crops teach 'predict background'. By guaranteeing ~1/3 of crops are centered on tumor, you rebalance the training signal without touching the loss function \u2014 the network sees enough positive examples to actually learn the boundaries.",
+  "Train on cubes, predict on the whole brain, then blend the seams. Patch training is a memory hack; sliding-window inference undoes it by tiling with overlap and averaging. Gaussian/importance weighting encodes 'trust the center of a patch more than its edges,' because edge voxels were predicted with less surrounding context.",
+  "bf16 vs fp16 is 'range vs precision.' bf16 trades away mantissa bits (precision) to keep fp32's exponent bits (range). For gradients, range is what matters \u2014 you must not lose tiny values to underflow \u2014 so bf16 is both faster AND simpler, dropping the entire loss-scaling apparatus."
+ ],
+ "gotchas": [
+  "bf16 is lower precision than fp16, not higher. People assume 'newer = more accurate.' bf16 has only 7 mantissa bits vs fp16's 10, so it is COARSER; it wins purely on dynamic range. This is fine for training because master weights and optimizer moments are kept in fp32; but naively storing everything in bf16 (e.g. accumulating a large sum) can lose small contributions.",
+  "Do not add a GradScaler 'just in case' when training in bf16 \u2014 it is not just unnecessary, it is conceptually wrong (bf16 has no underflow problem to solve) and can mask bugs. Conversely, forgetting GradScaler under fp16 silently kills learning as small gradients vanish. Match the tool to the dtype.",
+  "The cosine argument uses T_cur/T_max in the range [0,1] mapped to [0,pi]; a common off-by-one/units bug is feeding it iteration counts against an epoch-based T_max (or vice versa), which either ends the schedule far from eta_min or anneals far too fast. Also, with warm restarts the LR JUMPS back up at each restart \u2014 if you did not intend restarts, use a single-cycle scheduler.",
+  "AdamW's weight decay lambda is NOT the same number as an Adam+L2 coefficient \u2014 decoupling changes its effective scale (it is no longer divided by sqrt(v_hat)). Porting an L2 value straight into AdamW's weight_decay usually over- or under-regularizes; it must be retuned. Also, weight decay is typically excluded from bias and normalization parameters.",
+  "Foreground oversampling changes the class balance the network TRAINS on, so the model's output distribution is biased unless you also use an imbalance-aware loss (Dice / Dice+CE). Evaluating with plain voxel accuracy will still look deceptively high; use Dice per tumor sub-region as BraTS does.",
+  "Sliding-window inference cost scales with overlap: going from r=0.5 to r=0.75 roughly doubles the number of windows per axis (up to ~8x more forward passes in 3D) for marginal accuracy gains \u2014 a real speed trap at test time."
+ ],
+ "example_questions": [
+  {
+   "question": "In AdamW with beta_1 = 0.9, at training step t = 1 the first raw moment is m_1. Show numerically how much bias correction changes the effective first-moment estimate, and explain why it matters early in training.",
+   "answer": "At t=1 with m_0=0: m_1 = beta_1*m_0 + (1-beta_1)*g_1 = 0.1*g_1. The bias-corrected estimate divides by (1 - beta_1^t) = (1 - 0.9^1) = 0.1, giving m_hat_1 = 0.1*g_1 / 0.1 = g_1 \u2014 exactly the current gradient. Without correction the optimizer would step using 0.1*g_1, i.e. only 10% of the true gradient magnitude, so early steps would be ~10x too small and training would crawl for the first iterations. At t=2, (1 - 0.9^2) = 0.19, so the correction factor is ~5.26x; by t=50, 0.9^50 ~ 5.2e-3, so (1 - 0.9^50) ~ 0.995 and the correction is negligible. Bias correction thus matters almost entirely in the opening dozens of steps, preventing an artificially timid start."
+  },
+  {
+   "question": "A model trains in bf16 and a gradient element has true value 3e-8. A colleague worries it will 'vanish like it does in fp16' and wants to add GradScaler with S = 2^15. Is that necessary? Give the numbers.",
+   "answer": "Not necessary. bf16's smallest positive normal is 2^-126 ~ 1.18e-38, and 3e-8 is about 30 orders of magnitude larger, so it is represented as a normal bf16 value with no underflow (only its mantissa is rounded to 7 bits). By contrast fp16's smallest normal is 2^-14 ~ 6.10e-5, and 3e-8 << 6.10e-5, so in fp16 it would underflow into subnormals or to zero \u2014 THAT is the case GradScaler fixes (S*3e-8 = 32768*3e-8 ~ 9.8e-4, back in fp16's range). Adding GradScaler under bf16 solves a non-problem, adds overhead, and its dynamic inf/NaN backoff can mask real issues. The correct bf16 recipe is: autocast to bf16 for the forward/backward, keep fp32 master weights and optimizer state, and no scaler."
+  },
+  {
+   "question": "You train with patch size 96^3 and want sliding-window inference at overlap 0.5 on a padded 192x192x144 volume. How many forward passes per case, and what does increasing overlap to 0.75 do to that count?",
+   "answer": "Stride at r=0.5 is S = 96*(1-0.5) = 48. Per axis N = ceil((D-96)/48) + 1: for X, ceil((192-96)/48)+1 = ceil(2)+1 = 3; same for Y = 3; for Z, ceil((144-96)/48)+1 = ceil(1)+1 = 2. Total = 3*3*2 = 18 forward passes. At r=0.75, S = 96*0.25 = 24: X = ceil((192-96)/24)+1 = ceil(4)+1 = 5; Y = 5; Z = ceil((144-96)/24)+1 = ceil(2)+1 = 3. Total = 5*5*3 = 75 passes \u2014 about 4.2x more compute for a modest boundary-smoothness gain. This is why overlap is a tunable cost/quality knob at inference, and why Gaussian weighting (not plain averaging) is used so the extra overlapping predictions are blended sensibly rather than giving equal vote to unreliable patch edges."
+  }
+ ],
+ "suggested_figures": [
+  "A three-panel comparison of LR schedules over epochs on the same axes: constant, linear/step decay, and cosine annealing (with an optional dashed overlay showing SGDR warm restarts) \u2014 annotate the eta_max, eta_min, and midpoint (T/2) points from the worked example.",
+  "A bit-layout diagram comparing FP32 (1+8+23), bf16 (1+8+7), and fp16 (1+5+10), with a number line beneath showing each format's representable range and the fp16 underflow zone where a 1e-7 gradient falls to zero \u2014 visually motivating 'why no GradScaler on bf16.'",
+  "A 2D schematic of the patch pipeline: (left) a brain slice with a tiny tumor and several candidate crops, most background, one forced foreground crop centered on tumor (class-balanced sampling); (right) sliding-window inference tiling the same slice with overlapping windows and a Gaussian weight heatmap showing center-weighted blending of overlaps."
+ ],
+ "confidence_notes": "All ML formulas and bit layouts are standard and were cross-checked against primary sources: AdamW (Loshchilov & Hutter, ICLR 2019), Adam (Kingma & Ba, ICLR 2015), SGDR cosine annealing (Loshchilov & Hutter, ICLR 2017), U-Net (Ronneberger et al., MICCAI 2015), nnU-Net (Isensee et al., Nature Methods 2021), and PyTorch AMP docs/blog for bf16-vs-fp16 dynamic range and the GradScaler rationale. Numeric examples were computed by hand and are internally consistent (cos values, geometric-series sum, ceil-based window counts, IEEE exponent-based min-normal values 2^-14, 2^-24, 2^-126). Two project-specific details I could NOT verify from a source and stated only as common defaults, not facts about this repo: (1) the exact foreground-oversampling fraction used in THIS BraTS codebase \u2014 I cited nnU-Net's canonical 1/3, but the project may differ; (2) the specific eta_max, patch size, and overlap values in the worked examples are illustrative BraTS-typical numbers, not read from the project's config. The BraTS post-treatment challenge label scheme (and the repo's noted 4-class vs 5-class discrepancy in memory) is a data/labeling matter outside this training-machinery topic and was not independently re-verified here. bf16 having 7 explicit mantissa bits (8 with implicit leading bit) is correct; I described it as '7 mantissa bits' following the IEEE explicit-bit convention.",
+ "_key": "training-machinery",
+ "_kind": "dl"
+}

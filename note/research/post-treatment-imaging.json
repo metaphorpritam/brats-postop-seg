@@ -1,0 +1,176 @@
+{
+ "topic": "Post-Treatment Glioma Imaging: Resection Cavity, Treatment Effect, Pseudoprogression, Radiation Necrosis, RANO Response Criteria, and Why Post-Treatment Segmentation Is Hard",
+ "overview": "After a diffuse glioma (most aggressively, glioblastoma) is treated, the brain no longer looks the way it did on the diagnostic scan. Standard therapy is maximal safe surgical resection followed by radiotherapy plus temozolomide chemotherapy. Each of these leaves a signature on MRI: surgery leaves a fluid-, blood-, and air-filled **resection cavity**; radiation and chemotherapy injure normal tissue and the blood-brain barrier, producing **treatment effect** (inflammation, gliosis, and leaky contrast enhancement). The clinical problem is that these treatment changes can look almost identical to tumor regrowth. This is the crux of post-treatment neuro-oncologic imaging.\n\nTwo specific mimics dominate. **Pseudoprogression** is a transient, treatment-related increase in contrast enhancement and edema that appears typically within the first 3 months (up to 6 months) after chemoradiation and then stabilizes or resolves on its own \u2014 it is NOT tumor growth, yet it looks like it. It is common (roughly 30% of patients after combined chemoradiation) and is strongly linked to MGMT-promoter methylation and IDH mutation. **Radiation necrosis** is a later (months to years), more destructive form of treatment-related tissue death. Both can enhance and enlarge inside the radiation field, so conventional MRI alone frequently cannot separate them from true tumor, which is why advanced techniques (perfusion, spectroscopy, PET) are added.\n\nTo make treatment-response judgments reproducible across hospitals and clinical trials, the neuro-oncology community created the **RANO criteria** (Response Assessment in Neuro-Oncology), updated to **RANO 2.0 in 2023**. RANO measures enhancing tumor bidimensionally (two perpendicular diameters), sums the products across target lesions, and classifies each follow-up scan as Complete Response, Partial Response, Stable Disease, or Progressive Disease using fixed percentage thresholds. RANO 2.0 explicitly guards against the pseudoprogression trap: it uses the post-radiotherapy scan (not the immediate post-surgical scan) as the baseline, and it requires confirmation of apparent early progression within 12 weeks of radiotherapy.\n\nThis is the clinical backdrop for the **BraTS 2024 post-treatment glioma segmentation challenge**, which asks machine-learning models to delineate four tissue classes on post-treatment MRI: enhancing tissue (ET), non-enhancing tumor core (NETC), surrounding non-enhancing FLAIR hyperintensity (SNFH), and \u2014 new for the post-treatment setting \u2014 the resection cavity (RC). Automated, reproducible volumetric segmentation matters because it feeds radiation planning and response assessment; it is hard precisely because the resection cavity, blood products, and post-radiation inflammation overlap in appearance with residual/recurrent tumor and with the naturally ill-defined borders of infiltrative glioma.",
+ "key_points": [
+  {
+   "point": "Standard-of-care glioblastoma treatment (the 'Stupp protocol') is maximal safe resection followed by concurrent radiotherapy plus temozolomide and adjuvant temozolomide; every element leaves an imaging signature (resection cavity, blood products, radiation-induced inflammation/gliosis) that complicates later interpretation.",
+   "source": "BraTS 2024 Challenge paper (arXiv 2405.18368)",
+   "citation_url": "https://arxiv.org/html/2405.18368v1"
+  },
+  {
+   "point": "Post-treatment segmentation is hard because 'the combination of treatment-related changes, including resection cavities, blood products, post-radiation inflammation, and gliosis, combined with the already naturally ill-defined tumor borders seen in infiltrative diffuse gliomas makes segmentation a challenging task.'",
+   "source": "BraTS 2024 Challenge paper (arXiv 2405.18368)",
+   "citation_url": "https://arxiv.org/html/2405.18368v1"
+  },
+  {
+   "point": "BraTS 2024 post-treatment defines four subregions: Enhancing Tissue (ET, hyperintense on contrast T1, excluding vessels and thin linear cavity-rim enhancement), Non-Enhancing Tumor Core (NETC, dark on T1 and post-contrast T1 = necrosis/cysts), Surrounding Non-enhancing FLAIR Hyperintensity (SNFH, edema + infiltrating tumor + treatment change, excluding chronic microvascular change), and Resection Cavity (RC, recent or chronic, containing fluid/blood/air/proteinaceous material).",
+   "source": "BraTS 2024 Challenge paper (arXiv 2405.18368)",
+   "citation_url": "https://arxiv.org/html/2405.18368v1"
+  },
+  {
+   "point": "The resection cavity is a subregion newly required in the post-treatment challenge; distinguishing treated/cavity tissue from residual or recurrent tumor is critical for radiation planning and is a primary source of difficulty. The challenge used ~2,200 cases and evaluated with lesion-wise Dice Similarity Coefficient and lesion-wise 95% Hausdorff Distance (HD95).",
+   "source": "BraTS 2024 Challenge paper (arXiv 2405.18368)",
+   "citation_url": "https://arxiv.org/html/2405.18368v1"
+  },
+  {
+   "point": "Pseudoprogression is a subacute, treatment-related increase in enhancement/edema that mimics tumor progression but is transient (stabilizes or resolves without changed therapy); it typically occurs within the first 3 months and up to 6 months after chemoradiation and is distinct from late radiation necrosis.",
+   "source": "PubMed review: Pseudoprogression versus true progression in glioblastoma (J Neurosurg 2023)",
+   "citation_url": "https://pubmed.ncbi.nlm.nih.gov/36790010/"
+  },
+  {
+   "point": "Pseudoprogression occurs in roughly 30% of patients after combined chemoradiotherapy versus about 15% after radiotherapy alone; in nearly 60% of cases it appears within the first 3 months after treatment (window from a few weeks up to 6 months).",
+   "source": "Zikou et al., Radiation Necrosis, Pseudoprogression, Pseudoresponse, and Tumor Recurrence (Contrast Media Mol Imaging 2018)",
+   "citation_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6305027/"
+  },
+  {
+   "point": "Pseudoprogression is more common in tumors with MGMT promoter methylation and IDH mutation; methylated tumors show pseudoprogression in up to ~91% of progression-appearing cases versus ~41% in unmethylated, and pseudoprogression is generally associated with better outcome/survival.",
+   "source": "Zikou et al. review (Contrast Media Mol Imaging 2018)",
+   "citation_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6305027/"
+  },
+  {
+   "point": "Radiation necrosis is a late-delayed (months to years) form of treatment-related tissue death; on conventional MRI both radiation necrosis and true progression enlarge and enhance within the radiation field, so they are frequently indistinguishable without advanced imaging (DWI/DTI, DSC/DCE perfusion, MR spectroscopy, PET). Morphologic clues favoring necrosis include a smooth/soap-bubble or Swiss-cheese enhancement pattern and lesions crossing anatomic boundaries.",
+   "source": "Verma et al. / Zikou review; The Diagnosis and Treatment of Pseudoprogression, Radiation Necrosis and Brain Tumor Recurrence (2014)",
+   "citation_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4139817/"
+  },
+  {
+   "point": "RANO defines measurable disease as bidimensional contrast-enhancing lesions with clearly defined margins, two perpendicular diameters each >=10 mm, visible on >=2 axial slices; when multiple lesions exist at least 2 target lesions are chosen and the sum of the products of perpendicular diameters is tracked.",
+   "source": "AJNR: RANO Criteria for Gliomas \u2014 Practical Approach (2020)",
+   "citation_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6975322/"
+  },
+  {
+   "point": "RANO 2D response thresholds (on sum of products of perpendicular diameters): Complete Response = complete disappearance of enhancing disease (>=4 weeks, off steroids, clinically stable/improved, stable/improved T2/FLAIR); Partial Response = >=50% decrease sustained >=4 weeks; Progressive Disease = >=25% increase (vs baseline or nadir) or new lesions or clear clinical decline; Stable Disease = neither PR nor PD.",
+   "source": "AJNR RANO practical review (2020); RANO 2.0 (JCO 2023 / PMC10860967)",
+   "citation_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10860967/"
+  },
+  {
+   "point": "RANO 2.0 (2023) key updates: use the post-radiotherapy MRI (~21-35 days after RT), not the immediate post-surgical MRI, as the response baseline (better PFS/OS correlation); remove routine T2/FLAIR non-enhancing criteria from progression determination for contrast-enhancing IDH-wildtype glioblastoma; and permit volumetric measurement with cutoffs (~65% volume decrease for PR, ~40% volume increase for PD) corresponding to the 2D thresholds.",
+   "source": "RANO 2.0: Update to the RANO Criteria for High- and Low-Grade Gliomas in Adults (JCO 2023)",
+   "citation_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10860967/"
+  },
+  {
+   "point": "To avoid the pseudoprogression trap, within 12 weeks of completing radiotherapy RANO requires that apparent new enhancement be interpreted cautiously: classically, progression in this window should be based on new enhancement OUTSIDE the radiation field (beyond the high-dose region / 80% isodose line), and RANO 2.0 mandates confirmation (repeat scan showing >=25% area or >=40% volume increase) before declaring progression in IDH-wildtype glioblastoma given 30-40% pseudoprogression rates.",
+   "source": "AJNR RANO practical review (2020); RANO 2.0 (PMC10860967)",
+   "citation_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10860967/"
+  },
+  {
+   "point": "Contrast enhancement is a marker of blood-brain-barrier disruption, not specifically of viable tumor; steroids and antiangiogenic drugs (e.g., bevacizumab) reduce enhancement without killing tumor (pseudoresponse), which is why RANO also tracks steroid dose, clinical status, and non-enhancing (T2/FLAIR) disease.",
+   "source": "AJNR RANO practical review (2020)",
+   "citation_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6975322/"
+  }
+ ],
+ "equations": [
+  {
+   "name": "Product of perpendicular diameters (single lesion, RANO 2D burden)",
+   "latex": "P_i = a_i \\times b_i",
+   "variables_explained": "P_i is the bidimensional area surrogate for target lesion i (in mm^2). a_i is the longest enhancing diameter of that lesion on an axial slice (mm); b_i is the diameter perpendicular to a_i on the same slice (mm). Both must be >= 10 mm for the lesion to qualify as measurable."
+  },
+  {
+   "name": "Total tumor burden (sum of products across target lesions)",
+   "latex": "S = \\sum_{i=1}^{n} P_i = \\sum_{i=1}^{n} a_i b_i",
+   "variables_explained": "S is the total measurable enhancing tumor burden used by RANO. n is the number of target lesions (>=1, typically up to 5). Response is judged from how S changes relative to baseline (S_0) or the smallest recorded value (nadir, S_nadir)."
+  },
+  {
+   "name": "Fractional change in tumor burden",
+   "latex": "\\Delta = \\frac{S_{t} - S_{\\text{ref}}}{S_{\\text{ref}}}",
+   "variables_explained": "\\Delta is the fractional (later multiplied by 100 for percent) change at timepoint t. S_t is the current sum of products; S_ref is the reference: baseline S_0 when assessing response (PR/CR), or the nadir S_nadir when assessing progression (PD). Negative \\Delta = shrinkage, positive = growth."
+  },
+  {
+   "name": "RANO 2D response classification",
+   "latex": "\\text{Category} = \\begin{cases} \\text{CR} & S_t = 0 \\ (\\text{plus clinical/steroid/T2 conditions}) \\\\ \\text{PR} & \\Delta \\le -0.50 \\ \\text{vs baseline} \\\\ \\text{PD} & \\Delta \\ge +0.25 \\ \\text{vs baseline or nadir, or new lesion} \\\\ \\text{SD} & \\text{otherwise} \\end{cases}",
+   "variables_explained": "CR = complete response (all enhancing disease gone, sustained >=4 weeks, off steroids, clinically stable). PR = partial response (>=50% decrease). PD = progressive disease (>=25% increase, a new lesion, or unequivocal clinical decline). SD = stable disease (neither PR nor PD). Additional non-imaging conditions (steroid dose, neurologic status, T2/FLAIR) must also be satisfied."
+  },
+  {
+   "name": "Dice Similarity Coefficient (segmentation overlap metric)",
+   "latex": "\\mathrm{DSC}(A,B) = \\frac{2\\,|A \\cap B|}{|A| + |B|}",
+   "variables_explained": "DSC measures voxel overlap between a predicted segmentation A and the reference (ground-truth) segmentation B, per tissue class. |A| and |B| are voxel counts of each set; |A \u2229 B| is the count of voxels in both. DSC ranges 0 (no overlap) to 1 (perfect). BraTS uses a lesion-wise variant so many small lesions are not swamped by one large one."
+  },
+  {
+   "name": "95% Hausdorff Distance (boundary error metric)",
+   "latex": "\\mathrm{HD95}(A,B) = P_{95}\\Big( \\{\\, \\min_{b \\in \\partial B} \\lVert a - b \\rVert : a \\in \\partial A \\,\\} \\cup \\{\\, \\min_{a \\in \\partial A} \\lVert b - a \\rVert : b \\in \\partial B \\,\\} \\Big)",
+   "variables_explained": "HD95 summarizes surface distance error. \u2202A and \u2202B are the boundary voxels of prediction and reference; ||a-b|| is Euclidean distance (mm). For each boundary point the nearest point on the other surface is found; P_95 takes the 95th percentile of all these distances (using the 95th percentile instead of the maximum makes it robust to a few outlier voxels). Lower is better."
+  }
+ ],
+ "derivations": [
+  {
+   "title": "Worked RANO response call: from raw diameters to a category (2D)",
+   "steps": [
+    "Setup. A patient has two target enhancing lesions on the post-radiotherapy baseline scan. Lesion 1 measures a_1 = 30 mm by b_1 = 20 mm; lesion 2 measures a_2 = 18 mm by b_2 = 12 mm. Both diameters of both lesions are >= 10 mm, so both qualify as measurable.",
+    "Compute each product. P_1 = a_1 b_1 = 30 \\times 20 = 600\\ \\text{mm}^2 and P_2 = a_2 b_2 = 18 \\times 12 = 216\\ \\text{mm}^2. Each product is the bidimensional area surrogate for one lesion.",
+    "Baseline burden. S_0 = P_1 + P_2 = 600 + 216 = 816\\ \\text{mm}^2. This single number is the reference the trial will compare future scans against.",
+    "Follow-up scan (3 months). The same lesions now measure 24 \\times 15 mm and 14 \\times 10 mm. New products: P_1' = 24 \\times 15 = 360 and P_2' = 14 \\times 10 = 140.",
+    "Follow-up burden. S_t = 360 + 140 = 500\\ \\text{mm}^2. Note we always re-measure the SAME target lesions and re-sum.",
+    "Fractional change vs baseline. \\Delta = \\dfrac{S_t - S_0}{S_0} = \\dfrac{500 - 816}{816} = \\dfrac{-316}{816} = -0.387. In percent, that is a 38.7% decrease.",
+    "Apply thresholds. Partial Response requires \\Delta \\le -0.50 (a >=50% decrease). Here \\Delta = -0.387, which is a shrinkage but NOT >= 50%. It is also nowhere near the +0.25 progression threshold. Therefore the imaging category is Stable Disease.",
+    "Sanity/clinical caveat. Even this arithmetic 'SD' is provisional: RANO also requires stable-or-improved T2/FLAIR on the same-or-lower steroid dose and no clinical deterioration. A drop in enhancement could instead be pseudoresponse if the patient just started bevacizumab or higher steroids \u2014 so the number alone never decides the call."
+   ]
+  },
+  {
+   "title": "Why a 50% area decrease (PR) equals a ~65% volume decrease, and a 25% area increase (PD) equals a ~40% volume increase",
+   "steps": [
+    "Model the lesion as roughly spherical (RANO's own justification for its volumetric cutoffs). Let d be a characteristic diameter. The bidimensional product behaves like an area: P \\propto d^2. The volume behaves like V \\propto d^3.",
+    "Relate the two. Solve the area relation for d: d \\propto P^{1/2}. Substitute into volume: V \\propto d^3 \\propto (P^{1/2})^3 = P^{3/2}. So volume scales as the 3/2 power of the bidimensional product.",
+    "Take ratios between two timepoints. \\dfrac{V_t}{V_0} = \\left( \\dfrac{P_t}{P_0} \\right)^{3/2}. This lets us convert any area-change threshold into a volume-change threshold.",
+    "Partial Response case. PR means P_t/P_0 = 0.50 (a 50% area decrease). Then \\dfrac{V_t}{V_0} = 0.50^{3/2} = 0.50^{1} \\times 0.50^{1/2} = 0.50 \\times 0.7071 = 0.3536.",
+    "Interpret. A volume ratio of 0.3536 is a 1 - 0.3536 = 0.6464, i.e. a ~65% volume decrease. This is exactly the ~65% volumetric PR cutoff RANO 2.0 quotes.",
+    "Progressive Disease case. PD means P_t/P_0 = 1.25 (a 25% area increase). Then \\dfrac{V_t}{V_0} = 1.25^{3/2} = 1.25 \\times 1.25^{1/2} = 1.25 \\times 1.1180 = 1.3975.",
+    "Interpret. A volume ratio of ~1.40 is a ~40% volume increase \u2014 matching RANO 2.0's ~40% volumetric progression cutoff. So the 2D and 3D thresholds are not arbitrary; they are the same biological change expressed in different geometry, which is why segmentation-derived volumes can be plugged into RANO."
+   ]
+  },
+  {
+   "title": "Worked Dice score for a segmented enhancing-tumor mask",
+   "steps": [
+    "Setup. On one MRI, the ground-truth enhancing-tumor (ET) mask contains |B| = 1000 voxels. A model predicts an ET mask of |A| = 1200 voxels (it over-segments a bit).",
+    "Overlap. Of the predicted voxels, |A \\cap B| = 900 fall inside the true mask (so 300 predicted voxels are false positives, and 100 true voxels were missed as false negatives).",
+    "Plug into Dice. \\mathrm{DSC} = \\dfrac{2 |A \\cap B|}{|A| + |B|} = \\dfrac{2 \\times 900}{1200 + 1000}.",
+    "Numerator and denominator. Numerator = 2 \\times 900 = 1800. Denominator = 1200 + 1000 = 2200.",
+    "Result. \\mathrm{DSC} = \\dfrac{1800}{2200} = 0.818. The model overlaps the truth well (0.82 of a possible 1.0).",
+    "Read it against errors. Dice is the harmonic-mean-style balance of precision (900/1200 = 0.75) and recall (900/1000 = 0.90); DSC = 2 \\times \\dfrac{0.75 \\times 0.90}{0.75 + 0.90} = 2 \\times \\dfrac{0.675}{1.65} = 0.818, confirming the value. This is why over-segmenting the resection cavity as 'enhancing tumor' hurts the score twice: it lowers precision AND, by the RANO logic above, would falsely inflate response/progression volumes."
+   ]
+  }
+ ],
+ "intuitions": [
+  "Contrast enhancement is a 'leaky-plumbing' signal, not a 'cancer' signal. Gadolinium lights up wherever the blood-brain barrier is broken \u2014 which happens with viable tumor, but ALSO with fresh surgery, radiation injury, and inflammation. That single fact explains pseudoprogression (barrier leaks from treatment, no tumor), pseudoresponse (steroids/bevacizumab seal the barrier, tumor still there), and why RANO never trusts enhancement alone.",
+  "Think of the treated brain as a palimpsest: surgery, radiation, and chemotherapy each write over the original tumor, and post-treatment imaging must read all the layers at once. The resection cavity, blood products, and gliosis sit right where the tumor was and where recurrence will appear, so the hardest voxels to label are exactly the clinically decisive ones.",
+  "Timing is a cheap, powerful discriminator. A new enhancing blob that appears within ~3 months of finishing chemoradiation, inside the high-dose radiation field, and then fades is behaving like pseudoprogression; the same blob months-to-years later that keeps growing behaves like recurrence or radiation necrosis. This is why RANO resets the baseline to the post-radiotherapy scan and demands confirmation inside the 12-week window.",
+  "RANO's 2D shortcut and a 3D segmentation are two views of one quantity. Because area ~ diameter^2 and volume ~ diameter^3, a fixed percentage change in the perpendicular-diameter product corresponds to a predictable percentage change in volume \u2014 so an automated segmenter's volume can be mapped onto the same response categories a radiologist reaches with a ruler."
+ ],
+ "gotchas": [
+  "Pseudoprogression is NOT the same as radiation necrosis, even though both are 'treatment effect.' Pseudoprogression is early (typically <3-6 months), often self-resolving, and prognostically FAVORABLE (associated with MGMT methylation and better survival). Radiation necrosis is late (months-years) and destructive. Conflating them, or lumping either with 'progression,' produces wrong treatment and wrong trial endpoints.",
+  "A shrinking enhancing lesion is not automatically good news. Steroids and antiangiogenic agents like bevacizumab reduce enhancement by resealing the blood-brain barrier without killing tumor \u2014 'pseudoresponse.' That is why RANO requires the steroid dose to be stable-or-lower and tracks clinical status and non-enhancing disease; a Dice-perfect segmentation of enhancement can still mislead on biology.",
+  "RANO 2.0 changed the baseline. Using the immediate post-surgical MRI as baseline is wrong for response assessment because early post-op enhancement and the fresh cavity contaminate it; RANO 2.0 uses the post-radiotherapy scan (~21-35 days after RT). Applying old-RANO baseline conventions inside a RANO 2.0 trial will misclassify responses.",
+  "In the first 12 weeks after radiotherapy, new enhancement INSIDE the radiation field (within the 80% isodose/high-dose region) does not by itself count as progression, because pseudoprogression is expected there in 30-40% of IDH-wildtype glioblastomas; progression in that window classically requires new enhancement outside the field or confirmation on a follow-up scan. An automated tool that flags any new enhancement as 'tumor progression' will over-call progression here.",
+  "Dice can look high while the clinically important structure is wrong. A model can score well overall by nailing the large SNFH region yet mislabel the thin rim of enhancement along the resection cavity or confuse blood products in the cavity with enhancing tumor \u2014 the very distinctions that drive radiation planning and RANO calls. This is why BraTS uses lesion-wise Dice plus HD95 rather than one global Dice."
+ ],
+ "example_questions": [
+  {
+   "question": "A glioblastoma patient's post-radiotherapy baseline MRI shows a single enhancing target lesion of 40 mm x 30 mm. Eight weeks later the lesion measures 50 mm x 36 mm, the patient is on an unchanged steroid dose and is clinically stable, and the new enhancement lies entirely within the prior high-dose radiation field. Using RANO, what is the arithmetic category, and what is the correct clinical action?",
+   "answer": "Baseline product S_0 = 40 x 30 = 1200 mm^2. Follow-up product S_t = 50 x 36 = 1800 mm^2. Fractional change = (1800 - 1200)/1200 = 600/1200 = +0.50, i.e. a 50% area increase. Arithmetically this is >= +25%, so it meets the numeric threshold for Progressive Disease. HOWEVER, this scan is only 8 weeks after radiotherapy (inside the 12-week window), the growth is entirely within the high-dose field, and the patient is clinically stable. This is the classic pseudoprogression scenario (expected in 30-40% of IDH-wildtype GBM). Under RANO/RANO 2.0 the correct action is NOT to declare progression: continue current therapy and obtain a confirmatory follow-up MRI (progression would require a sustained >=25% area / >=40% volume increase on repeat imaging, or new enhancement outside the radiation field). If the lesion later stabilizes or shrinks, it was pseudoprogression."
+  },
+  {
+   "question": "A segmentation model outputs an enhancing-tumor volume of 12.0 cm^3 at baseline and 4.0 cm^3 at follow-up. Convert this to a RANO-style response category using the volumetric thresholds, and cross-check with the equivalent 2D threshold.",
+   "answer": "Volume ratio = 4.0 / 12.0 = 0.333, i.e. a 66.7% volume decrease. RANO 2.0's volumetric partial-response cutoff is ~65% volume decrease, so 66.7% qualifies as (at least) Partial Response. Cross-check via geometry: for a sphere V ~ d^3 and area-product P ~ d^2, so P_t/P_0 = (V_t/V_0)^{2/3} = 0.333^{2/3}. Compute: 0.333^{1/3} = 0.693, then squared = 0.480. So the equivalent 2D product ratio is 0.48, a 52% area decrease \u2014 which is >= 50%, confirming Partial Response on the classic 2D criterion. The two frameworks agree. (Clinical caveat: this is still contingent on stable/lower steroids and no pseudoresponse from antiangiogenic therapy.)"
+  },
+  {
+   "question": "For the resection-cavity (RC) class, a model predicts a mask of 800 voxels; the ground truth is 1000 voxels; their overlap is 600 voxels. Compute the Dice score, and explain in one sentence why RC is a uniquely error-prone class in post-treatment segmentation.",
+   "answer": "DSC = 2 x |A \u2229 B| / (|A| + |B|) = 2 x 600 / (800 + 1000) = 1200 / 1800 = 0.667. (Precision = 600/800 = 0.75; recall = 600/1000 = 0.60; harmonic combination gives 0.667.) A Dice of 0.67 is mediocre \u2014 expected for RC, because the resection cavity contains fluid, blood products, air, and proteinaceous material whose MRI signals overlap with necrosis (NETC), cyst, and even enhancing rim tissue, and it sits exactly where recurrent tumor arises, so its boundaries are genuinely ambiguous even to expert annotators."
+  }
+ ],
+ "suggested_figures": [
+  "A side-by-side 'imaging mimics' matrix: rows = true progression, pseudoprogression, radiation necrosis, pseudoresponse; columns = typical timing after chemoradiation, location relative to radiation field, contrast-enhancement behavior, T2/FLAIR behavior, perfusion (rCBV) high vs low, and prognosis \u2014 to show at a glance why conventional MRI alone is insufficient.",
+  "An annotated post-treatment axial MRI panel (T1-post-contrast + FLAIR) with the four BraTS subregions color-coded (ET, NETC, SNFH, RC), with callouts on the thin cavity-rim enhancement that must be EXCLUDED from ET and blood products in the cavity that must NOT be labeled tumor.",
+  "A RANO decision flow / number line: baseline post-RT scan -> compute sum of products of perpendicular diameters -> map onto the CR/PR/SD/PD thresholds (-100%, -50%, +25%) with the parallel volumetric axis (-65%, +40%) and a branch for the '12-week confirmation' pseudoprogression rule."
+ ],
+ "confidence_notes": "Response-category threshold numbers (PR >=50% decrease, PD >=25% increase, volumetric ~65%/~40%, post-RT baseline 21-35 days, 12-week confirmation window, 30-40% pseudoprogression in IDH-wildtype GBM) were retrieved from the RANO 2.0 PMC article (PMC10860967) and the AJNR RANO practical review (PMC6975322) via WebFetch, which returned them as summarized quotations rather than verbatim tables; the exact wording/edge-case conditions (e.g., precise handling of non-target and non-measurable lesions, exact steroid-dose language) should be confirmed against the primary JCO 2023 RANO 2.0 paper before use in a formal clinical document. Pseudoprogression incidence (~30% combined chemoradiation, ~15% RT alone; ~60% within first 3 months; MGMT-methylated up to ~91%) comes from the Zikou 2018 review summary (PMC6305027) and a 2014 review (PMC4139817); these are review-level figures that vary by cohort and definition. The BraTS 2024 details (four subregions, ~2,200 cases, seven institutions, lesion-wise Dice/HD95) come from the arXiv HTML version (2405.18368v1); the final published dataset count and per-class definitions may differ slightly in the peer-reviewed version. The 2D-to-volume conversion derivation assumes a spherical lesion (RANO's own simplifying assumption); real irregular post-treatment lesions will deviate, so the 65%/40% equivalences are approximate by construction. The Radiopaedia pseudoprogression article (radiopaedia.org) returned HTTP 403 and could not be fetched, so no Radiopaedia-specific claim is cited here; equivalent claims are sourced to peer-reviewed PMC/PubMed articles instead. All clinical numbers should be treated as trial/criteria conventions and review estimates, not patient-specific rules.",
+ "_key": "post-treatment-imaging",
+ "_kind": "medical"
+}

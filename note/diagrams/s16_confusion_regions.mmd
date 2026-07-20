@@ -1,0 +1,9 @@
+flowchart TB
+    P["Predicted mask (A)"]
+    G["Ground-truth mask (B)"]
+    P --> FP["FP<br/>predicted, not true"]
+    P --> TP["TP<br/>overlap (A ∩ B)"]
+    G --> TP
+    G --> FN["FN<br/>true, not predicted"]
+    TP & FP & FN --> D["Dice, precision, recall<br/>use TP, FP, FN only"]
+    TN["TN<br/>vast background<br/>(neither A nor B)"] --> ACC["Accuracy & specificity<br/>inflated by huge TN"]

@@ -1,0 +1,4 @@
+flowchart LR
+  BG["999,000<br/>background voxels"] -- "pull toward<br/>background" --> P["Prediction"]
+  FG["1,000<br/>foreground voxels"] -- "pull toward<br/>tumour" --> P
+  P --> R["Plain CE:<br/>background wins<br/>= empty mask"]

@@ -1,0 +1,7 @@
+flowchart TB
+  K["Kaggle mirror<br/>700 post-treatment cases"] --> V["Contract check<br/>labels ⊆ {0..4} · ET in 579/700"]
+  V --> S["RC-stratified split (seed 42)<br/>490 train · 105 val · 105 test"]
+  S --> TR["Each track: train 3 seeds"]
+  S --> TE["Shared 105-case test set"]
+  TR --> E["Score once on test → Dice ± SD"]
+  TE --> E

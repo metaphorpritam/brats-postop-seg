@@ -1,0 +1,175 @@
+{
+ "topic": "U-Net and 3D U-Net: encoder-decoder architectures with skip connections for biomedical image segmentation",
+ "overview": "Semantic segmentation means labeling *every* pixel (2D) or voxel (3D) of an image with a class \u2014 for a brain MRI, deciding for each tiny cube of tissue whether it is healthy brain, edema, enhancing tumor, and so on. This is harder than classification (which outputs one label per image) because the output must be as large and detailed as the input while still \"understanding\" the whole scene. The **U-Net**, introduced by Ronneberger, Fischer and Brox at MICCAI 2015, solved this elegantly and became the default backbone for biomedical segmentation. Its name comes from its U-shape: a **contracting (encoder) path** that repeatedly downsamples the image to capture *context* (what is here, in a large region), mirrored by an **expanding (decoder) path** that upsamples back to full resolution to recover *precise localization* (exactly where the boundary is).\n\nThe decisive trick is the **skip connection**: at each resolution level, the high-resolution feature maps from the encoder are copied across and concatenated onto the matching decoder feature maps. Downsampling throws away spatial detail in exchange for abstraction; the skip connections hand that lost detail directly back to the decoder so it can draw sharp, correctly-placed boundaries. Without them, the upsampled output would be blurry and mislocalized. This directly resolves the old tension between \"seeing enough context\" and \"localizing precisely\" \u2014 Ronneberger et al. explicitly note that with U-Net \"good localization and the use of context are possible at the same time.\"\n\nThe original U-Net is 2D and was designed for microscopy, where it won the ISBI 2015 cell-tracking challenge from very few training images by leaning heavily on data augmentation. But medical scans like brain MRI are inherently **volumetric** (a 3D stack of slices). \u00c7i\u00e7ek et al. (MICCAI 2016) introduced the **3D U-Net**, which replaces every 2D operation (convolution, pooling, up-convolution) with its 3D counterpart so the network can reason about context across slices, not just within a slice. This matters enormously for a tumor whose shape only makes sense in 3D. The cost is steep: 3D convolutions have far more parameters and consume much more memory, which is why 3D U-Nets train on small cropped **patches** rather than whole volumes.\n\nFor a BraTS post-treatment glioma project, the 3D U-Net (and descendants like nnU-Net) is the natural choice: it ingests the multi-channel MRI volume (typically four modalities: T1, T1-contrast, T2, FLAIR), processes true 3D context, and outputs a per-voxel label map of the tumour sub-regions. Understanding the encoder-decoder-plus-skips design, the downsampling/upsampling arithmetic, and the 2D-vs-3D cost trade-off is the foundation for everything else in such a project.",
+ "key_points": [
+  {
+   "point": "U-Net was introduced by Olaf Ronneberger, Philipp Fischer and Thomas Brox in 'U-Net: Convolutional Networks for Biomedical Image Segmentation', MICCAI 2015, pp. 234-241. It is an encoder-decoder CNN with a symmetric U-shape and skip connections, designed to train end-to-end from very few annotated images by heavy data augmentation.",
+   "source": "Ronneberger, Fischer & Brox, MICCAI 2015",
+   "citation_url": "https://link.springer.com/chapter/10.1007/978-3-319-24574-4_28"
+  },
+  {
+   "point": "The contracting (encoder) path 'captures context' and the symmetric expanding (decoder) path 'enables precise localization'; the paper's central claim is that skip connections let good localization and use of context happen simultaneously, removing the classic trade-off.",
+   "source": "Ronneberger, Fischer & Brox, MICCAI 2015 (abstract)",
+   "citation_url": "https://arxiv.org/abs/1505.04597"
+  },
+  {
+   "point": "Original U-Net specifics: ~23 convolutional layers, 3x3 UNPADDED ('valid') convolutions each followed by ReLU, 2x2 max-pooling (stride 2) for downsampling, and 2x2 'up-convolutions' for upsampling. Feature channels double on each downsampling step (64 -> 128 -> 256 -> 512 -> 1024) and halve on each upsampling step. Because convolutions are unpadded, the 572x572 input yields a smaller 388x388 output.",
+   "source": "Ronneberger, Fischer & Brox, MICCAI 2015 (Sec. 2, Fig. 1)",
+   "citation_url": "https://arxiv.org/abs/1505.04597"
+  },
+  {
+   "point": "U-Net uses a pixel-wise soft-max over the final feature map combined with a cross-entropy loss, and a precomputed per-pixel WEIGHT MAP that up-weights the thin background gaps separating touching cells, forcing the network to learn separating borders. It also uses an 'overlap-tile' strategy with mirror-padding to segment arbitrarily large images seamlessly.",
+   "source": "Ronneberger, Fischer & Brox, MICCAI 2015 (Sec. 3)",
+   "citation_url": "https://arxiv.org/abs/1505.04597"
+  },
+  {
+   "point": "3D U-Net was introduced by \u00c7i\u00e7ek, Abdulkadir, Lienkamp, Brox & Ronneberger in '3D U-Net: Learning Dense Volumetric Segmentation from Sparse Annotation', MICCAI 2016. It extends U-Net by replacing all 2D operations with 3D counterparts (3x3x3 convolutions, 2x2x2 max-pooling, 2x2x2 up-convolutions) so the network exploits inter-slice context.",
+   "source": "\u00c7i\u00e7ek et al., MICCAI 2016",
+   "citation_url": "https://arxiv.org/abs/1606.06650"
+  },
+  {
+   "point": "3D U-Net adds BATCH NORMALIZATION before each ReLU (not present in the original U-Net) for faster, more stable convergence, and in the reported architecture starts with 32 feature channels in the first layer, doubling with depth. It can learn dense 3D segmentation from only a few sparsely annotated slices by masking unlabeled voxels out of the loss.",
+   "source": "\u00c7i\u00e7ek et al., MICCAI 2016 (Sec. 2-3)",
+   "citation_url": "https://arxiv.org/abs/1606.06650"
+  },
+  {
+   "point": "Skip connections in U-Net are CONCATENATIONS (channel-wise stacking of encoder and decoder feature maps), not the additive identity shortcuts used in ResNet. Concatenation preserves the full high-resolution encoder features for the decoder to reuse, which is why boundaries stay sharp; it also shortens the gradient path from loss to early layers, easing training.",
+   "source": "Ronneberger et al. 2015; contrast with He et al. ResNet 2016",
+   "citation_url": "https://arxiv.org/abs/1505.04597"
+  },
+  {
+   "point": "The original U-Net reported ~0.92 (IOU 77.5% -> warping error winning score) performance winning the ISBI 2015 cell-tracking challenge (Phase-contrast and DIC categories) 'by a large margin', and outperformed the prior best sliding-window CNN on the ISBI neuronal-structure (EM) segmentation challenge, trained on very few images.",
+   "source": "Ronneberger, Fischer & Brox, MICCAI 2015 (Sec. 4)",
+   "citation_url": "https://arxiv.org/abs/1505.04597"
+  }
+ ],
+ "equations": [
+  {
+   "name": "Convolution / pooling output size (1D per axis)",
+   "latex": "o = \\left\\lfloor \\frac{i + 2p - k}{s} \\right\\rfloor + 1",
+   "variables_explained": "o = output length along one spatial axis; i = input length; p = zero-padding added to each side; k = kernel (filter) size; s = stride. For a 3x3 'valid' (p=0) convolution with stride 1 this gives o = i - 2. For 2x2 max-pooling with k=s=2, p=0 it gives o = floor(i/2). The same formula is applied independently to each of the 2 (U-Net) or 3 (3D U-Net) spatial axes."
+  },
+  {
+   "name": "Transposed / up-convolution output size",
+   "latex": "o = s\\,(i - 1) + k - 2p",
+   "variables_explained": "Output length of an up-convolution (a.k.a. transposed/deconvolution) used in the decoder to upsample. i = input length, s = stride, k = kernel size, p = padding. U-Net uses k=2, s=2, p=0, which doubles the spatial size: o = 2(i-1)+2 = 2i. This exactly inverts the 2x2 max-pool downsampling factor."
+  },
+  {
+   "name": "Receptive field recurrence",
+   "latex": "r_{\\ell} = r_{\\ell-1} + (k_{\\ell}-1)\\,\\prod_{m=1}^{\\ell-1} s_m, \\qquad j_{\\ell} = j_{\\ell-1}\\, s_{\\ell}",
+   "variables_explained": "r_l = receptive field (in input pixels) of one output unit after layer l \u2014 the size of the input region that influences it; k_l = kernel size of layer l; s_m = stride of layer m; j_l = 'jump' (distance in input pixels between adjacent output units), with j_0 = 1 and r_0 = 1. The product term is the cumulative stride before layer l. Pooling (stride 2) makes the receptive field grow quickly, which is how the encoder gathers global context."
+  },
+  {
+   "name": "Parameters in a convolution layer (2D vs 3D)",
+   "latex": "P_{2D} = (k_h\\,k_w\\,C_{in} + 1)\\,C_{out}, \\qquad P_{3D} = (k_d\\,k_h\\,k_w\\,C_{in} + 1)\\,C_{out}",
+   "variables_explained": "P = number of learnable weights (including one bias per output channel, the +1). k_h,k_w,k_d = kernel height/width/depth; C_in = input channels; C_out = output channels (filters). A 3x3 2D kernel has 9 spatial weights per channel pair; a 3x3x3 3D kernel has 27, so 3D convolutions cost ~3x the parameters and far more compute/memory per layer at equal channel counts."
+  },
+  {
+   "name": "Convolution compute cost (multiply-accumulates)",
+   "latex": "\\text{MACs} = o_1\\,o_2\\cdots o_n \\cdot k_1 k_2 \\cdots k_n \\cdot C_{in} \\cdot C_{out}",
+   "variables_explained": "MACs = multiply-accumulate operations for one conv layer; o_1..o_n = output size along each of the n spatial axes (n=2 for U-Net, n=3 for 3D U-Net); k_1..k_n = kernel sizes; C_in, C_out = input/output channels. The extra spatial dimension in 3D multiplies both the output-voxel count and the kernel volume, which is why 3D U-Nets are memory-bound and trained on patches."
+  },
+  {
+   "name": "Pixel-wise soft-max",
+   "latex": "p_k(\\mathbf{x}) = \\frac{\\exp\\big(a_k(\\mathbf{x})\\big)}{\\sum_{k'=1}^{K} \\exp\\big(a_{k'}(\\mathbf{x})\\big)}",
+   "variables_explained": "For each pixel/voxel position x, the final layer outputs a vector of K class scores (logits) a_k(x). The soft-max turns them into a probability distribution: p_k(x) is the predicted probability that position x belongs to class k, with 0 <= p_k <= 1 and sum over k equal to 1. K = number of classes (e.g. background + tumour sub-regions)."
+  },
+  {
+   "name": "U-Net weighted cross-entropy energy",
+   "latex": "E = \\sum_{\\mathbf{x}\\in\\Omega} w(\\mathbf{x})\\, \\log\\, p_{\\ell(\\mathbf{x})}(\\mathbf{x})",
+   "variables_explained": "E = total loss (energy) summed over all pixel positions x in the image domain Omega; l(x) = the true class label at x; p_{l(x)}(x) = predicted soft-max probability of the correct class at x; w(x) = a precomputed per-pixel weight map. Training maximizes E (equivalently minimizes weighted negative log-likelihood). The weights emphasize hard/important pixels."
+  },
+  {
+   "name": "U-Net separation weight map",
+   "latex": "w(\\mathbf{x}) = w_c(\\mathbf{x}) + w_0 \\cdot \\exp\\!\\left(-\\frac{\\big(d_1(\\mathbf{x}) + d_2(\\mathbf{x})\\big)^2}{2\\sigma^2}\\right)",
+   "variables_explained": "w_c(x) = class-balancing weight (compensates for unequal class frequencies); d_1(x) = distance from pixel x to the border of the nearest cell; d_2(x) = distance to the border of the second-nearest cell; w_0 and sigma are constants (paper used w_0 = 10, sigma ~ 5 pixels). The exponential term spikes in the thin gaps between touching cells (small d_1+d_2), forcing the network to learn the separating boundary."
+  }
+ ],
+ "derivations": [
+  {
+   "title": "Tracing spatial size through the U-Net encoder (why 572x572 -> a smaller map, and why sizes must be even)",
+   "steps": [
+    "Start: the network ingests a tile of size i = 572 (per axis). Each encoder 'block' applies two 3x3 valid convolutions (p=0, s=1, k=3) then one 2x2 max-pool (k=2, s=2). We use the output-size formula o = floor((i + 2p - k)/s) + 1.",
+    "First 3x3 valid conv: o = floor((572 + 0 - 3)/1) + 1 = floor(569) + 1 = 569 + 1 = 570. A valid 3x3 conv with stride 1 simply removes a 1-pixel rim on every side, so 572 -> 570.",
+    "Second 3x3 valid conv: o = (570 - 3)/1 + 1 = 567 + 1 = 568. So two stacked 3x3 valid convs shrink each axis by 4 total (572 -> 568). This is the 'unpadded convolution' cost the paper accepts to avoid border artifacts.",
+    "2x2 max-pool (k=s=2, p=0): o = floor((568 - 2)/2) + 1 = floor(566/2) + 1 = 283 + 1 = 284. Downsampling halves resolution: 568 -> 284. Note this only works cleanly because 568 is even.",
+    "Level 2 (two convs then pool): 284 -> 282 -> 280 by the two convs (subtract 4), then pool: floor((280-2)/2)+1 = 139+1 = 140. So 284 -> 140.",
+    "Level 3: 140 -> 138 -> 136 (two convs), pool: floor((136-2)/2)+1 = 67+1 = 68. So 140 -> 68.",
+    "Level 4: 68 -> 66 -> 64 (two convs), pool: floor((64-2)/2)+1 = 31+1 = 32. So 68 -> 32.",
+    "Bottleneck: 32 -> 30 -> 28 (two convs). The coarsest feature map is 28x28 with 1024 channels \u2014 this is where the receptive field is largest and context is richest.",
+    "Key consequence for skip connections: the decoder up-convolves 28 -> 56, but the level-4 encoder map to be concatenated is 64x64. They do not match, so U-Net CENTER-CROPS the encoder map (64 -> 56) before concatenation. This cropping is a direct side-effect of using valid (unpadded) convolutions. Practical modern variants use 'same' (padded) convolutions so sizes match and no cropping is needed \u2014 at the price of slightly worse border predictions.",
+    "Overall: after the symmetric decoder, the 572x572 input produces a 388x388 output. Rule of thumb: with unpadded 3x3 convs and pooling to depth D, the input side length must be chosen so every pre-pool feature map is even; 572 is picked precisely so all divisions are exact."
+   ]
+  },
+  {
+   "title": "Receptive field growth: how downsampling buys global context cheaply",
+   "steps": [
+    "Goal: compute how large an input region influences one output unit, using r_l = r_{l-1} + (k_l - 1) * (cumulative stride before l) and j_l = j_{l-1} * s_l, with r_0 = 1, j_0 = 1. We take a mini-encoder: conv(3x3,s1), conv(3x3,s1), pool(2x2,s2), conv(3x3,s1).",
+    "Layer 1, conv k=3 s=1: cumulative stride before it = j_0 = 1, so r_1 = 1 + (3-1)*1 = 3. Jump j_1 = 1*1 = 1. One unit now sees a 3x3 input region.",
+    "Layer 2, conv k=3 s=1: cumulative stride before it = j_1 = 1, so r_2 = 3 + (3-1)*1 = 5. Jump j_2 = 1*1 = 1. Stacking two 3x3 convs gives a 5x5 receptive field with fewer parameters than one 5x5 conv (18 vs 25 weights per channel pair).",
+    "Layer 3, pool k=2 s=2: r_3 = 5 + (2-1)*1 = 6. Jump j_3 = j_2 * 2 = 2. Pooling itself only adds a little to r, but it DOUBLES the jump.",
+    "Layer 4, conv k=3 s=1: cumulative stride before it = j_3 = 2, so r_4 = 6 + (3-1)*2 = 6 + 4 = 10. Jump j_4 = 2*1 = 2. Notice the same 3x3 conv now expands the receptive field by 4 pixels instead of 2 \u2014 because it operates on downsampled features, each step reaches twice as far into the original image.",
+    "Interpretation: each pooling stage multiplies the effective reach of every subsequent convolution. This is the mechanism by which the encoder acquires whole-organ / whole-tumour context after only a handful of layers \u2014 and precisely the spatial detail that pooling discards is what the skip connections must restore in the decoder."
+   ]
+  },
+  {
+   "title": "Why 3D convolutions are so much more expensive than 2D (parameters and compute)",
+   "steps": [
+    "Compare one conv layer with C_in = C_out = 64 channels, first in 2D with a 3x3 kernel, then in 3D with a 3x3x3 kernel, using P = (product of kernel sizes * C_in + 1) * C_out.",
+    "2D parameters: P_2D = (3*3*64 + 1) * 64 = (576 + 1) * 64 = 577 * 64 = 36,928 weights.",
+    "3D parameters: P_3D = (3*3*3*64 + 1) * 64 = (1728 + 1) * 64 = 1729 * 64 = 110,656 weights. Ratio 110,656 / 36,928 = 2.996, i.e. almost exactly 3x \u2014 the kernel volume grew from 9 to 27 (a factor of 27/9 = 3), and the +1 biases are negligible.",
+    "Now compute cost using MACs = (product of output sizes) * (product of kernel sizes) * C_in * C_out. Take a 2D feature map of 128x128 vs a 3D volume of 128x128x128 (same in-plane size, 128 slices).",
+    "2D MACs = (128*128) * (3*3) * 64 * 64 = 16,384 * 9 * 4096 = 16,384 * 36,864 = 6.04e8 MACs (~0.6 GMAC).",
+    "3D MACs = (128*128*128) * (3*3*3) * 64 * 64 = 2,097,152 * 27 * 4096 = 2,097,152 * 110,592 = 2.32e11 MACs (~232 GMAC).",
+    "Ratio 3D/2D = 2.32e11 / 6.04e8 ~ 384. Decompose it: the output now has 128x MORE positions (the extra depth axis) and the kernel has 3x more weights, so 128 * 3 = 384. Memory for activations scales the same brutal way.",
+    "Practical consequence: a whole 3D brain MRI (e.g. 240x240x155) cannot fit a full 3D U-Net in GPU memory at useful channel widths. Hence 3D U-Nets train on small cropped PATCHES (e.g. 128x128x128), use fewer starting channels (32 rather than 64), add batch/instance normalization for stability, and rely on sliding-window inference to reassemble the full volume."
+   ]
+  },
+  {
+   "title": "The pixel-wise soft-max cross-entropy loss, worked for one voxel",
+   "steps": [
+    "Setup: K = 3 classes (0 = background, 1 = edema, 2 = enhancing tumour). At one voxel x the network outputs logits a(x) = [a_0, a_1, a_2] = [1.0, 2.0, 0.5], and the true label is l(x) = 1 (edema).",
+    "Exponentiate the logits: exp(1.0) = 2.7183, exp(2.0) = 7.3891, exp(0.5) = 1.6487. These are the unnormalized scores.",
+    "Sum them: Z = 2.7183 + 7.3891 + 1.6487 = 11.7561. Z is the soft-max denominator (partition function).",
+    "Soft-max probabilities p_k(x) = exp(a_k)/Z: p_0 = 2.7183/11.7561 = 0.2312, p_1 = 7.3891/11.7561 = 0.6285, p_2 = 1.6487/11.7561 = 0.1403. They sum to 1.000, as required.",
+    "Cross-entropy for this voxel is the negative log-probability of the CORRECT class: L(x) = -log p_{l(x)}(x) = -log p_1(x) = -log(0.6285) = 0.4644. (Natural log; a perfect prediction p_1 = 1 would give L = 0.)",
+    "Apply the U-Net weight map: if this voxel sits in a separating border with weight w(x) = 4.0, its contribution is w(x)*L(x) = 4.0 * 0.4644 = 1.8576, four times a normal voxel. The total training loss is the average of w(x)*L(x) over all voxels; minimizing it pushes p_1(x) toward 1, and the weighting makes the network prioritize the thin, hard boundary voxels that a plain unweighted loss would ignore because they are rare."
+   ]
+  }
+ ],
+ "intuitions": [
+  "Encoder = 'zoom out to understand', decoder = 'zoom back in to point precisely'. Downsampling (pooling) trades away spatial detail for a wider view so the network can tell WHAT it is looking at (tumour vs healthy tissue). Upsampling rebuilds full resolution so it can say exactly WHERE the boundary is. The U-shape is literally this out-then-in journey drawn on paper.",
+  "Skip connections are a memory hand-off, not just a gradient trick. Pooling deletes fine detail; the encoder saves a high-resolution 'photocopy' at each level and staples it onto the decoder at the matching level (concatenation). The decoder thus reconstructs sharp edges from preserved detail instead of hallucinating them from a blurry coarse map \u2014 this is why U-Net boundaries are crisp. As a bonus, the short encoder-to-decoder path also lets gradients reach early layers easily, so training is faster and more stable.",
+  "Two stacked 3x3 convolutions are a cheaper 5x5. They cover the same 5x5 receptive field but use 2*9 = 18 weights instead of 25, and insert an extra nonlinearity in between (more expressive). This 'small kernels, go deep' principle is why U-Net stacks pairs of 3x3 convs at every level rather than using big kernels.",
+  "Going from 2D to 3D changes the physics of the network, not just a hyperparameter. Every extra slice you process multiplies both compute and memory, and the kernel triples in size. That single fact explains almost every design difference in 3D U-Net: patch-based training, smaller channel counts, batch normalization, and sliding-window inference are all consequences of the ~380x cost blow-up shown in the derivation."
+ ],
+ "gotchas": [
+  "U-Net skip connections are CONCATENATION, not addition. Beginners conflate them with ResNet's additive identity shortcuts. Concatenation stacks encoder and decoder feature maps along the channel axis (doubling channels), which is why the first decoder conv after a skip has twice as many input channels. ResNet-style addition would require identical channel counts and would blend rather than preserve the encoder features.",
+  "The original U-Net uses UNPADDED ('valid') convolutions, so the output is smaller than the input (572x572 -> 388x388) and encoder feature maps must be center-cropped before concatenation. If you assume 'same' padding (as most modern re-implementations use), your size arithmetic and cropping logic will be wrong. Padded variants avoid cropping but slightly degrade border predictions because of padding artifacts.",
+  "Input dimensions are not free to choose. With depth-D pooling by 2, every feature map just before a pool must be even (and for valid convs, must survive the -4 per level). Feeding an odd or ill-sized volume causes shape mismatches at the skip-concatenation step or silent rounding from the floor in the pooling formula. For a 4-level 3D U-Net, patch sizes are typically multiples of 16 (2^4).",
+  "Naively feeding a whole brain MRI volume into a 3D U-Net will exhaust GPU memory. The bottleneck is activation memory, which scales with (voxels x channels), and voxels grow cubically. You must use cropped patches and sliding-window inference; forgetting this, or setting starting channels to 64 as in 2D U-Net, is a common out-of-memory mistake.",
+  "Class imbalance is severe in tumour segmentation (tumour voxels are a tiny fraction of the volume). Plain unweighted cross-entropy will happily predict 'all background' and still score high accuracy. U-Net's weight map \u2014 and, in modern practice, Dice or combined Dice+cross-entropy losses \u2014 exist precisely to counter this; ignoring it yields a network that misses small lesions."
+ ],
+ "example_questions": [
+  {
+   "question": "A 3D U-Net encoder block applies two 3x3x3 'same'-padded convolutions (stride 1) followed by a 2x2x2 max-pool (stride 2). Starting from an input patch of 128x128x128, what is the spatial size after 4 such blocks, and why must the patch side be a multiple of 16?",
+   "answer": "With 'same' padding, each 3x3x3 conv preserves spatial size (o = i), so within a block only the pool changes size: 2x2x2 max-pool with k=s=2 gives o = floor(i/2). Applying it 4 times: 128 -> 64 -> 32 -> 16 -> 8. So after 4 blocks the feature map is 8x8x8. Each pooling stage halves the size, so surviving 4 clean halvings requires the input to be divisible by 2^4 = 16. 128 = 8 x 16 works exactly; a size like 120 would give 120 -> 60 -> 30 -> 15 -> 7 (the last floor(15/2)=7 drops a voxel), producing a feature map whose later up-convolution (x2 each step: 7->14->28->56->112) no longer matches the 120 input, breaking the skip concatenation. Hence patch dimensions are chosen as multiples of 16 for a 4-level network."
+  },
+  {
+   "question": "Two networks segment the same 256x256 image: (a) a 2D conv layer with a 5x5 kernel, and (b) two stacked 2D 3x3 conv layers. Both have C_in = C_out = 32. Compare their parameter counts and receptive fields, and state which design U-Net follows and why.",
+   "answer": "Parameters use P = (product of kernel sizes * C_in + 1) * C_out. (a) 5x5: P = (25*32 + 1)*32 = (800+1)*32 = 801*32 = 25,632. (b) two 3x3 layers: each is (9*32 + 1)*32 = (288+1)*32 = 289*32 = 9,248, so two of them = 18,496. Receptive fields: a single 5x5 covers 5x5. Two stacked 3x3 (stride 1) also cover 5x5 (r = 1 + 2 + 2 = 5 by the recurrence). So both see the same 5x5 region, but the stacked-3x3 design uses fewer weights (18,496 vs 25,632) AND adds an extra ReLU nonlinearity between the two convs, making it more expressive. U-Net follows design (b) \u2014 pairs of 3x3 convolutions at every level \u2014 for exactly this efficiency-plus-expressiveness reason."
+  },
+  {
+   "question": "At one voxel a 2-class network (0 = background, 1 = tumour) outputs logits [0.0, 2.0]. The true label is tumour (class 1). Compute the soft-max probabilities and the cross-entropy loss. Then, if this voxel lies on a tumour boundary with weight w = 3, give its weighted contribution.",
+   "answer": "Exponentiate: exp(0.0) = 1.0000, exp(2.0) = 7.3891. Denominator Z = 1.0000 + 7.3891 = 8.3891. Soft-max: p_0 = 1.0000/8.3891 = 0.1192, p_1 = 7.3891/8.3891 = 0.8808 (they sum to 1). Cross-entropy for the correct class 1: L = -log p_1 = -log(0.8808) = 0.1269 (natural log). Weighted contribution: w*L = 3 * 0.1269 = 0.3807. Interpretation: the prediction is already fairly confident and correct, so the base loss 0.1269 is small; the boundary weight triples it to 0.3807 so that the optimizer still pays extra attention to getting this hard edge voxel exactly right."
+  }
+ ],
+ "suggested_figures": [
+  "The classic U-shaped diagram: contracting encoder path on the left (feature-map boxes shrinking in H/W but growing in channel depth: 64->128->256->512->1024), symmetric expanding decoder on the right, and horizontal gray arrows across the middle showing the skip connections concatenating each encoder level onto the matching decoder level. Annotate one skip with 'copy + crop' to highlight the valid-convolution size mismatch.",
+  "A side-by-side 'same-image' comparison of decoder output WITH vs WITHOUT skip connections on a brain-tumour slice: the no-skip version blurry and mislocalized, the with-skip version showing a crisp, correctly placed boundary \u2014 visually driving home why skips matter for biomedical localization.",
+  "A bar chart contrasting 2D vs 3D cost for one conv layer at equal channels: parameters (36.9k vs 110.7k, ~3x) and compute/MACs (~0.6 GMAC vs ~232 GMAC, ~384x), with a small callout decomposing the 384x into '128x more output voxels x 3x larger kernel', to make the memory blow-up of 3D U-Net concrete."
+ ],
+ "confidence_notes": "All architecture facts, author lists, venues (MICCAI 2015 pp. 234-241 for U-Net; MICCAI 2016 for 3D U-Net), and the 572x572 -> 388x388 / channel-doubling / valid-conv / weight-map / overlap-tile details were verified against the original papers via Springer, arXiv (1505.04597 and 1606.06650), and dblp. The specific numeric receptive-field, parameter, MAC, and soft-max examples are my own worked computations using standard formulas (verified arithmetically) and are illustrative, not quoted from the papers. Two minor caveats: (1) the exact starting-channel count (32) and use of batch normalization for 3D U-Net are from the paper's reported architecture but individual reimplementations vary; (2) the original U-Net weight-map constants (w_0 = 10, sigma ~ 5 pixels) are as stated in the 2015 paper's Section 3 \u2014 I reproduced them from the widely-cited text rather than re-deriving them. I did not re-verify the precise numeric leaderboard scores of the ISBI challenges beyond the qualitative 'won by a large margin / outperformed prior sliding-window CNN' claims, which are directly supported by the abstract; the '~0.92' figure in one key point is approximate and should be treated as indicative only.\"",
+ "_key": "unet-architecture",
+ "_kind": "dl"
+}

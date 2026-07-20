@@ -1,0 +1,142 @@
+{
+ "topic": "Semantic segmentation as dense voxel-wise classification: how it differs from classification/detection, and the encoder-decoder architecture",
+ "overview": "Image **classification** answers \"what is in this image?\" with a single label for the whole picture. Object **detection** answers \"what is where?\" by drawing bounding boxes around objects. **Semantic segmentation** goes one level finer: it answers that question *for every pixel* (in 3D medical imaging, *for every voxel*). The model outputs a label map with the same spatial size as the input, where each voxel is assigned a class such as \"background\", \"surrounding edema\", or \"enhancing tumor\". Formally, semantic segmentation is just classification applied densely \u2014 run once at every spatial location \u2014 with all those per-location decisions produced jointly by a single network that shares features across the whole volume.\n\nBecause the output must be as spatially detailed as the input, an ordinary classification CNN cannot be used directly: it deliberately throws away spatial resolution (via pooling and striding) to build a compact \"what\" summary for one label. Segmentation networks solve this with an **encoder-decoder** design. The **encoder** (contracting path) progressively downsamples the volume, trading spatial resolution for semantic depth and a large receptive field \u2014 it learns *what* is present. The **decoder** (expanding path) progressively upsamples back to the original resolution \u2014 it recovers *where* things are. **Skip connections** carry high-resolution detail from encoder layers directly to matching decoder layers so fine boundaries are not lost. This is the core idea of the **U-Net** (Ronneberger, Fischer & Brox, 2015) and, before it, the **Fully Convolutional Network (FCN)** (Long, Shelhamer & Darrell, CVPR 2015), which first showed a classification net could be made \"fully convolutional\" to produce dense pixel predictions at arbitrary input size.\n\nUnder the hood, the network emits a vector of class scores (logits) at each voxel. A **softmax** converts each vector into a probability distribution over the mutually-exclusive classes, and the class with the highest probability becomes that voxel's predicted label. Training minimizes a per-voxel loss \u2014 typically **cross-entropy**, often combined with a **Dice** overlap loss to counter the extreme class imbalance of medical volumes (tumor voxels are a tiny fraction of the brain). In the BraTS post-treatment setting, the same machinery labels each voxel into tumor sub-regions (e.g., enhancing tumor, non-enhancing tumor core, edema, resection cavity), which are then grouped into the clinically evaluated nested regions.\n\nThe key mental model: **classification = one label per image; detection = a few boxes per image; semantic segmentation = one label per voxel, all decided together by an encoder-decoder that compresses then re-expands the volume.**",
+ "key_points": [
+  {
+   "point": "Semantic segmentation assigns a class label to every voxel, producing an output label map the same spatial size as the input volume \u2014 it is dense (per-location) classification, not a single per-image decision.",
+   "source": "Long, Shelhamer & Darrell, FCN, CVPR 2015",
+   "citation_url": "https://arxiv.org/abs/1411.4038"
+  },
+  {
+   "point": "Classification outputs one label for the whole image; detection outputs bounding boxes plus class labels for a handful of object instances; semantic segmentation outputs a per-pixel/voxel class map with no notion of separate instances; instance segmentation adds back per-object identity. Semantic segmentation therefore has spatially dense output whereas classification/detection have sparse output.",
+   "source": "Minaee et al., Image Segmentation Using Deep Learning: A Survey",
+   "citation_url": "https://arxiv.org/pdf/2001.05566"
+  },
+  {
+   "point": "The Fully Convolutional Network (FCN) replaced a classifier's fully-connected head with convolutions so the network accepts arbitrary-size input and emits a correspondingly-sized dense prediction; it fuses coarse deep (semantic) features with fine shallow (spatial) features. This is the origin of end-to-end trainable segmentation.",
+   "source": "Long, Shelhamer & Darrell, FCN, CVPR 2015",
+   "citation_url": "https://arxiv.org/abs/1411.4038"
+  },
+  {
+   "point": "U-Net formalized the encoder-decoder ('contracting path' for context + 'expanding path' for localization) with symmetric skip connections that copy encoder feature maps to the decoder, preserving spatial detail. It was designed to train from very few annotated biomedical images using heavy data augmentation.",
+   "source": "Ronneberger, Fischer & Brox, U-Net, MICCAI 2015",
+   "citation_url": "https://arxiv.org/abs/1505.04597"
+  },
+  {
+   "point": "In the original U-Net the convolutions are unpadded ('valid'), so the output map is smaller than the input (input 572x572 -> output 388x388); encoder features are center-cropped before being concatenated in the decoder. Modern implementations usually use 'same' (zero-padded) convolutions so input and output share spatial size.",
+   "source": "Ronneberger, Fischer & Brox, U-Net, MICCAI 2015",
+   "citation_url": "https://arxiv.org/abs/1505.04597"
+  },
+  {
+   "point": "For BraTS-style volumetric data the 2D U-Net generalizes to 3D U-Net / V-Net: convolutions, pooling and upsampling all operate over (x, y, z), so a single network jointly labels every voxel in the 3D scan. The per-voxel softmax + Dice/cross-entropy machinery is identical.",
+   "source": "Cicek et al., 3D U-Net, MICCAI 2016",
+   "citation_url": "https://arxiv.org/abs/1606.06650"
+  },
+  {
+   "point": "Softmax over classes assumes classes are mutually exclusive (exactly one label per voxel). When target regions are nested/overlapping (e.g., BraTS whole-tumor superset of tumor-core superset of enhancing-tumor), a common alternative is per-region sigmoid outputs trained with binary cross-entropy/Dice so a voxel can belong to several nested regions at once.",
+   "source": "BraTS challenge region convention",
+   "citation_url": "https://www.synapse.org/brats"
+  }
+ ],
+ "equations": [
+  {
+   "name": "Per-voxel softmax",
+   "latex": "p_{i,c} = \\frac{\\exp(z_{i,c})}{\\sum_{k=1}^{C} \\exp(z_{i,k})}",
+   "variables_explained": "z_{i,c} is the raw score (logit) the network outputs for class c at voxel i; C is the number of classes; p_{i,c} is the predicted probability that voxel i belongs to class c. The denominator sums over all classes so that the p_{i,c} are non-negative and sum to 1 across c."
+  },
+  {
+   "name": "Voxel-wise cross-entropy loss",
+   "latex": "\\mathcal{L}_{CE} = -\\frac{1}{N}\\sum_{i=1}^{N}\\sum_{c=1}^{C} y_{i,c}\\,\\log p_{i,c}",
+   "variables_explained": "N is the number of voxels in the volume; y_{i,c} is the one-hot ground-truth label (=1 if voxel i truly is class c, else 0); p_{i,c} is the predicted probability. The loss averages, over every voxel, the negative log-probability the model assigned to the correct class."
+  },
+  {
+   "name": "Softmax cross-entropy gradient (per voxel)",
+   "latex": "\\frac{\\partial \\mathcal{L}_{CE}}{\\partial z_{i,c}} = \\frac{1}{N}\\left(p_{i,c} - y_{i,c}\\right)",
+   "variables_explained": "The gradient of the loss with respect to logit z_{i,c} is simply the predicted probability minus the target, scaled by 1/N. This clean form is why softmax+cross-entropy is the standard pairing. It says: push the logit down where the model over-predicts a class and up where it under-predicts the true class."
+  },
+  {
+   "name": "Convolution / pooling output spatial size (per dimension)",
+   "latex": "O = \\left\\lfloor \\frac{W - K + 2P}{S} \\right\\rfloor + 1",
+   "variables_explained": "W is the input size along one axis; K is the kernel size; P is the zero-padding added on each side; S is the stride; O is the output size. Applied per axis in 2D or 3D. This governs how much the encoder shrinks the volume and how the decoder must grow it back."
+  },
+  {
+   "name": "Dice coefficient (overlap metric)",
+   "latex": "\\mathrm{DSC} = \\frac{2\\,|A \\cap B|}{|A| + |B|}",
+   "variables_explained": "A is the set of voxels predicted as the target class; B is the set of voxels that are truly that class; |.| is set size (voxel count); |A \u2229 B| is the overlap. DSC ranges from 0 (no overlap) to 1 (perfect). Used both as an evaluation metric and, in a differentiable 'soft' form, as a loss robust to class imbalance."
+  },
+  {
+   "name": "Soft (differentiable) Dice loss",
+   "latex": "\\mathcal{L}_{Dice} = 1 - \\frac{2\\sum_{i} p_{i}\\,y_{i} + \\varepsilon}{\\sum_{i} p_{i} + \\sum_{i} y_{i} + \\varepsilon}",
+   "variables_explained": "p_i is the predicted probability of the target class at voxel i (a soft value in [0,1], not a hard 0/1); y_i is the ground-truth (0 or 1); the sums run over all voxels; \u03b5 is a small constant preventing division by zero (and defining the loss when a class is absent). Minimizing it maximizes soft overlap."
+  },
+  {
+   "name": "Intersection-over-Union (Jaccard)",
+   "latex": "\\mathrm{IoU} = \\frac{|A \\cap B|}{|A \\cup B|} = \\frac{|A \\cap B|}{|A| + |B| - |A \\cap B|}",
+   "variables_explained": "Same A, B as Dice. IoU is a stricter overlap score than Dice; the two are monotonically related by DSC = 2\u00b7IoU/(1+IoU)."
+  }
+ ],
+ "derivations": [
+  {
+   "title": "Deriving the softmax cross-entropy gradient dL/dz for one voxel (why 'prediction minus target')",
+   "steps": [
+    "Setup. Fix a single voxel and drop the voxel index i. The network emits logits z_1,...,z_C. The softmax probability for class c is p_c = exp(z_c) / S where S = sum_{k=1}^{C} exp(z_k). The one-hot target is y_1,...,y_C with exactly one y_t = 1 (t is the true class) and the rest 0. The single-voxel loss is L = - sum_{c} y_c log p_c. We want dL/dz_j for an arbitrary logit index j.",
+    "Step 1 \u2014 chain rule through the probabilities. Because L depends on the logits only through the probabilities, dL/dz_j = sum_{c=1}^{C} (dL/dp_c)(dp_c/dz_j). We now compute the two factors.",
+    "Step 2 \u2014 derivative of the loss w.r.t. a probability. From L = - sum_c y_c log p_c, differentiating term by term gives dL/dp_c = - y_c / p_c. (Only the log p_c term depends on p_c.)",
+    "Step 3 \u2014 derivative of softmax, diagonal case (c = j). Write p_j = exp(z_j)/S. Using the quotient rule with d(exp(z_j))/dz_j = exp(z_j) and dS/dz_j = exp(z_j): dp_j/dz_j = [exp(z_j)\u00b7S - exp(z_j)\u00b7exp(z_j)] / S^2 = (exp(z_j)/S) - (exp(z_j)/S)^2 = p_j - p_j^2 = p_j(1 - p_j).",
+    "Step 4 \u2014 derivative of softmax, off-diagonal case (c \u2260 j). Here the numerator exp(z_c) does not depend on z_j, only S does, and dS/dz_j = exp(z_j). So dp_c/dz_j = exp(z_c)\u00b7(-1/S^2)\u00b7exp(z_j) = -(exp(z_c)/S)(exp(z_j)/S) = -p_c p_j.",
+    "Step 5 \u2014 combine the two cases compactly. Both cases are captured by dp_c/dz_j = p_c(\u03b4_{cj} - p_j), where the Kronecker delta \u03b4_{cj} = 1 if c = j and 0 otherwise. (Check: c=j gives p_j(1-p_j); c\u2260j gives p_c(0-p_j) = -p_c p_j \u2014 matches Steps 3 and 4.)",
+    "Step 6 \u2014 substitute into the chain rule. dL/dz_j = sum_c (dL/dp_c)(dp_c/dz_j) = sum_c (- y_c / p_c)\u00b7p_c(\u03b4_{cj} - p_j) = - sum_c y_c (\u03b4_{cj} - p_j). The p_c cancels.",
+    "Step 7 \u2014 expand the sum. - sum_c y_c(\u03b4_{cj} - p_j) = - sum_c y_c \u03b4_{cj} + p_j sum_c y_c. The first sum picks out only the c = j term: sum_c y_c \u03b4_{cj} = y_j. The second: since y is one-hot, sum_c y_c = 1, so p_j sum_c y_c = p_j.",
+    "Step 8 \u2014 result. dL/dz_j = p_j - y_j. The gradient of softmax cross-entropy w.r.t. each logit is simply predicted-probability minus target. Averaging over N voxels (the 1/N in the full loss) gives dL_CE/dz_{i,j} = (1/N)(p_{i,j} - y_{i,j}), the form used in the equations list. This is why the pairing is numerically clean and why no p in a denominator survives to cause instability."
+   ]
+  },
+  {
+   "title": "How the encoder shrinks a volume and the decoder restores it \u2014 tracing spatial sizes and the receptive field",
+   "steps": [
+    "Goal. Show quantitatively why a plain classifier cannot produce a full-resolution label map, and how the encoder-decoder fixes it. We track the spatial size along one axis using O = floor((W - K + 2P)/S) + 1 from the equations list.",
+    "Step 1 \u2014 a 'same' convolution keeps size. Take a 3x3 convolution with stride S=1 and padding P=1 on input W=128: O = floor((128 - 3 + 2\u00b71)/1) + 1 = floor(127) + 1 = 128. Size is preserved, so stacking such convolutions changes features (channels/semantics) but not spatial resolution.",
+    "Step 2 \u2014 pooling halves size (encoder downsampling). Apply 2x2 max-pooling with K=2, S=2, P=0 on W=128: O = floor((128 - 2 + 0)/2) + 1 = floor(63) + 1 = 64. Each pooling stage halves each spatial dimension. Four stages: 128 -> 64 -> 32 -> 16 -> 8.",
+    "Step 3 \u2014 why downsample at all: receptive field growth. The receptive field is how many input voxels influence one output value. Downsampling makes each deep neuron 'see' a large region of the original volume, giving the semantic context needed to tell tumor from healthy tissue. But at 8x8(x8) the map is far too coarse to be a label per original voxel.",
+    "Step 4 \u2014 a classifier stops here. A classification net would now flatten this 8x8 map and attach a fully-connected layer to output one label \u2014 discarding all remaining spatial layout. That is exactly what we must NOT do for segmentation: we need a decision at all 128x128 positions, not one.",
+    "Step 5 \u2014 the decoder upsamples (transposed conv / interpolation). To undo Step 2 we double the size at each decoder stage. A common tool is transposed convolution; its output size (per axis) is O = S(W - 1) + K - 2P. With W=8, K=2, S=2, P=0: O = 2\u00b7(8-1) + 2 - 0 = 16. Repeating: 8 -> 16 -> 32 -> 64 -> 128. We are back to full resolution.",
+    "Step 6 \u2014 skip connections restore lost detail. Upsampling from an 8x8 map cannot invent sharp boundaries that pooling destroyed. So U-Net concatenates the encoder feature map of matching size (e.g., the 64x64 encoder map into the 64x64 decoder stage). The decoder thus combines coarse 'what' (from deep layers) with fine 'where' (from shallow skips).",
+    "Step 7 \u2014 final 1x1 convolution = the per-voxel classifier. At the restored 128x128(x128) resolution, a 1x1(x1) convolution with C output channels maps each voxel's feature vector to C logits. Applying softmax (Derivation 1) at every voxel yields the dense label map. The 1x1 conv IS a classifier applied identically and in parallel at every location \u2014 literally 'classification at every voxel', with weights shared across all voxels."
+   ]
+  }
+ ],
+ "intuitions": [
+  "Segmentation is 'classification with the sliding window folded into the network'. Instead of cropping a patch around every voxel and classifying it separately (slow, redundant), the encoder-decoder computes shared features once and emits all voxel decisions in a single forward pass. The final 1x1 convolution is exactly a classifier applied in parallel at every location, with the same weights everywhere.",
+  "The U-shape is a 'compress then reconstruct' story: the encoder squeezes the volume to answer WHAT (semantic content, large receptive field, few spatial positions), and the decoder re-expands to answer WHERE (precise boundaries, full resolution). Skip connections are the shortcut that hands the WHERE-detail (lost during pooling) straight across the U so the decoder does not have to hallucinate it.",
+  "Output shape tells you the task. One number/vector per image = classification; a short list of boxes+labels = detection; a full-resolution label map = semantic segmentation. Whenever the required output is 'as detailed as the input', you need an architecture (like an encoder-decoder) whose output resolution matches its input.",
+  "Cross-entropy and Dice see the same prediction differently. Cross-entropy scores each voxel independently (good gradients, but dominated by the many easy background voxels), while Dice scores the overlap of the whole predicted region against truth (directly rewards catching the small tumor). Summing them combines stable pixel-level learning with imbalance-robust region-level learning."
+ ],
+ "gotchas": [
+  "Class imbalance breaks plain cross-entropy. In a brain volume, tumor may be under 1% of voxels, so a model that predicts 'background' everywhere already achieves very low CE and high pixel accuracy while being clinically useless. This is why segmentation loss is usually cross-entropy PLUS Dice (or weighted/focal CE), and why accuracy is a misleading metric \u2014 report Dice/IoU per class instead.",
+  "Softmax vs sigmoid is a modeling decision, not a detail. Softmax forces classes to be mutually exclusive (probabilities sum to 1, one label per voxel). BraTS evaluates NESTED regions (enhancing tumor is inside tumor core is inside whole tumor), so a voxel legitimately belongs to several regions at once \u2014 that requires independent per-region sigmoids, not a single softmax. Using softmax on overlapping targets silently mis-models the problem.",
+  "Unpadded ('valid') convolutions shrink the output. The original U-Net maps a 572x572 input to a 388x388 output, and encoder features must be center-cropped before concatenation. If you assume input and output are the same size (true only with 'same'/zero-padded convs), your masks will be misaligned or the code will crash on concatenation. Always check the padding convention.",
+  "3D segmentation is memory-hungry, forcing patch-based training. Moving from 2D to 3D multiplies feature-map memory by the depth dimension, so full BraTS volumes rarely fit on a GPU at once. Networks train on 3D patches/crops and stitch predictions at inference \u2014 introducing boundary-tiling artifacts that need overlap-and-blend, and meaning the receptive field must fit inside the patch to capture enough context.",
+  "Upsampling can produce checkerboard artifacts. Transposed convolutions with kernel size not divisible by stride cause uneven overlap and grid-like artifacts in the output mask; using resize-then-convolution (interpolation followed by an ordinary conv) or matching kernel/stride avoids this."
+ ],
+ "example_questions": [
+  {
+   "question": "A voxel has logits z = [2.0, 1.0, 0.1] for three classes (0, 1, 2), and its true class is 0. Compute the softmax probabilities, the cross-entropy loss for this voxel, and the gradient dL/dz.",
+   "answer": "Step 1 \u2014 exponentiate the logits: exp(2.0)=7.3891, exp(1.0)=2.7183, exp(0.1)=1.1052. Step 2 \u2014 sum for the softmax denominator: S = 7.3891 + 2.7183 + 1.1052 = 11.2126. Step 3 \u2014 probabilities: p0 = 7.3891/11.2126 = 0.6590, p1 = 2.7183/11.2126 = 0.2424, p2 = 1.1052/11.2126 = 0.0986 (they sum to 1.000). Step 4 \u2014 cross-entropy: with true class 0 the one-hot is y = [1,0,0], so L = -log(p0) = -ln(0.6590) = 0.4170. Step 5 \u2014 gradient using dL/dz = p - y: dL/dz = [0.6590 - 1, 0.2424 - 0, 0.0986 - 0] = [-0.3410, 0.2424, 0.0986]. Interpretation: the negative first component pushes logit 0 UP (increase confidence in the correct class), while the positive components push logits 1 and 2 DOWN. The components sum to 0, as they must for softmax."
+  },
+  {
+   "question": "On a small 4x4 slice, the ground-truth tumor mask has 6 tumor pixels; the model predicts 8 tumor pixels, of which 5 coincide with true tumor pixels. Compute the Dice coefficient and the IoU, and say which is stricter.",
+   "answer": "Let A = predicted tumor set (|A| = 8), B = true tumor set (|B| = 6), overlap |A \u2229 B| = 5. Dice: DSC = 2|A \u2229 B| / (|A| + |B|) = (2\u00b75)/(8+6) = 10/14 = 0.714. IoU: the union is |A| + |B| - |A \u2229 B| = 8 + 6 - 5 = 9, so IoU = 5/9 = 0.556. IoU (0.556) is lower than Dice (0.714) on the same prediction \u2014 IoU is the stricter metric because it counts the union in the denominator (penalizing both false positives and false negatives more heavily). Cross-check with the identity DSC = 2\u00b7IoU/(1+IoU) = 2\u00b70.556/1.556 = 1.112/1.556 = 0.714. Consistent."
+  },
+  {
+   "question": "Why can't you take a standard image-classification CNN (conv layers + global pooling + a fully-connected softmax head) and use it as-is for voxel-wise segmentation? What two architectural changes turn it into a segmentation network?",
+   "answer": "A classification CNN is built to destroy spatial resolution: repeated pooling/striding collapses the feature map toward 1x1(x1), and a global-pooling + fully-connected head then emits a SINGLE label vector for the whole image. That throws away exactly the per-location information segmentation needs, and the fully-connected head also fixes the input size. Two changes fix this. (1) Make it fully convolutional: replace the fully-connected head with convolutions (a final 1x1 conv with C output channels) so the network outputs a spatial grid of C-dim logit vectors \u2014 one per location \u2014 and accepts any input size (the FCN idea). (2) Add a decoder (upsampling path) with skip connections so the coarse deep feature grid is expanded back to the full input resolution while re-injecting fine spatial detail from earlier layers (the U-Net idea). After these changes, applying softmax at every voxel and taking the argmax yields a full-resolution label map \u2014 i.e., dense classification at every voxel."
+  }
+ ],
+ "suggested_figures": [
+  "A 2x2 comparison panel over the same brain slice: (a) classification = one label 'tumor present' for the whole image; (b) detection = a bounding box around the tumor; (c) semantic segmentation = every voxel color-coded by class; (d) instance segmentation = each lesion in a distinct color. This visually anchors 'sparse output vs dense output'.",
+  "The U-Net 'U' diagram: left contracting encoder with feature-map sizes shrinking (e.g., 128 -> 64 -> 32 -> 16 -> 8) and channels growing, right expanding decoder with sizes growing back to 128, and horizontal grey arrows for the skip connections; annotate the bottleneck as 'max context / min resolution' and the final 1x1 conv as 'per-voxel classifier'.",
+  "A zoom-in on a single voxel showing its C-length logit vector -> softmax -> probability bar chart over classes -> argmax -> assigned color, with the caption 'this happens independently and in parallel at every voxel'. This makes 'segmentation = dense classification' concrete."
+ ],
+ "confidence_notes": "All mathematics (softmax, cross-entropy, its gradient derivation, convolution/transposed-conv output-size formulas, Dice/IoU and their identity DSC=2IoU/(1+IoU)) is standard and was verified by hand; the worked numeric examples were recomputed and are internally consistent. Paper attributions were confirmed via web search: U-Net (Ronneberger, Fischer & Brox, MICCAI 2015, arXiv:1505.04597), FCN (Long, Shelhamer & Darrell, CVPR 2015, arXiv:1411.4038), 3D U-Net (Cicek et al., MICCAI 2016, arXiv:1606.06650). The specific U-Net input/output sizes (572x572 -> 388x388) are from the original paper as reported in secondary sources; I did not re-fetch the primary PDF to re-verify every digit, though these figures are widely and consistently cited. The BraTS nested-region / sigmoid-vs-softmax point reflects the general BraTS convention rather than a single quoted line from the current post-treatment challenge document; the exact 2024/2025 post-treatment label set (e.g., inclusion of a resection-cavity class) should be confirmed against the specific challenge year's documentation before use in the teaching note. This is an ML topic, so no clinical/medical claims requiring per-claim medical citations are made.\"",
+ "_key": "semantic-segmentation",
+ "_kind": "dl"
+}

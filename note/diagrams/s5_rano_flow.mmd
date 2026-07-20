@@ -1,0 +1,8 @@
+flowchart TB
+    A[Post-RT baseline scan<br/>~21-35 days after RT] --> B[Sum products of<br/>perpendicular diameters S]
+    B --> C{Change vs<br/>baseline / nadir}
+    C -->|Delta <= -0.50| PR[Partial Response<br/>~65% volume drop]
+    C -->|Delta >= +0.25| PD{Within 12 wk<br/>of RT?}
+    C -->|otherwise| SD[Stable Disease]
+    PD -->|Yes, in field| CF[Confirm on<br/>repeat scan first]
+    PD -->|No| PROG[Progressive Disease<br/>~40% volume rise]

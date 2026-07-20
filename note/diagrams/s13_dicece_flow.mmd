@@ -1,0 +1,8 @@
+flowchart LR
+    L[Network<br/>logits] --> S[softmax /<br/>sigmoid]
+    S --> P[probabilities<br/>p_i]
+    P --> DL[Dice loss<br/>1 - D]
+    P --> CE[cross-entropy<br/>L_CE]
+    DL --> SUM["weighted sum<br/>λ·Dice + λ·CE"]
+    CE --> SUM
+    SUM --> T[total<br/>DiceCE loss]

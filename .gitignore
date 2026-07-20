@@ -35,3 +35,16 @@ kb/sources/
 
 # regenerable from report.md via scripts/08_report_html.py
 report.html
+
+# Type-checker / test caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+node_modules/
+
+# Third-party original research code — kept locally for the reproduction study,
+# NOT redistributed (licensing). See README for what it was used for.
+reference/
+
+# Built note (regenerable via scripts/build_note.py); the PUBLISHED copy lives in docs/
+note/brats_explainer.html

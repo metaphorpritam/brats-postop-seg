@@ -1,0 +1,152 @@
+{
+ "sections": [
+  {
+   "number": "1",
+   "title": "Orientation: what this note is and how to read it",
+   "covers": "Frames the whole arc \u2014 a deep-learning system that outlines post-treatment glioma sub-regions on MRI \u2014 and previews the payoff (a controlled A/B experiment moving mean foreground Dice 0.349->0.670). Sets expectations that we build medicine first, ML second, then this specific project. Feeds from: all topics at a high level; project specifics for the teaser result.",
+   "depends_on": "none (entry point)"
+  },
+  {
+   "number": "2",
+   "title": "Brain tumors: cells in a closed box",
+   "covers": "Teaches the biological and physical basics \u2014 what a tumor is, why the rigid skull makes even small masses dangerous (mass effect, herniation), primary vs metastatic, benign vs malignant. Establishes stakes so the reader cares about accurate outlines. Feeds from: brain-tumors-basics.",
+   "depends_on": "1"
+  },
+  {
+   "number": "3",
+   "title": "Gliomas and the WHO grading system",
+   "covers": "Narrows to gliomas (glial-cell origin, most common primary malignant CNS tumors), histological grading vs the WHO 2021 CNS5 molecular reclassification (IDH status), and why grade matters for prognosis. Introduces the vocabulary later sections rely on. Feeds from: gliomas-who-grading.",
+   "depends_on": "2"
+  },
+  {
+   "number": "4",
+   "title": "Glioblastoma and its standard treatment",
+   "covers": "Defines GBM (IDH-wildtype, grade 4) as the aggressive case, then walks the standard-of-care pathway: maximal safe resection + radiotherapy + temozolomide. This treatment is exactly what creates the 'post-treatment' brain the model must segment. Feeds from: glioblastoma-treatment.",
+   "depends_on": "3"
+  },
+  {
+   "number": "5",
+   "title": "The post-treatment brain: why the scan changes",
+   "covers": "Explains how surgery and chemoradiation transform the imaging picture \u2014 resection cavities, treatment effect/pseudoprogression vs true tumor, why post-treatment segmentation is harder than pre-treatment. Motivates the specific BraTS post-treatment task. Feeds from: post-treatment-imaging.",
+   "depends_on": "4"
+  },
+  {
+   "number": "6",
+   "title": "How MRI sees tissue: the modalities",
+   "covers": "Teaches that MRI is not one photo but several weighted images (T1, T1-contrast/T1ce, T2, FLAIR), what each weighting emphasizes, and why four co-registered channels give complementary evidence about tumor sub-parts. Grounds the '4 input channels' of the network. Feeds from: mri-modalities.",
+   "depends_on": "5"
+  },
+  {
+   "number": "7",
+   "title": "The BraTS challenge and the 5-class post-treatment labels",
+   "covers": "Introduces BraTS as the benchmark, then defines the specific label scheme this project uses: NETC, SNFH, ET, RC (plus background) \u2014 what each sub-region is and how the modalities in Section 6 reveal them. Notes the shift from legacy TC/WT/ET regions to the post-treatment 5-class map. Feeds from: brats-subregions-labels; project specifics (5-class NETC/SNFH/ET/RC).",
+   "depends_on": "6"
+  },
+  {
+   "number": "8",
+   "title": "Why voxel-accurate segmentation matters clinically",
+   "covers": "Closes the medical arc by showing what an outline enables \u2014 volume tracking, response assessment, surgical/radiotherapy planning \u2014 and why voxel-level accuracy (not just detection) is the goal. This is the human justification for the ML objective. Feeds from: clinical-impact.",
+   "depends_on": "7"
+  },
+  {
+   "number": "9",
+   "title": "From classification to semantic segmentation: defining the ML task",
+   "covers": "Bridges medicine to ML. Contrasts classification vs detection vs semantic segmentation, and states the formal objective: assign every voxel one of the label classes from Section 7. First DL section, framed entirely by the clinical need. Feeds from: semantic-segmentation.",
+   "depends_on": "8"
+  },
+  {
+   "number": "10",
+   "title": "CNNs and convolutions: the core operation",
+   "covers": "Builds intuition for the learnable sliding kernel, feature maps, receptive fields, pooling/downsampling, and the jump from 2D to 3D convolutions for volumetric MRI. The foundational mechanism every later architecture reuses. Feeds from: cnns-convolutions.",
+   "depends_on": "9"
+  },
+  {
+   "number": "11",
+   "title": "The U-Net: encoder, decoder, and skip connections",
+   "covers": "Explains the encoder-decoder shape, why downsampling loses spatial detail, and how skip connections restore it \u2014 the architecture that dominates BraTS. Introduces this project's concrete instance: a ~1.98M-parameter MONAI 3D U-Net held byte-identical across experimental tracks. Feeds from: unet-architecture; project specifics (MONAI 3D U-Net, 1.98M params).",
+   "depends_on": "10"
+  },
+  {
+   "number": "12",
+   "title": "From logits to labels: softmax and cross-entropy",
+   "covers": "Derives how per-voxel logits become a probability vector via softmax, and how cross-entropy scores those probabilities against the truth to give a trainable loss. The default supervision signal before we confront imbalance. Feeds from: softmax-cross-entropy.",
+   "depends_on": "11"
+  },
+  {
+   "number": "13",
+   "title": "Measuring overlap: the Dice coefficient and Dice loss",
+   "covers": "Defines the Sorensen-Dice overlap index, derives its soft/differentiable form as a loss, and explains why overlap-based losses suit thin, sparse tumor regions better than pure cross-entropy. Introduces Dice as both loss and, later, metric. Feeds from: dice-loss.",
+   "depends_on": "12"
+  },
+  {
+   "number": "14",
+   "title": "Class imbalance: when the target is a tiny fraction of voxels",
+   "covers": "Quantifies how sub-regions occupy a minuscND fraction of a 240x240x155 volume, why that biases naive losses toward predicting background, and the mitigations (Dice/compound losses, weighting, foreground sampling). Explains why we report *foreground* Dice. Feeds from: class-imbalance.",
+   "depends_on": "13"
+  },
+  {
+   "number": "15",
+   "title": "Two kinds of normalization (don't conflate them)",
+   "covers": "Separates input intensity normalization (making MRI voxel values comparable across scans/scanners) from in-network normalization layers (batch/instance norm for stable training). A classic pitfall section with gotchas. Feeds from: normalization.",
+   "depends_on": "14"
+  },
+  {
+   "number": "16",
+   "title": "Evaluating a segmentation: metrics beyond accuracy",
+   "covers": "Shows why voxel accuracy misleads under imbalance, and builds the real toolkit \u2014 Dice as a metric, boundary/Hausdorff distance, and the meaning of a per-region 'mean foreground Dice' summary used for this project's headline number. Feeds from: evaluation-metrics; dice-loss (Dice reused as metric).",
+   "depends_on": "15"
+  },
+  {
+   "number": "17",
+   "title": "Training machinery: making 3D learning actually run",
+   "covers": "The engineering layer \u2014 patching a huge 4-channel volume, batch sizing, augmentation, caching, optimizer/schedule, epochs \u2014 that turns the model and loss into a reproducible run. Sets up why holding the pipeline fixed matters for a fair comparison. Feeds from: training-machinery.",
+   "depends_on": "16"
+  },
+  {
+   "number": "18",
+   "title": "Designing a trustworthy experiment: controlled A/B",
+   "covers": "Teaches the methodology principle: to claim 'change X improved segmentation,' X must be the only thing that varied. Introduces isolation of variables, seeds/repeats for the +-std, and confounds \u2014 the lens for reading this project's result. Feeds from: ab-methodology.",
+   "depends_on": "17"
+  },
+  {
+   "number": "19",
+   "title": "This project: dataset, labels, and fixed design",
+   "covers": "Concrete setup \u2014 the subsampled BraTS post-treatment cases, the 5-class targets, the byte-identical 1.98M-param MONAI 3D U-Net held constant across tracks, and the pipeline choices from Sections 15-17 pinned down. Grounds all prior theory in the actual build. Feeds from: project specifics; training-machinery; normalization; unet-architecture.",
+   "depends_on": "18"
+  },
+  {
+   "number": "20",
+   "title": "The A/B defect experiment (D1-D9)",
+   "covers": "Walks the deliberately-broken Track A versus corrected Track B, enumerating the D1-D9 defects and why each plausibly degrades learning, as a concrete application of Section 18's isolation logic. Feeds from: ab-methodology; project specifics (A/B defect list D1-D9).",
+   "depends_on": "19"
+  },
+  {
+   "number": "21",
+   "title": "Results and interpretation",
+   "covers": "Presents the headline: mean foreground Dice 0.349+-0.013 (A) -> 0.670+-0.002 (B), delta +0.321+-0.013, interprets the magnitude and tight variance against Section 16's metric meaning, and discusses what it does and does not prove. Feeds from: project results; evaluation-metrics; ab-methodology.",
+   "depends_on": "20"
+  },
+  {
+   "number": "22",
+   "title": "Takeaways, limitations, and where this sits in neuro-oncology",
+   "covers": "Synthesizes the full chain \u2014 clinical need -> task -> architecture -> honest evaluation \u2014 states limitations (subsampling, single architecture, defect-driven gains), and reconnects to Section 8's clinical stakes. Feeds from: clinical-impact; ab-methodology; project specifics.",
+   "depends_on": "21"
+  }
+ ],
+ "gaps": [
+  "The nine defects D1-D9 are not described in any research topic \u2014 authoring needs the committed project docs to state exactly what each defect is, which pipeline stage it touches, and why it degrades learning; without this Section 20 cannot be written concretely.",
+  "The statistical basis of the \u00b10.013 / \u00b10.002 std is unspecified \u2014 number of seeds vs cross-validation folds vs bootstrap, and how many runs per track. Needed to justify the 'controlled A/B' claim and the tight variance in Section 21.",
+  "Dataset provenance and split are unverified \u2014 memory notes a ~200-case subsample gzipped from a ~159 GB .nii dump; need exact case count, train/val/test split, BraTS year/edition, and whether the subsample biases the reported Dice.",
+  "Per-class Dice breakdown (NETC/SNFH/ET/RC separately) is not given \u2014 only the mean foreground number. Readers will want which sub-regions drove the gain; unverified.",
+  "The exact 5-class label definitions (NETC = non-enhancing tumor core?, SNFH = surrounding non-enhancing FLAIR hyperintensity, RC = resection cavity) and their modality signatures need confirming against official BraTS post-treatment documentation before Section 7 is finalized.",
+  "Legacy-to-new region mapping (how old TC/WT/ET regions relate to the new 5-class post-treatment scheme) is only implied and needs an authoritative source.",
+  "Reference-model discrepancy flagged in memory: reference/Model unet_cc.py is 4-class (merges RC into ET) and contradicts the 5-class CLAUDE.md narrative \u2014 Sections 7/19 need an explicit caveat and a decision on which is authoritative.",
+  "Exact MONAI 3D U-Net configuration behind the 1.98M param count (channel widths, depth, norm type, residual units) is not in the topics \u2014 needed for Section 11's concrete instance and to confirm reproducibility.",
+  "Boundary/Hausdorff and BraTS lesion-wise Dice details are only sketched in evaluation-metrics; if the project reports only voxel-wise mean-fg Dice, Section 16 should say so and note what is omitted.",
+  "Compute/engineering specifics (cache build outcome, epoch time \u2014 the Gate 2.10 item in memory, GPU/hardware, total training time) are unconfirmed; Section 17 needs real numbers or should stay qualitative.",
+  "Input intensity normalization scheme actually used (z-score per channel? percentile clipping? brain-mask-only stats) is unverified against the committed pipeline \u2014 load-bearing for Section 15's concrete example.",
+  "Data augmentation and any post-processing (e.g., largest-connected-component, small-object removal) are not covered by any topic and may materially affect results \u2014 confirm presence/absence before Sections 17 and 21.",
+  "Whether the +0.321 delta is statistically tested (paired test, confidence interval, effect size) versus just reported as a difference of means \u2014 needed for an honest 'what it proves' discussion in Section 21."
+ ],
+ "citation_count": 17
+}

@@ -1,0 +1,5 @@
+flowchart LR
+    Z["Logits z<br/>(raw scores,<br/>any real number)"] -->|softmax| P["Probabilities p<br/>(positive,<br/>sum to 1)"]
+    Y["One-hot label y"] --> L
+    P -->|cross-entropy| L["Loss L =<br/>minus log p_c"]
+    L -.->|"gradient = p minus y"| Z

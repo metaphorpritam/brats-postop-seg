@@ -1,0 +1,4 @@
+flowchart LR
+    R0["input pixel<br/>R = 1"] -->|"3x3 conv"| R1["R = 3"]
+    R1 -->|"3x3 conv"| R2["R = 5"]
+    R2 -->|"3x3 conv"| R3["R = 7<br/>= one 7x7 kernel"]

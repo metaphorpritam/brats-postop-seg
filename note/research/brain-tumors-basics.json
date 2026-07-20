@@ -1,0 +1,163 @@
+{
+ "topic": "Brain Tumors: What They Are, Primary vs. Metastatic, Epidemiology, Symptoms, and Why They Are Serious",
+ "overview": "A brain tumor is an abnormal mass of cells growing inside the skull or spinal canal \u2014 the central nervous system (CNS). Because the skull is a rigid, closed box, even a small mass has \"nowhere to go,\" so a growing tumor raises pressure and presses on or destroys the healthy brain tissue around it. Tumors are divided two ways at once. First, by **origin**: a *primary* tumor starts in brain/CNS tissue itself (e.g., glioma from glial support cells, or meningioma from the membranes covering the brain), whereas a *metastatic* (secondary) tumor is cancer that started elsewhere in the body \u2014 most often lung, breast, or melanoma \u2014 and spread to the brain through the bloodstream. Second, by **behavior**: *benign* tumors grow slowly and rarely invade surrounding tissue, while *malignant* tumors grow quickly and infiltrate the brain. A key quirk of neuro-oncology is that even a \"benign\" brain tumor can be dangerous purely because of *where* it sits \u2014 a slow-growing mass pressing on the brainstem can be life-threatening.\n\nTo capture this behavioral spectrum, pathologists assign a **WHO grade from 1 to 4** (grade 1 = most indolent, grade 4 = most aggressive). Since 2021 the WHO CNS5 classification grades many tumors using *molecular markers* (such as IDH mutation status) in addition to how the cells look under a microscope \u2014 this is why the same word \"glioblastoma\" now specifically means an IDH-wildtype, grade-4 diffuse glioma. This molecular precision is exactly the clinical backdrop for computational challenges like BraTS, which ask algorithms to segment tumor sub-regions on MRI.\n\nEpidemiologically, primary brain and other CNS tumors are relatively uncommon compared with breast or lung cancer, but they carry outsized harm. In the United States (CBTRUS 2018\u20132022 data) the average annual age-adjusted incidence is about **26 cases per 100,000 people** for all primary CNS tumors combined, most of which are non-malignant (chiefly meningioma). Malignant tumors run about **6.9 per 100,000**, and glioblastoma \u2014 the most common malignant primary brain tumor \u2014 makes up over half of malignant cases and has a five-year relative survival of only about **7%**. Metastatic brain tumors are actually *more* common than primary ones (roughly 5\u201310\u00d7 more frequent), because so many people develop cancer elsewhere that can spread to the brain.\n\nSymptoms flow directly from the mass-and-pressure story: headaches (classically worse in the morning), new-onset seizures, nausea/vomiting, and focal deficits such as weakness, vision or speech changes, and personality or memory changes depending on tumor location. Brain tumors are serious because the affected organ has little tolerance for pressure or damage, malignant gliomas diffusely infiltrate and cannot be fully removed by surgery, and the blood\u2013brain barrier limits which drugs can reach the tumor \u2014 together explaining why aggressive gliomas remain among the hardest cancers to treat.",
+ "key_points": [
+  {
+   "point": "A primary brain tumor starts in the brain/CNS tissue itself; it may spread within the brain or to the spine but rarely spreads to other parts of the body. A metastatic (secondary) tumor is cancer that spread to the brain from a primary site elsewhere in the body.",
+   "source": "NCI Adult Central Nervous System Tumors Treatment (PDQ) / NCI Brain Tumors",
+   "citation_url": "https://www.cancer.gov/types/brain/patient/adult-brain-treatment-pdq"
+  },
+  {
+   "point": "Benign brain tumors grow and press on nearby areas, rarely spread into other tissues, and may recur; malignant brain tumors are likely to grow quickly and spread into other brain tissue.",
+   "source": "NCI Adult Central Nervous System Tumors Treatment (PDQ)",
+   "citation_url": "https://www.cancer.gov/types/brain/patient/adult-brain-treatment-pdq"
+  },
+  {
+   "point": "Brain/CNS tumors are graded WHO 1\u20134: grade 1 cells look near-normal and grow/spread slowly; grade 4 cells do not look like normal cells and grow and spread very quickly. Higher grade = more aggressive.",
+   "source": "NCI Adult Central Nervous System Tumors Treatment (PDQ)",
+   "citation_url": "https://www.cancer.gov/types/brain/patient/adult-brain-treatment-pdq"
+  },
+  {
+   "point": "The 2021 WHO Classification of CNS Tumors (WHO CNS5, 5th edition) introduced molecular-based grading: molecular features (e.g., IDH mutation, 1p/19q codeletion, CDKN2A/B deletion) now help both classify and grade gliomas. Glioblastoma is now defined as IDH-wildtype; former 'IDH-mutant glioblastoma' is reclassified as IDH-mutant astrocytoma.",
+   "source": "RadioGraphics 2022, 'Major Changes in 2021 WHO Classification of CNS Tumors' (RSNA)",
+   "citation_url": "https://pubs.rsna.org/doi/full/10.1148/rg.210236"
+  },
+  {
+   "point": "In the US (CBTRUS 2018\u20132022), the average annual age-adjusted incidence rate (AAAIR) of all primary malignant and non-malignant brain/other CNS tumors was 26.05 per 100,000 (malignant 6.86; non-malignant 19.19), totaling 489,718 cases over five years.",
+   "source": "CBTRUS Fact Sheet / CBTRUS Statistical Report 2018\u20132022, Neuro-Oncology",
+   "citation_url": "https://cbtrus.org/cbtrus-fact-sheet/"
+  },
+  {
+   "point": "Glioblastoma is the most common malignant primary brain tumor: 13.7% of all brain/CNS tumors and 52.2% of all malignant tumors. Meningioma is the most common non-malignant tumor (about 57% of non-malignant, ~42.6% of all tumors, incidence ~23.02 per 100,000 in adults 40+).",
+   "source": "CBTRUS Statistical Report 2018\u20132022 / National Brain Tumor Society Facts",
+   "citation_url": "https://cbtrus.org/cbtrus-fact-sheet/"
+  },
+  {
+   "point": "Incidence is higher in females (29.67 per 100,000) than males (22.23 per 100,000) for all primary CNS tumors combined, driven largely by meningioma. In children ages 0\u201314 the incidence is 5.51 per 100,000 (pilocytic astrocytoma most common).",
+   "source": "CBTRUS Statistical Report 2018\u20132022, Neuro-Oncology (Oxford Academic)",
+   "citation_url": "https://academic.oup.com/neuro-oncology/article/27/Supplement_4/iv1/8285946"
+  },
+  {
+   "point": "Malignant brain/CNS tumors caused 88,186 US deaths over 2018\u20132022 (average 17,637 per year, ~48 per day; mortality rate 4.41 per 100,000). Five-year relative survival is 34.8% for malignant tumors and 91.7% for non-malignant tumors.",
+   "source": "CBTRUS Fact Sheet / National Brain Tumor Society",
+   "citation_url": "https://cbtrus.org/cbtrus-fact-sheet/"
+  },
+  {
+   "point": "Glioblastoma has among the worst outcomes of any cancer: a five-year relative survival of only ~7.0%, and a low median observed survival (about 8 months in unselected population data; roughly 15 months with maximal multimodal therapy).",
+   "source": "National Brain Tumor Society Facts / CBTRUS",
+   "citation_url": "https://braintumor.org/brain-tumors/about-brain-tumors/brain-tumor-facts/"
+  },
+  {
+   "point": "Metastatic brain tumors are more common than primary brain tumors \u2014 roughly 5\u00d7 (up to 5\u201310\u00d7) more frequent. The most common primary sources of brain metastases are lung cancer (~20\u201336%), breast cancer (~15\u201325%), and melanoma (~5\u201320%).",
+   "source": "National Brain Tumor Society / Neuro-Oncology (Oxford) & PMC reviews on brain metastasis",
+   "citation_url": "https://braintumor.org/brain-tumors/about-brain-tumors/brain-tumor-facts/"
+  },
+  {
+   "point": "More than 1.3 million Americans are estimated to be living with a primary brain tumor, and an estimated 108,810 people will receive a new primary brain tumor diagnosis in 2026.",
+   "source": "National Brain Tumor Society Brain Tumor Facts",
+   "citation_url": "https://braintumor.org/brain-tumors/about-brain-tumors/brain-tumor-facts/"
+  },
+  {
+   "point": "Common signs and symptoms of adult brain tumors include morning headaches, seizures, nausea and vomiting, vision/hearing/speech problems, loss of appetite, personality or mood changes, loss of balance, weakness, and unusual sleepiness; symptoms arise as the tumor and surrounding swelling press on or damage healthy brain tissue.",
+   "source": "NCI Adult Central Nervous System Tumors Treatment (PDQ) / MSKCC Glioma Signs and Symptoms",
+   "citation_url": "https://www.cancer.gov/types/brain/patient/adult-brain-treatment-pdq"
+  },
+  {
+   "point": "In glioma symptom series, reported frequencies include headache in roughly half of patients (~56%), seizures (~32%), cognitive dysfunction (~34%), and nausea/vomiting (~13%); brain-tumor headaches are frequently worse in the morning and may accompany nausea/vomiting.",
+   "source": "MSKCC Glioma Signs and Symptoms; MD Anderson Glioblastoma Symptoms",
+   "citation_url": "https://www.mskcc.org/cancer-care/types/glioma/glioma-signs-and-symptoms"
+  }
+ ],
+ "equations": [
+  {
+   "name": "Direct age-standardized (age-adjusted) incidence rate",
+   "latex": "\\text{ASR} = \\frac{\\sum_{i} r_i \\, w_i}{\\sum_{i} w_i}, \\qquad r_i = \\frac{c_i}{n_i}",
+   "variables_explained": "ASR = age-standardized incidence rate (cases per 100,000). i indexes age groups (e.g., 0\u20134, 5\u20139, \u2026). r_i = age-specific rate in group i, computed as c_i (new cases in that age group) divided by n_i (population at risk in that age group). w_i = weight from a fixed 'standard' population (e.g., the 2000 US standard) for age group i. Standardizing to a common age structure lets us compare populations that have different age distributions, because brain-tumor risk rises steeply with age."
+  },
+  {
+   "name": "Expected annual case count from an incidence rate",
+   "latex": "C = \\text{rate} \\times \\frac{N}{100{,}000}",
+   "variables_explained": "C = expected number of new cases per year; rate = incidence rate expressed per 100,000 people per year; N = total population at risk. Dividing N by 100,000 converts the population into 'units of 100,000' so it matches the rate's denominator."
+  },
+  {
+   "name": "Relative survival ratio",
+   "latex": "\\text{RSR} = \\frac{S_{\\text{obs}}}{S_{\\text{exp}}}",
+   "variables_explained": "RSR = relative survival ratio (often reported as a percentage). S_obs = observed proportion of tumor patients still alive after a set time (e.g., 5 years). S_exp = expected survival over the same period for a matched general-population group (same age, sex, calendar period) without the tumor. RSR isolates the mortality attributable to the tumor by dividing out background mortality, so RSR can slightly exceed 1 (100%) for indolent tumors where patients die of other causes at rates similar to the general population."
+  },
+  {
+   "name": "Crude incidence rate",
+   "latex": "\\text{CR} = \\frac{C_{\\text{total}}}{N_{\\text{total}}} \\times 100{,}000",
+   "variables_explained": "CR = crude rate per 100,000; C_total = total new cases in the whole population over the period; N_total = total person-time / population at risk. Unlike the ASR, the crude rate does not correct for age structure, so a population with more elderly people will show a higher crude rate even if age-specific risks are identical."
+  }
+ ],
+ "derivations": [
+  {
+   "title": "Turning the malignant-tumor incidence rate (6.86 per 100,000) into an expected US annual case count",
+   "steps": [
+    "Start from the definition of an incidence rate expressed per 100,000 people per year: \\text{rate} = \\dfrac{C}{N} \\times 100{,}000. Here C is the unknown number of new cases per year and N is the population at risk. The factor 100,000 is just the chosen reporting unit.",
+    "We know the malignant AAAIR: \\text{rate} = 6.86 \\text{ per } 100{,}000. Substitute it in: 6.86 = \\dfrac{C}{N} \\times 100{,}000. Nothing has changed except we plugged in the known rate.",
+    "Solve algebraically for C. Divide both sides by 100,000: \\dfrac{6.86}{100{,}000} = \\dfrac{C}{N}. This isolates the plain fraction of the population that gets a tumor each year (a probability per person-year).",
+    "Multiply both sides by N to get C alone: C = \\dfrac{6.86}{100{,}000} \\times N = 6.86 \\times \\dfrac{N}{100{,}000}. This is exactly the 'expected case count' formula; N/100,000 counts how many 100,000-person blocks the population contains.",
+    "Insert an approximate US population N = 335{,}000{,}000: C = 6.86 \\times \\dfrac{335{,}000{,}000}{100{,}000}. The division inside gives the number of 100,000-blocks.",
+    "Compute the block count: \\dfrac{335{,}000{,}000}{100{,}000} = 3{,}350. So there are 3,350 blocks of 100,000 people.",
+    "Multiply: C = 6.86 \\times 3{,}350 = 22{,}981. So the rate implies roughly 23,000 new malignant primary brain/CNS tumors per year \u2014 consistent in order of magnitude with reported US figures (~25,000/yr), the small gap coming from age-standardization and the exact population used."
+   ]
+  },
+  {
+   "title": "Reading a 5-year relative survival of 34.8% (malignant tumors) as attributable mortality",
+   "steps": [
+    "Begin with the relative-survival definition: \\text{RSR} = \\dfrac{S_{\\text{obs}}}{S_{\\text{exp}}}. RSR is what registries report; S_obs is the raw fraction of patients alive at 5 years; S_exp is the fraction a matched cancer-free group would have alive.",
+    "Plug in the reported malignant RSR = 0.348 (i.e., 34.8%): 0.348 = \\dfrac{S_{\\text{obs}}}{S_{\\text{exp}}}. This is the given quantity.",
+    "Rearrange to express observed survival: S_{\\text{obs}} = \\text{RSR} \\times S_{\\text{exp}} = 0.348 \\times S_{\\text{exp}}. This says the actual survival is 34.8% of what an unaffected peer group would have.",
+    "Use an illustrative background survival S_exp = 0.95 (a general-population cohort of similar age might have 95% of its members alive over 5 years). Substitute: S_{\\text{obs}} = 0.348 \\times 0.95.",
+    "Compute: S_{\\text{obs}} = 0.3306 \\approx 0.331. So about 33.1% of patients are actually alive at 5 years, slightly below the 34.8% relative figure because a few would have died of unrelated causes anyway.",
+    "Interpret the excess deaths due to the tumor: the fraction lost beyond background is 1 - \\text{RSR} = 1 - 0.348 = 0.652. In words, the tumor is associated with roughly a 65% reduction in the 5-year survival that these patients would otherwise have expected."
+   ]
+  },
+  {
+   "title": "Using 'metastatic tumors are ~5\u00d7 more common than primary' to estimate the metastatic share",
+   "steps": [
+    "Let P be the number of primary brain tumors and M the number of metastatic brain tumors in a population. The statement 'metastatic are 5\u00d7 more common' means M = 5P.",
+    "The metastatic share (fraction of all brain tumors that are metastatic) is f = \\dfrac{M}{M + P}. This is the definition of a proportion: metastatic count over total count.",
+    "Substitute M = 5P: f = \\dfrac{5P}{5P + P}. We replaced M so the expression is in a single variable P.",
+    "Factor P out of numerator and denominator: f = \\dfrac{5P}{6P} = \\dfrac{5}{6}. The P cancels because the ratio does not depend on the absolute size, only the 5:1 relationship.",
+    "Evaluate: f = \\dfrac{5}{6} \\approx 0.833, i.e., about 83%. So if metastases are 5\u00d7 as common, roughly 5 in every 6 brain tumors would be metastatic \u2014 underscoring why brain metastases dominate adult intracranial tumors even though primary tumors get more research attention."
+   ]
+  }
+ ],
+ "intuitions": [
+  "The 'closed box' intuition: the skull is rigid, so intracranial contents (brain, blood, cerebrospinal fluid) fill a fixed volume. Add a tumor plus its surrounding swelling and something must give \u2014 pressure rises and healthy tissue is squeezed. This single fact explains morning headaches (pressure builds while lying flat overnight), nausea/vomiting, and why even a slow, 'benign' tumor in a bad spot can be deadly.",
+  "Location is destiny: unlike most organs, the brain is functionally mapped, so a tumor's symptoms advertise where it is \u2014 speech trouble points to language areas, weakness on one side points to the opposite motor cortex, personality change points to the frontal lobe. Two tumors of identical size and grade can behave completely differently depending on address.",
+  "Two independent axes, not one label: 'primary vs. metastatic' (where it came from) and 'benign vs. malignant / grade 1\u20134' (how it behaves) are separate questions. A tumor is described by a point on both axes at once, which is why the WHO now layers molecular markers on top of microscope appearance to pin down the exact entity.",
+  "Rare but heavy: primary brain tumors are far less common than breast or lung cancer, yet they punch above their weight in years-of-life-lost because the deadliest ones (glioblastoma) strike vital tissue, cannot be fully resected, and resist drugs blocked by the blood\u2013brain barrier."
+ ],
+ "gotchas": [
+  "'Benign' does not mean 'harmless' in the brain. A non-malignant, slow-growing tumor pressing on the brainstem or blocking cerebrospinal-fluid flow can be life-threatening \u2014 location and mass effect matter as much as histology. Non-malignant does not equal no risk.",
+  "Incidence rates are age-adjusted (standardized), so they are NOT the raw count divided by population. Comparing a crude rate to an age-standardized rate, or comparing standardized rates built on different 'standard populations,' can produce misleading differences. Always check the standard used.",
+  "Relative survival is not the same as the raw probability of being alive; it divides out deaths from other causes. That is why a non-malignant tumor can show a relative survival near or above 100% \u2014 it does not mean the tumor cures people, only that these patients die of unrelated causes at nearly the general-population rate.",
+  "'Brain cancer statistics' can silently include or exclude non-malignant tumors, and can mix primary with metastatic tumors. Since non-malignant tumors are ~3\u00d7 more common than malignant ones and metastases outnumber primaries, a headline number is meaningless without stating which population it covers.",
+  "Post-2021 vocabulary shift: 'glioblastoma' now means IDH-wildtype grade 4 only. Older papers and datasets calling an IDH-mutant tumor 'glioblastoma' are using the pre-CNS5 definition \u2014 a real trap when comparing survival across studies or training/evaluating segmentation models on relabeled data."
+ ],
+ "example_questions": [
+  {
+   "question": "A country of 50 million people reports an age-adjusted malignant brain-tumor incidence of 6.9 per 100,000 per year. Approximately how many new malignant brain tumors occur per year, and about how many patients would you expect to be alive 5 years later if the 5-year relative survival is 34.8% and background 5-year survival for a matched group is ~95%?",
+   "answer": "Step 1 \u2014 annual cases: C = rate \u00d7 N/100,000 = 6.9 \u00d7 (50,000,000 / 100,000) = 6.9 \u00d7 500 = 3,450 new malignant cases per year. Step 2 \u2014 observed 5-year survival: S_obs = RSR \u00d7 S_exp = 0.348 \u00d7 0.95 = 0.3306, i.e., about 33.1%. Step 3 \u2014 survivors among one year's cohort at 5 years: 0.331 \u00d7 3,450 \u2248 1,142 patients. So roughly 3,450 new cases per year, of whom about 1,140 (\u224833%) would be expected to be alive at 5 years. The remaining ~2,300 represent the heavy toll of malignant brain tumors."
+  },
+  {
+   "question": "In a neuro-oncology clinic, for every primary brain tumor seen there are about 5 metastatic brain tumors. If the clinic evaluates 600 brain tumors in a year, how many are metastatic, and what is the metastatic share as a percentage?",
+   "answer": "Let P = primaries, M = metastases with M = 5P. Total = M + P = 6P = 600, so P = 100 and M = 5 \u00d7 100 = 500. Metastatic share f = M/(M+P) = 500/600 = 5/6 \u2248 0.833 = 83.3%. So 500 tumors are metastatic (about 83%), 100 are primary. This mirrors the epidemiologic fact that metastatic brain tumors are roughly 5\u00d7 more common than primary ones."
+  },
+  {
+   "question": "Why can a WHO grade 1 (benign) tumor still be considered a neurosurgical emergency, while a WHO grade 4 glioblastoma is described as nearly impossible to cure \u2014 even though grade 1 is the 'least aggressive' label?",
+   "answer": "The grade describes cellular aggressiveness (growth rate and invasiveness), not the clinical danger from location. A grade 1 tumor grows slowly and rarely invades, but inside the closed, rigid skull even a small mass can be an emergency if it sits where it blocks cerebrospinal-fluid drainage (causing acute hydrocephalus and rising intracranial pressure) or compresses the brainstem, which controls breathing and consciousness. Conversely, glioblastoma (grade 4, IDH-wildtype) is deadly for different reasons: it diffusely infiltrates healthy brain so surgeons cannot remove all of it, it grows fast, and the blood\u2013brain barrier limits drug delivery \u2014 giving a ~7% five-year relative survival. The lesson: grade and clinical severity are related but not identical; location, mass effect, resectability, and molecular biology all contribute."
+  }
+ ],
+ "suggested_figures": [
+  "A 2x2 matrix figure with axes 'Origin (primary vs. metastatic)' and 'Behavior (benign/low-grade vs. malignant/high-grade),' placing example tumors (meningioma, pilocytic astrocytoma, glioblastoma, lung/breast/melanoma metastasis) in the appropriate quadrants to show the two independent classification axes.",
+  "A 'closed box' cross-section schematic of the skull showing a tumor plus peritumoral edema displacing brain, with arrows for rising intracranial pressure, mapped to the symptoms it produces (morning headache, nausea/vomiting, focal deficits, seizures).",
+  "A labeled bar/pie chart of US primary CNS tumor distribution (CBTRUS 2018\u20132022): meningioma vs. glioblastoma vs. other gliomas vs. remaining types, annotated with 5-year relative survival for malignant (34.8%), non-malignant (91.7%), and glioblastoma (~7%) to contrast frequency against lethality."
+ ],
+ "confidence_notes": "Glioblastoma median survival is context-dependent and I report a range rather than one figure: CBTRUS lists ~8 months median observed survival for glioblastoma in unselected population data, while treated-cohort literature commonly cites ~14.6\u201316 months with maximal surgery + chemoradiation (Stupp protocol); the ~7.0% five-year relative survival is well established (NBTS/CBTRUS). The '5\u00d7 more common' figure for metastatic vs. primary is from the National Brain Tumor Society; other reputable sources give 'up to 5\u201310\u00d7' \u2014 the exact multiple varies by source and by whether non-malignant primaries are included, so I state it as a range. Brain-metastasis primary-source percentages (lung ~20\u201336%, breast ~15\u201325%, melanoma ~5\u201320%) come from peer-reviewed review literature and vary by referral center; melanoma has the highest per-patient propensity to spread to brain even though lung contributes the most cases in absolute terms. Symptom-frequency percentages (headache ~56%, seizures ~32%, etc.) are from clinical case-series summaries surfaced via MSKCC/MD Anderson and vary across studies; treat them as representative, not definitive. The US 2026 estimate (108,810 new primary diagnoses; >1.3 million living with a primary brain tumor) is from NBTS projections. I could not open the full CBTRUS primary journal article text directly (paywalled Oxford Academic), so numeric CBTRUS values were taken from the CBTRUS fact sheet and the search-surfaced report abstract, which agreed with each other. WHO CNS5 molecular-grading details were drawn from the RadioGraphics/RSNA summary rather than the WHO Blue Book itself.",
+ "_key": "brain-tumors-basics",
+ "_kind": "medical"
+}
