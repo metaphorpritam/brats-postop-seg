@@ -12,6 +12,7 @@ Run: uv run --with markdown --with pymdown-extensions python scripts/build_note.
 """
 from __future__ import annotations
 
+import argparse
 import base64
 import re
 from pathlib import Path
@@ -20,8 +21,16 @@ import markdown
 
 REPO = Path("/home/pritam/code/brats-postop-seg")
 NOTE = REPO / "note"
-SECTIONS = NOTE / "sections"
-OUT = NOTE / "brats_explainer.html"
+
+_ap = argparse.ArgumentParser(description="Assemble a note/<src> dir into a self-contained HTML.")
+_ap.add_argument("--src", default="sections", help="sections subdir under note/ (default: sections)")
+_ap.add_argument("--out", default="brats_explainer.html", help="output HTML filename under note/")
+_ap.add_argument("--title", default="BraTS Post-Treatment Glioma Segmentation — An Explainer",
+                 help="document <title> and browser-tab name")
+_args = _ap.parse_args()
+SECTIONS = NOTE / _args.src
+OUT = NOTE / _args.out
+DOC_TITLE = _args.title
 
 # ---- gather sections in order ---------------------------------------------------
 files = sorted(SECTIONS.glob("*.md"))
@@ -176,7 +185,7 @@ JS = r"""
 HTML = (
     "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">\n"
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
-    "<title>BraTS Post-Treatment Glioma Segmentation — An Explainer</title>\n"
+    f"<title>{DOC_TITLE}</title>\n"
     "<script>\nMathJax = { tex: { inlineMath: [['\\\\(','\\\\)']], displayMath: [['\\\\[','\\\\]']], tags: 'none' },"
     " options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] } };\n</script>\n"
     "<script src=\"https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js\" async></script>\n"

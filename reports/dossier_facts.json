@@ -1,0 +1,199 @@
+{
+ "n_test": 105,
+ "stats": {
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "A_mean_fg": [
+   0.3399790071416646,
+   0.3424037282820791,
+   0.3635609424673021
+  ],
+  "B_mean_fg": [
+   0.6717901155352592,
+   0.6678053066134453,
+   0.6705875471234322
+  ],
+  "per_seed_delta": [
+   0.3318111083935946,
+   0.3254015783313662,
+   0.3070266046561301
+  ],
+  "delta_mean": 0.3214130971270303,
+  "delta_sd": 0.012864637309932371,
+  "delta_se": 0.007427401813916358,
+  "ci95": [
+   0.28945556443017767,
+   0.35337062982388295
+  ],
+  "t_crit_df2": 4.302653,
+  "paired_t": 43.27396109428392,
+  "p_two_sided": 0.0005335793275298428,
+  "cohens_d": 24.984233086686217,
+  "A_mean": 0.3486478926303486,
+  "A_sd": 0.01297185837618446,
+  "B_mean": 0.6700609897573789,
+  "B_sd": 0.0020439233181924307
+ },
+ "per_class": {
+  "NETC": {
+   "A_mean": 0.0092634167522192,
+   "A_sd": 0.007697396705325729,
+   "B_mean": 0.46630995472272235,
+   "B_sd": 0.004462331311735625,
+   "delta": 0.45704653797050315,
+   "countA": 105,
+   "countB": 48
+  },
+  "SNFH": {
+   "A_mean": 0.683218240737915,
+   "A_sd": 0.017022553962419053,
+   "B_mean": 0.8700130581855774,
+   "B_sd": 0.002704422892059572,
+   "delta": 0.18679481744766235,
+   "countA": 105,
+   "countB": 105
+  },
+  "ET": {
+   "A_mean": 0.29935489098231,
+   "A_sd": 0.03289267984181937,
+   "B_mean": 0.6499408483505249,
+   "B_sd": 0.0065706311032665615,
+   "delta": 0.3505859573682149,
+   "countA": 100,
+   "countB": 85
+  },
+  "RC": {
+   "A_mean": 0.4027550220489502,
+   "A_sd": 0.02634807194169381,
+   "B_mean": 0.6939800977706909,
+   "B_sd": 0.0024673107193667085,
+   "delta": 0.2912250757217407,
+   "countA": 87,
+   "countB": 87
+  }
+ },
+ "stratification": {
+  "seed": 42,
+  "stratify": "rc_presence",
+  "splits": {
+   "train": {
+    "n": 490,
+    "rc": 406,
+    "rc_pct": 82.85714285714286
+   },
+   "val": {
+    "n": 105,
+    "rc": 87,
+    "rc_pct": 82.85714285714286
+   },
+   "test": {
+    "n": 105,
+    "rc": 87,
+    "rc_pct": 82.85714285714286
+   }
+  },
+  "n_total": 700,
+  "label_present": {
+   "0": 700,
+   "1": 353,
+   "2": 700,
+   "3": 579,
+   "4": 580
+  },
+  "et_present": 579
+ },
+ "params": {
+  "total": 1983069,
+  "trainable": 1983069,
+  "by_channel": {
+   "16": 1328,
+   "32": 18208,
+   "64": 746624,
+   "128": 331904,
+   "256": 884992,
+   "other": 13
+  },
+  "n_param_tensors": 26,
+  "top5": [
+   {
+    "name": "model.1.submodule.1.submodule.1.submodule.1.submodule.conv.weight",
+    "shape": [
+     256,
+     128,
+     3,
+     3,
+     3
+    ],
+    "numel": 884736
+   },
+   {
+    "name": "model.1.submodule.1.submodule.1.submodule.2.conv.weight",
+    "shape": [
+     384,
+     64,
+     3,
+     3,
+     3
+    ],
+    "numel": 663552
+   },
+   {
+    "name": "model.1.submodule.1.submodule.1.submodule.0.conv.weight",
+    "shape": [
+     128,
+     64,
+     3,
+     3,
+     3
+    ],
+    "numel": 221184
+   },
+   {
+    "name": "model.1.submodule.1.submodule.2.conv.weight",
+    "shape": [
+     128,
+     32,
+     3,
+     3,
+     3
+    ],
+    "numel": 110592
+   },
+   {
+    "name": "model.1.submodule.1.submodule.0.conv.weight",
+    "shape": [
+     64,
+     32,
+     3,
+     3,
+     3
+    ],
+    "numel": 55296
+   }
+  ]
+ },
+ "fidelity": {
+  "source": "reports/results.md (committed; raw per-seed metrics.csv on the detached ~/brats mount)",
+  "a": {
+   "best_epochs": [
+    20,
+    18,
+    22
+   ],
+   "val_acc_mean": 0.991,
+   "val_mean_fg_mean": 0.32
+  },
+  "b": {
+   "best_epochs": [
+    72,
+    68,
+    64
+   ],
+   "val_acc_mean": 0.995,
+   "val_mean_fg_mean": 0.682
+  }
+ }
+}

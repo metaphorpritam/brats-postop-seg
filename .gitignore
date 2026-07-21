@@ -47,5 +47,5 @@ node_modules/
 # NOT redistributed (licensing). See README for what it was used for.
 reference/
 
-# Built note (regenerable via scripts/build_note.py); the PUBLISHED copy lives in docs/
-note/brats_explainer.html
+# Built notes (regenerable via scripts/build_note.py); the PUBLISHED copies live in docs/
+note/*.html
