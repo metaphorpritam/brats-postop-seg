@@ -1,4 +1,4 @@
-## 4. Bullet 4 — "Lifted held-out mean foreground Dice from 0.349 to 0.670 (+0.321 ± 0.013, 3 seeds); rarest class +0.457" {#results}
+## 4. The results — Dice 0.67 and the recovered classes {#results}
 
 This is the payoff line of the entry: a single number that says the nine fixes worked. Every token in it is load-bearing — *held-out* (not train), *foreground* (not the easy background), *mean over four classes* (not cherry-picked), *±0.013 over 3 seeds* (reproducible, not a lucky run), and *rarest class +0.457* (the hardest class moved the most). This section defends each in turn, and — because honesty is part of the defense — states plainly what the number is **not**: it is a voxel-wise, single-split, small-model result, and the *delta* is the claim, never the *level*.
 

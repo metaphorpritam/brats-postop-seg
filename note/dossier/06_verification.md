@@ -20,7 +20,7 @@ can open, and the whole result regenerates from one script. This section is the 
 | 3 modalities | t2f, t1c, t2w | `scripts/01_fetch_subsample.py` | constant `INPUT_MODS` |
 | 1,983,069 params | exact | `src/brats/model.py` | `build_model(...)`; count in `compute_dossier_facts.py` |
 | Byte-identical net | shared config | `configs/base.yaml` + `configs/track_{a,b}.yaml` | the `model:` block lives in `base.yaml`; tracks override only pipeline/loss/selection |
-| Nine defects (D1–D9) | — | `CLAUDE.md` §3; `wiki/pages/defect-inventory.md` | each defect with its offending original line and its fix |
+| 9 defects diagnosed, 6 fixed (D1–D9) | — | `CLAUDE.md` §3; `wiki/pages/defect-inventory.md` | each defect with its offending original line and its fix |
 | Reference provenance | Colab export, no license | *(local only — not in the public repo)* | `unet_cc.py` header: *"Copy of Untitled7.ipynb"* |
 
 !!! gotcha "Watch out — two things are deliberately NOT in the public repo"

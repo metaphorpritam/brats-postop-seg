@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Post-Treatment Glioma Segmentation — A Controlled A/B Reproduction</title>
-<meta name="description" content="A controlled A/B experiment on BraTS post-treatment glioma segmentation: fixing a defective data pipeline, with the network held byte-identical, raises mean foreground Dice from 0.349 to 0.670.">
+<title>BraTS 2024: Post-Treatment Glioma Segmentation (3D U-Net)</title>
+<meta name="description" content="A 3D U-Net segmenting brain-tumour regions on post-treatment MRI (BraTS 2024); fixing 6 data-pipeline flaws recovered the rare tumour classes and raised Dice to 0.67.">
 <style>
 :root{--fg:#1b1b1f;--bg:#fff;--muted:#5a5a66;--line:#e2e2e8;--accent:#0b5cad;--card:#f7f8fa}
 *{box-sizing:border-box}
@@ -45,8 +45,8 @@ a{color:var(--accent)}
 </style></head><body><div class="wrap">
 
 <h1>Post-Treatment Glioma Segmentation</h1>
-<p class="sub">A controlled A/B experiment: what happens when you fix a defective data pipeline and
-change <em>nothing</em> about the neural network.</p>
+<p class="sub">A 3D U-Net that segments brain-tumour regions on post-treatment MRI — and the
+data-pipeline fixes that made it work on the rare, under-represented classes.</p>
 
 <p class="herolink">
   <a href="https://github.com/metaphorpritam/brats-postop-seg">&#9679; Source on GitHub &rarr;</a>
@@ -54,10 +54,11 @@ change <em>nothing</em> about the neural network.</p>
 </p>
 
 <div class="headline">
-  <div class="big">Mean foreground Dice <span>0.349 &rarr; 0.670</span> &nbsp;(&Delta; +0.321 &plusmn; 0.013)</div>
-  <p>Held-out test set (105 cases), mean &plusmn; SD over 3 training seeds, with the 3D U-Net held
-  <strong>byte-identical</strong> between both tracks — so the gain is attributable to the pipeline,
-  not the model. The largest recovery is on the rarest class (NETC, +0.457).</p>
+  <div class="big">Dice <span>0.67</span> on unseen scans — rare tumour classes recovered from near zero</div>
+  <p>Fixing <strong>6 data-pipeline flaws</strong> (of 9 diagnosed) let a compact 3D U-Net finally
+  segment the rare, heavily under-represented tumour classes. Verified on a held-out test set of 105
+  cases; the network was held <strong>identical</strong> throughout, so the gain is the pipeline, not
+  the model.</p>
 </div>
 
 <div class="cards">
@@ -70,7 +71,7 @@ change <em>nothing</em> about the neural network.</p>
   </a>
   <a class="card" href="report.html">
     <h2>📊 The Technical Report &rarr;</h2>
-    <p>The compact write-up: experimental design, the nine reproduced defects (D1–D9), per-class
+    <p>The compact write-up: experimental design, the 6 data-pipeline fixes (of 9 diagnosed), per-class
     results with error bars, figures, and an honest list of limitations.</p>
     <span class="tag">Results &amp; analysis</span>
   </a>
@@ -84,20 +85,18 @@ change <em>nothing</em> about the neural network.</p>
 </div>
 
 <h3>What this is</h3>
-<p>An earlier research pipeline for post-treatment glioma segmentation carried nine named defects —
-a bilinear resize applied to <em>label</em> volumes, class imbalance left unhandled, checkpoints
-selected on a degenerate accuracy metric, an uncached loader that starves the GPU. This project
-reimplements it in PyTorch + MONAI as a controlled A/B:</p>
-<ul>
-  <li><strong>Track A</strong> faithfully reproduces the defects — and fails in the documented way.</li>
-  <li><strong>Track B</strong> fixes them, with the architecture frozen byte-for-byte.</li>
-</ul>
-<p>The deliverable is not a leaderboard score — it is the <strong>A&rarr;B delta</strong>, which is
-immune to the project's deliberate handicaps because both tracks carry them equally.</p>
+<p>A 3D U-Net segments four brain-tumour regions on post-treatment MRI. Out of the box the data
+pipeline was badly flawed — a resize that corrupts the labels, class imbalance left unhandled, model
+selection on a misleading metric — so the model missed the rare, under-represented tumour classes
+almost entirely. Fixing <strong>6 data-pipeline flaws</strong> (of 9 diagnosed) recovered them.</p>
+<p>To show the fixes — not luck or a bigger model — caused the gain, it was run as a <strong>controlled
+experiment</strong>: the same network, held <strong>identical</strong>, trained once with the flawed
+pipeline and once with the fixes. The difference is attributable to the pipeline alone. The full method
+and numbers are in the report and dossier.</p>
 
 <h3>Results at a glance</h3>
 <table>
-<tr><th>Class</th><th>Track A</th><th>Track B</th><th>&Delta;</th></tr>
+<tr><th>Tumour class</th><th>Before fixes</th><th>After fixes</th><th>Gain</th></tr>
 <tr><td>NETC (necrotic core)</td><td>0.009 ± 0.008</td><td>0.466 ± 0.004</td><td><strong>+0.457</strong></td></tr>
 <tr><td>SNFH (edema / FLAIR)</td><td>0.683 ± 0.017</td><td>0.870 ± 0.003</td><td>+0.187</td></tr>
 <tr><td>ET (enhancing tumour)</td><td>0.299 ± 0.033</td><td>0.650 ± 0.007</td><td>+0.351</td></tr>

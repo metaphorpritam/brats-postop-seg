@@ -2,9 +2,9 @@
 
 A controlled **A/B experiment** that reimplements a 3D U-Net pipeline for **flat
 5-class post-treatment glioma segmentation** (BraTS-GLI 2024) in modern PyTorch +
-MONAI, faithfully reproduces a set of named defects (**D1–D9**) from the original
-TensorFlow/Keras research code in **Track A**, then fixes them in **Track B** while
-holding the network architecture byte-identical between the two. The deliverable is
+MONAI, diagnoses nine named defects (**D1–D9**) in the original TensorFlow/Keras
+research code, and reproduces the **six** that suppress the rare classes in **Track A**
+before fixing them in **Track B** — the network held byte-identical between the two. The deliverable is
 **not a leaderboard score** — it is the **A→B delta in mean foreground Dice**
 (**0.349 → 0.670, +0.321 ± 0.013** over 3 seeds on a held-out test set), which is immune
 to the project's deliberate handicaps because both tracks carry them equally.

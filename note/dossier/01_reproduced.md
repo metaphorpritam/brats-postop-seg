@@ -1,4 +1,4 @@
-## 1. Bullet 1 — "Reproduced a defective pipeline as a controlled A/B to isolate cause from model" {#reproduced}
+## 1. The method — a controlled reproduction {#reproduced}
 
 This bullet makes a *causal* claim — that a documented segmentation failure was caused by the **pipeline**, not by an inadequate network. A causal claim is only as good as the experiment that licenses it, so every phrase below is really a defense of experimental design. The three phrases unpack in order: *what* was reproduced (a pipeline's **behaviour**, honestly sourced and faithfully — not weakly — reproduced), *how* it was compared (a **controlled** A/B where exactly one thing moves), and *why* the comparison is attributable (a **byte-identical** network is what turns a difference into a cause).
 

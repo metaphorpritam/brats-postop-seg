@@ -1,4 +1,4 @@
-## 2. Bullet 2 — "Curated 700 BraTS-2024 post-treatment glioma MRIs (3 modalities) into a stratified 490/105/105 split" {#data}
+## 2. The data — 700 scans, curated and split {#data}
 
 This bullet is the *data-provenance* claim. It has to survive the two questions any careful reviewer asks about a medical-imaging dataset: **where did it come from, and what did you actually do to it?** The honest answer is that I did no manual annotation whatsoever — "curated" here means quality-control, contract-checking, and a reproducible split, all recomputable from committed artifacts. Everything below is designed to make that boundary explicit rather than let the word "curated" over-claim.
 

@@ -82,18 +82,19 @@ mjx-container[display="true"]{margin:1.1rem 0}
 <nav id="toc-sidebar"><div class="toc-header"><a href="#">Contents — jump to a section</a></div>
 <div class="toc">
 <ul>
-<li><a href="#brats-controlled-ab-in-post-treatment-glioma-segmentation">BraTS: Controlled A/B in post-treatment glioma segmentation</a><ul>
+<li><a href="#brats-2024-post-treatment-glioma-segmentation-3d-u-net">BraTS 2024: post-treatment glioma segmentation (3D U-Net)</a><ul>
 <li><a href="#the-cv-entry-being-defended">The CV entry being defended</a></li>
+<li><a href="#how-the-cv-maps-to-this-dossier">How the CV maps to this dossier</a></li>
 <li><a href="#how-to-read-this">How to read this</a></li>
 </ul>
 </li>
-<li><a href="#reproduced">1. Bullet 1 — "Reproduced a defective pipeline as a controlled A/B to isolate cause from model"</a><ul>
+<li><a href="#reproduced">1. The method — a controlled reproduction</a><ul>
 <li><a href="#reproduced-a-defective-pipeline">"Reproduced … a defective … pipeline"</a></li>
 <li><a href="#controlled-ab">"controlled A/B"</a></li>
 <li><a href="#to-isolate-cause-from-model">"to isolate cause from model"</a></li>
 </ul>
 </li>
-<li><a href="#data">2. Bullet 2 — "Curated 700 BraTS-2024 post-treatment glioma MRIs (3 modalities) into a stratified 490/105/105 split"</a><ul>
+<li><a href="#data">2. The data — 700 scans, curated and split</a><ul>
 <li><a href="#curated-700">"Curated 700"</a></li>
 <li><a href="#brats-2024">"BraTS-2024"</a></li>
 <li><a href="#post-treatment-glioma">"post-treatment glioma"</a></li>
@@ -101,15 +102,15 @@ mjx-container[display="true"]{margin:1.1rem 0}
 <li><a href="#stratified-490105105-split">"stratified" + "490/105/105 split"</a></li>
 </ul>
 </li>
-<li><a href="#method">3. Bullet 3 — "Fixed 9 pipeline defects with a 1.98M-param MONAI 3D U-Net held byte-identical across the two tracks"</a><ul>
-<li><a href="#fixed-9-pipeline-defects">"Fixed 9 pipeline defects"</a></li>
+<li><a href="#method">3. The fixes — six flaws, and the frozen network</a><ul>
+<li><a href="#fixed-6-data-pipeline-flaws-nine-diagnosed">"Fixed 6 data-pipeline flaws" — nine diagnosed</a></li>
 <li><a href="#198m-param">"1.98M-param"</a></li>
 <li><a href="#monai-3d-u-net">"MONAI 3D U-Net"</a></li>
 <li><a href="#held-byte-identical">"held byte-identical"</a></li>
 <li><a href="#the-two-tracks">"the two tracks"</a></li>
 </ul>
 </li>
-<li><a href="#results">4. Bullet 4 — "Lifted held-out mean foreground Dice from 0.349 to 0.670 (+0.321 ± 0.013, 3 seeds); rarest class +0.457"</a><ul>
+<li><a href="#results">4. The results — Dice 0.67 and the recovered classes</a><ul>
 <li><a href="#held-out">"held-out"</a></li>
 <li><a href="#mean-foreground-dice">"mean foreground Dice"</a></li>
 <li><a href="#from-0349-to-0670">"from 0.349 to 0.670"</a></li>
@@ -137,35 +138,67 @@ mjx-container[display="true"]{margin:1.1rem 0}
 </div></nav>
 <main id="content"><div id="content-inner">
 <h1 id="cv-defense-dossier">CV Defense Dossier<a class="headerlink" href="#cv-defense-dossier" title="Permanent link">#</a></h1>
-<h2 id="brats-controlled-ab-in-post-treatment-glioma-segmentation">BraTS: Controlled A/B in post-treatment glioma segmentation<a class="headerlink" href="#brats-controlled-ab-in-post-treatment-glioma-segmentation" title="Permanent link">#</a></h2>
-<p><em>This document defends one CV entry, phrase by phrase. Every noun, number, and qualifier in the
-four bullets below is unpacked into: the </em><em>claim</em><em>, </em><em>what it means</em><em>, the </em><em>evidence</em><em> (a plot,
-table, or statistic from the committed run logs), </em><em>where to verify it</em><em>, and the </em><em>interview
-question</em><em> it invites — answered honestly, including where the work is deliberately limited.</em></p>
+<h2 id="brats-2024-post-treatment-glioma-segmentation-3d-u-net">BraTS 2024: post-treatment glioma segmentation (3D U-Net)<a class="headerlink" href="#brats-2024-post-treatment-glioma-segmentation-3d-u-net" title="Permanent link">#</a></h2>
+<p><em>This document defends the project's CV entry in depth. The CV states the work simply — a
+segmentation model, six data-pipeline fixes, a Dice score. This dossier shows the </em><em>rigorous method
+behind each claim</em><em>: every number traced to a committed file, and the experimental design — a
+controlled comparison with the network held identical — that makes "fixing 6 flaws recovered the rare
+classes" a </em><em>causal</em><em> claim rather than a coincidence.</em></p>
 <h3 id="the-cv-entry-being-defended">The CV entry being defended<a class="headerlink" href="#the-cv-entry-being-defended" title="Permanent link">#</a></h3>
 <blockquote>
-<p><strong>BraTS: Controlled A/B in post-treatment glioma segmentation</strong></p>
+<p><strong>BraTS 2024: post-treatment glioma segmentation (3D U-Net)</strong></p>
 <ul>
-<li>Reproduced a defective glioma-segmentation pipeline as a controlled A/B to isolate cause from model.</li>
-<li>Curated 700 BraTS-2024 post-treatment glioma MRIs (3 modalities) into a stratified 490/105/105 split.</li>
-<li>Fixed 9 pipeline defects with a 1.98M-param MONAI 3D U-Net held byte-identical across the two tracks.</li>
-<li>Lifted held-out mean foreground Dice from 0.349 to 0.670 (+0.321 ± 0.013, 3 seeds); rarest class +0.457.</li>
+<li>Built a 3D U-Net to automatically segment brain-tumour regions from post-treatment MRI scans (BraTS).</li>
+<li>Curated 700 post-treatment brain-tumour MRI scans (BraTS 2024) into train, validation and test sets.</li>
+<li>Fixed 6 data-pipeline flaws causing the model to miss rare, heavily under-represented tumour classes.</li>
+<li>Improved segmentation accuracy (Dice) to 0.67 on unseen scans; rare classes recovered from near zero.</li>
 </ul>
 </blockquote>
 <div class="admonition note">
-<p class="admonition-title">The verdict in one line</p>
-<p>Every quantitative claim in the entry is reproducible from committed artifacts, and the central
-causal claim — <em>the pipeline, not the model, caused the gap</em> — is licensed by holding a
-1,983,069-parameter network <strong>byte-identical</strong> across both arms. The honest limitations
-(voxel-wise not lesion-wise Dice; a small model on a resampled mirror; n = 3 seeds on one test
-split) are stated in §5 rather than hidden, which is itself part of the defense.</p>
+<p class="admonition-title">The CV is the summary; this is the proof</p>
+<p>The résumé line is deliberately plain, for a fast read. Underneath, the fixes were validated as a
+<strong>controlled experiment</strong>: the <em>same</em> 1,983,069-parameter network, held <strong>byte-identical</strong>, was
+trained once with the flawed pipeline and once with the six fixes. Because nothing but the pipeline
+changed, the improvement — mean foreground Dice <strong>0.349 → 0.670</strong>, largest on the rarest class
+(NETC, near-zero → 0.466) — is attributable to the fixes, not to luck or a bigger model. That is
+what turns "I fixed some flaws" into "the flaws <em>caused</em> the failure, and here is the evidence."</p>
 </div>
+<h3 id="how-the-cv-maps-to-this-dossier">How the CV maps to this dossier<a class="headerlink" href="#how-the-cv-maps-to-this-dossier" title="Permanent link">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>CV claim</th>
+<th>Defended in</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Built a 3D U-Net to segment brain-tumour regions</td>
+<td>§1 (the method), §3 (the exact network)</td>
+</tr>
+<tr>
+<td>Curated 700 scans into train / validation / test</td>
+<td>§2 (data &amp; the split)</td>
+</tr>
+<tr>
+<td>Fixed 6 data-pipeline flaws → rare classes recovered</td>
+<td>§3 (the flaws &amp; the frozen network), §1 (fidelity)</td>
+</tr>
+<tr>
+<td>Dice 0.67; rare classes recovered from near zero</td>
+<td>§4 (results &amp; statistics)</td>
+</tr>
+<tr>
+<td>the hardest interview questions, and where to check every number</td>
+<td>§5 (cross-examination) · §6 (verification map)</td>
+</tr>
+</tbody>
+</table>
 <h3 id="how-to-read-this">How to read this<a class="headerlink" href="#how-to-read-this" title="Permanent link">#</a></h3>
-<p>Each of the four sections below takes one bullet and walks its phrases in order. Three kinds of box
-recur:</p>
+<p>Three kinds of box recur — worth reading, not skipping:</p>
 <div class="admonition intuition">
 <p class="admonition-title">The one-liner</p>
-<p>The single sentence that defends a phrase if you remember nothing else.</p>
+<p>The single sentence that defends a claim if you remember nothing else.</p>
 </div>
 <div class="admonition gotcha">
 <p class="admonition-title">Watch out</p>
@@ -173,20 +206,19 @@ recur:</p>
 </div>
 <div class="admonition example">
 <p class="admonition-title">Interview question</p>
-<p>The sharpest question the phrase invites, with a crisp, honest answer.</p>
+<p>The sharpest question the claim invites, with a crisp, honest answer.</p>
 </div>
-<p>A companion document — <em>the Explainer</em> (<code>explainer.html</code>) — carries the from-scratch theory
-(what a glioma is, how MRI works, how a U-Net and the Dice loss are derived). This dossier
-cross-references it as <code>§N</code> rather than repeating those derivations; it stays focused on <strong>defending
-the claims</strong>.</p>
+<p>A companion document — <em>the Explainer</em> (<code>explainer.html</code>) — carries the from-scratch theory (what a
+glioma is, how MRI works, how a U-Net and the Dice loss are derived). This dossier cross-references it
+as §N and stays focused on <strong>defending the claims</strong>.</p>
 <div class="admonition gotcha">
 <p class="admonition-title">Watch out — the metric caveat that governs the whole entry</p>
 <p>Every Dice number here is <strong>voxel-wise</strong> Dice, <em>not</em> the BraTS lesion-wise challenge score. The
-numbers are internally consistent for an A/B comparison but are <strong>not comparable to
-leaderboards</strong>. Quote the <em>delta</em>, not the absolute level (see §4 and §5).</p>
+numbers are internally consistent but are <strong>not comparable to leaderboards</strong>. The honest headline
+is the <em>recovery of the rare classes</em>, not the absolute 0.67 (see §4 and §5).</p>
 </div>
 
-<h2 id="reproduced">1. Bullet 1 — "Reproduced a defective pipeline as a controlled A/B to isolate cause from model"<a class="headerlink" href="#reproduced" title="Permanent link">#</a></h2>
+<h2 id="reproduced">1. The method — a controlled reproduction<a class="headerlink" href="#reproduced" title="Permanent link">#</a></h2>
 <p>This bullet makes a <em>causal</em> claim — that a documented segmentation failure was caused by the <strong>pipeline</strong>, not by an inadequate network. A causal claim is only as good as the experiment that licenses it, so every phrase below is really a defense of experimental design. The three phrases unpack in order: <em>what</em> was reproduced (a pipeline's <strong>behaviour</strong>, honestly sourced and faithfully — not weakly — reproduced), <em>how</em> it was compared (a <strong>controlled</strong> A/B where exactly one thing moves), and <em>why</em> the comparison is attributable (a <strong>byte-identical</strong> network is what turns a difference into a cause).</p>
 <h3 id="reproduced-a-defective-pipeline">"Reproduced … a defective … pipeline"<a class="headerlink" href="#reproduced-a-defective-pipeline" title="Permanent link">#</a></h3>
 <p><strong>Claim.</strong> <em>"Reproduced a defective glioma-segmentation pipeline."</em> The object of the verb is the <strong>data pipeline's behaviour</strong> — its label handling, normalisation, sampling, loss, and checkpoint-selection — <strong>not</strong> a set of trained weights. No original weights were reused; the pathology was re-implemented in PyTorch/MONAI and shown to reproduce.</p>
@@ -245,7 +277,7 @@ It is controlled at the resolution the claim is made: <strong>pipeline vs. model
 <p><strong>"How do you know it's the pipeline and not the model?"</strong>
 Because the model is the one thing I refused to change. Both arms are the exact same MONAI 3D U-Net — <strong>1,983,069 parameters</strong>, identical channels, strides, and dropout — trained on the same fixed 490/105/105 split under the same 3-seed protocol. The only difference between the arms is the data-and-training pipeline (labels, normalisation, sampling, loss, checkpoint rule). Under those conditions the Track A → Track B gap has no architectural degree of freedom to hide in. The counterfactual makes it concrete: had I <em>also</em> upgraded Track B's network, the delta would be confounded by architecture plus pipeline and I could not claim either as the cause — which is precisely the mistake this design exists to avoid.</p>
 </div>
-<h2 id="data">2. Bullet 2 — "Curated 700 BraTS-2024 post-treatment glioma MRIs (3 modalities) into a stratified 490/105/105 split"<a class="headerlink" href="#data" title="Permanent link">#</a></h2>
+<h2 id="data">2. The data — 700 scans, curated and split<a class="headerlink" href="#data" title="Permanent link">#</a></h2>
 <p>This bullet is the <em>data-provenance</em> claim. It has to survive the two questions any careful reviewer asks about a medical-imaging dataset: <strong>where did it come from, and what did you actually do to it?</strong> The honest answer is that I did no manual annotation whatsoever — "curated" here means quality-control, contract-checking, and a reproducible split, all recomputable from committed artifacts. Everything below is designed to make that boundary explicit rather than let the word "curated" over-claim.</p>
 <div class="admonition intuition">
 <p class="admonition-title">The one-liner</p>
@@ -354,15 +386,15 @@ I stratify on resection-cavity presence because RC is the defining, imbalanced f
 <p class="admonition-title">Watch out — what the split does <em>not</em> buy</p>
 <p>Stratifying by RC presence balances <em>one</em> binary. It does not balance the rarer classes (NETC is present in only 353/700 cases) or scanner/site distribution, and it says nothing about generalisation <em>beyond this mirror</em>. The honest uncertainty in the headline result is a single 105-case test set on one resampled mirror — a point made in full in §5, not hidden here.</p>
 </div>
-<h2 id="method">3. Bullet 3 — "Fixed 9 pipeline defects with a 1.98M-param MONAI 3D U-Net held byte-identical across the two tracks"<a class="headerlink" href="#method" title="Permanent link">#</a></h2>
-<p>This bullet is the experimental design in one line. It makes three separable promises: that nine concrete defects were identified and fixed, that the <em>fixes</em> — not some architecture change — are what moved the score, and that the network was frozen so tightly across the comparison that it cannot be the confound. Everything below is written so an interviewer can check each promise against a committed file.</p>
+<h2 id="method">3. The fixes — six flaws, and the frozen network<a class="headerlink" href="#method" title="Permanent link">#</a></h2>
+<p>This section defends the experimental design. It makes three separable promises: that 6 data-pipeline flaws (of 9 diagnosed) were fixed, that the <em>fixes</em> — not some architecture change — are what moved the score, and that the network was frozen so tightly across the comparison that it cannot be the confound. Everything below is written so an interviewer can check each promise against a committed file.</p>
 <div class="admonition intuition">
 <p class="admonition-title">The one-liner</p>
-<p>Change the pipeline, freeze the network. Nine defects are the independent variable; the 1.98M-parameter U-Net is the <em>controlled</em> variable, held byte-identical so the A→B delta belongs to the fixes and nothing else.</p>
+<p>Change the pipeline, freeze the network. The six fixed data-pipeline flaws are the independent variable; the 1.98M-parameter U-Net is the <em>controlled</em> variable, held byte-identical so the gain belongs to the fixes and nothing else.</p>
 </div>
 <hr />
-<h3 id="fixed-9-pipeline-defects">"Fixed 9 pipeline defects"<a class="headerlink" href="#fixed-9-pipeline-defects" title="Permanent link">#</a></h3>
-<p><strong>Claim.</strong> <em>"Fixed 9 pipeline defects"</em> — a catalogue of nine specific engineering errors, labelled <strong>D1–D9</strong>, that the reference pipeline either committed or left unhandled.</p>
+<h3 id="fixed-6-data-pipeline-flaws-nine-diagnosed">"Fixed 6 data-pipeline flaws" — nine diagnosed<a class="headerlink" href="#fixed-6-data-pipeline-flaws-nine-diagnosed" title="Permanent link">#</a></h3>
+<p><strong>Claim.</strong> <em>"Fixed 6 data-pipeline flaws"</em> — the CV cites the six data-pipeline flaws that drove the accuracy gain. The full engineering audit found <strong>nine</strong> errors (labelled <strong>D1–D9</strong>); these six are the ones reproduced in the flawed pipeline and fixed in the corrected one, so their effect can be isolated (the other three are handled on both arms — see the table).</p>
 <p><strong>What it means.</strong> The reference code was a Colab export (<code>unet_cc.py</code>, header <em>"Copy of Untitled7.ipynb … Automatically generated by Colab"</em>) with no author, README, or LICENSE, carrying a BraTS-2020-era label remap onto 2024 data. Rather than "improve" it globally, each defect was isolated so its effect could be attributed. Six of the nine are <em>reproduced faithfully</em> in Track A and <em>only</em> fixed in Track B — those are the independent variable of the A/B. The other three are handled specially and are noted as such below, because pretending they were part of the A/B would overstate the result.</p>
 <table>
 <thead>
@@ -600,7 +632,7 @@ The <code>model:</code> block exists in exactly one file, <code>configs/base.yam
 <p><strong>"In one breath, what makes this a clean experiment?"</strong>
 One independent variable — the six A-reproduced pipeline defects — moved between Track A and Track B, while the network was held byte-identical (same <code>base.yaml</code> <code>model:</code> block, same <code>build_model</code>, same 1,983,069 parameters) and the metric and 5-class contract were fixed on both sides. So the +0.321 Dice delta is caused by the fixes, not by anything I changed about the model — because I changed nothing about the model.</p>
 </div>
-<h2 id="results">4. Bullet 4 — "Lifted held-out mean foreground Dice from 0.349 to 0.670 (+0.321 ± 0.013, 3 seeds); rarest class +0.457"<a class="headerlink" href="#results" title="Permanent link">#</a></h2>
+<h2 id="results">4. The results — Dice 0.67 and the recovered classes<a class="headerlink" href="#results" title="Permanent link">#</a></h2>
 <p>This is the payoff line of the entry: a single number that says the nine fixes worked. Every token in it is load-bearing — <em>held-out</em> (not train), <em>foreground</em> (not the easy background), <em>mean over four classes</em> (not cherry-picked), <em>±0.013 over 3 seeds</em> (reproducible, not a lucky run), and <em>rarest class +0.457</em> (the hardest class moved the most). This section defends each in turn, and — because honesty is part of the defense — states plainly what the number is <strong>not</strong>: it is a voxel-wise, single-split, small-model result, and the <em>delta</em> is the claim, never the <em>level</em>.</p>
 <div class="admonition gotcha">
 <p class="admonition-title">Watch out — the caveat that governs the whole number</p>
@@ -976,7 +1008,7 @@ can open, and the whole result regenerates from one script. This section is the 
 <td>the <code>model:</code> block lives in <code>base.yaml</code>; tracks override only pipeline/loss/selection</td>
 </tr>
 <tr>
-<td>Nine defects (D1–D9)</td>
+<td>9 defects diagnosed, 6 fixed (D1–D9)</td>
 <td>—</td>
 <td><code>CLAUDE.md</code> §3; <code>wiki/pages/defect-inventory.md</code></td>
 <td>each defect with its offending original line and its fix</td>
