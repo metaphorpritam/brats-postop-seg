@@ -12,8 +12,8 @@ classes" a **causal** claim rather than a coincidence.*
 
 > **BraTS 2024: post-treatment glioma segmentation (3D U-Net)**
 >
-> - Built a 3D U-Net to automatically segment brain-tumour regions from post-treatment MRI scans (BraTS).
-> - Curated 700 post-treatment brain-tumour MRI scans (BraTS 2024) into train, validation and test sets.
+> - Built a 3D U-Net to segment brain-tumour regions from post-treatment MRI scans (BraTS 2024).
+> - Curated 700 post-treatment brain-tumour MRI scans into a 490/105/105 train/validation/test split.
 > - Fixed 6 data-pipeline flaws causing the model to miss rare, heavily under-represented tumour classes.
 > - Improved segmentation accuracy (Dice) to 0.67 on unseen scans; rare classes recovered from near zero.
 
