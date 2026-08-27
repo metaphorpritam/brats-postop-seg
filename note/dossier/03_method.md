@@ -22,10 +22,10 @@ This section defends the experimental design. It makes three separable promises:
 | **D5** | Global-max normalisation `X / max(X)` | Per-modality z-score over brain (nonzero) voxels | One bright voxel rescales the whole volume and flattens cross-modality contrast the network needs | **Reproduced in A** |
 | **D6** | Non-uniform slice stride `int(j·2.5)`, 48 slices | Foreground crop + 96³ class-balanced patches | Irregular anisotropic sampling drops thin/small lesions before the network ever sees them | **Reproduced in A** |
 | **D7** | Dead label remap merging **RC→ET** — a 4-class contract on 5-class data | Assert 5-class `{0,1,2,3,4}` at load | Silently deletes the resection-cavity class; a 2020-era assumption smuggled onto 2024 post-treatment data | **Enforced on BOTH** (5-class asserted at load) |
-| **D8** | No normalisation layers in the network | *(left as-is)* | A genuine handicap — but shared, so it is **held constant on BOTH** tracks and is explicitly *not* part of the A/B | **Held constant** |
+| **D8** | *Reference* net had no normalization layers | Instance normalization (MONAI default) on **both** tracks | Corrected identically on both arms — not an A/B knob, so it cannot manufacture the delta | **Fixed on both** |
 | **D9** | Uncached, I/O-bound per-epoch loader | MONAI `PersistentDataset` cache | Pure engineering speed: ~23 s → ~8 s/epoch (~2.8×); no accuracy effect | **Reproduced in A** |
 
-So Track A reproduces **D1, D3, D4, D5, D6, D9**; **D2** is fixed on both (you cannot run a fair comparison with a broken metric); **D7** is *enforced* on both (the 5-class contract is a correctness guardrail, not a tuning knob); **D8** is *held constant* on both (an equal handicap — see the parameter discussion below). Naming this split honestly is the point: the headline "+0.321 Dice" is driven by the six A-reproduced defects, and I do not claim credit for the three that are shared or enforced.
+So Track A reproduces **D1, D3, D4, D5, D6, D9**; **D2** is fixed on both (you cannot run a fair comparison with a broken metric); **D7** is *enforced* on both (the 5-class contract is a correctness guardrail, not a tuning knob); **D8** is *corrected* on both (the MONAI network uses instance normalization — the reference's lack of norm was not reproduced). Naming this split honestly is the point: the headline "+0.321 Dice" is driven by the six A-reproduced defects, and I do not claim credit for the three that are shared or enforced.
 
 **Evidence.** The defect ladder shows how the six A-reproduced fixes stack from the collapsed Track A baseline up to Track B:
 
@@ -38,7 +38,7 @@ D1 is the most vivid single defect, because it corrupts the *labels* before any 
 **Verify.** The A-vs-B defect handling is diffable directly: `configs/track_a.yaml` (`label_interpolation: bilinear`, `normalization: global_max`, `slice_sampling: "…int(j*2.5)"`, `loss: cross_entropy`, `metric_selection: val_accuracy`, `cache: none`) against `configs/track_b.yaml` (the matching fixes). The D1 count-inflation numbers are recomputed in `scripts/compute_dossier_facts.py`.
 
 !!! gotcha "Watch out"
-    D2, D7, and D8 are *not* A/B knobs. If someone counts "nine fixes → +0.321 Dice", correct them: the delta comes from the six A-reproduced defects. D2 and D7 are correctness prerequisites shared by both tracks, and D8 is a deliberate shared handicap.
+    D2, D7, and D8 are *not* A/B knobs. If someone counts "nine fixes → +0.321 Dice", correct them: the delta comes from the six A-reproduced defects. D2 and D7 are correctness prerequisites shared by both tracks, and D8 (the network's instance normalization) is applied identically to both.
 
 !!! example "Interview question"
     **"Name three defects and why each matters."**
@@ -67,7 +67,7 @@ Summing this over every convolution in the encoder, decoder, and the final 1×1�
 
 ![Parameter budget by feature width — the 64- and 256-channel stages dominate](reports/figures/dossier/param_breakdown.png)
 
-**Why so small.** 1.98M parameters is tiny for a 3D segmentation network (modern nnU-Net-class models run tens of millions). That is deliberate. The original network compounded the handicap with **D8** — no normalisation layers — and rather than "fix" the capacity to flatter the result, the small, norm-free network is **carried equally by both tracks**. An equal handicap on both sides *cancels* in the A→B difference: it can lower both absolute numbers but it cannot manufacture a delta, because the same 1,983,069 parameters compute both tracks. If anything it makes the +0.321 gain *conservative* — a bigger network would likely widen it.
+**Why so small.** 1.98M parameters is tiny for a 3D segmentation network (modern nnU-Net-class models run tens of millions). That is deliberate: rather than scale the network up to flatter the result, the same small network is **carried equally by both tracks**. An equal handicap on both sides *cancels* in the A→B difference — it can lower both absolute numbers but cannot manufacture a delta, because the same 1,983,069 parameters compute both tracks. If anything it makes the +0.321 gain *conservative*: a bigger network would likely widen it. (The network *does* use **instance normalization** — MONAI's default — on both tracks; the original's absence of norm, defect D8, was not reproduced.)
 
 **Verify.** `src/brats/model.py::count_params` returns 1,983,069 for both tracks (run its `__main__` block, which prints the count for track `a` and track `b`); the width breakdown is regenerated into `reports/figures/dossier/param_breakdown.png`.
 
@@ -76,7 +76,7 @@ Summing this over every convolution in the encoder, decoder, and the final 1×1�
 
 !!! example "Interview question"
     **"Why such a tiny model — isn't that the real problem?"**
-    No — and this is the crucial point. The 1.98M-parameter, normalisation-free network is a genuine handicap, but it is applied *equally* to Track A and Track B: both call the same factory with the same config, so both compute with the identical 1,983,069 parameters. An equal handicap subtracts out of the A→B difference; it can depress both absolute Dice scores but cannot create the +0.321 gap. The small model makes the result *conservative*, not inflated.
+    No — and this is the crucial point. The 1.98M-parameter network is a genuine handicap on *absolute* score, but it is applied *equally* to Track A and Track B: both call the same factory with the same config, so both compute with the identical 1,983,069 parameters (instance normalization included). An equal handicap subtracts out of the A→B difference; it can depress both absolute Dice scores but cannot create the +0.321 gap. The small model makes the result *conservative*, not inflated.
 
 ---
 
@@ -93,6 +93,27 @@ num_res_units = 0, dropout = 0.1
 ```
 
 `in_channels = 3` are the three retained modalities (t2f, t1c, t2w — native t1n dropped, matching the reference); `out_channels = 5` are background plus the four tumour classes (NETC, SNFH, ET, RC); `num_res_units = 0` makes it a plain (non-residual) U-Net.
+
+**The architecture in full.** Inspecting the instantiated network:
+
+| Property | Value |
+|---|---|
+| Resolution levels | 5 (feature widths 16 → 32 → 64 → 128 → 256) |
+| Down/up-sampling steps | 4 (stride 2 each; 16× total at the bottleneck) |
+| Convolutional layers | **9** — 5 `Conv3d` (encoder + bottleneck) + 4 `ConvTranspose3d` (decoder) |
+| Skip connections | 4 (encoder → decoder, one per level) |
+| Residual connections | **none** (`num_res_units = 0` — a plain U-Net) |
+| Normalization | **8 × `InstanceNorm3d`** (MONAI's default `norm="INSTANCE"`) |
+| Activation | 8 × `PReLU` (MONAI default) |
+| Dropout | 8 × p = 0.1 |
+| Kernel size | 3×3×3 |
+| Input → output | `[3, D, H, W]` (3 modalities) → `[5, D, H, W]` logits → softmax |
+| Trainable parameters | **1,983,069** |
+
+Two clarifications this table settles, because they are exactly the questions an interviewer asks:
+
+- **Skip vs. residual connections.** The network has the **4 U-Net skip connections** (encoder features *concatenated* into the decoder) but **no residual connections** — `num_res_units = 0` means each level is a single convolution block, not a residual block.
+- **Normalization.** MONAI's `UNet` defaults to **instance normalization**, so the built network carries 8 `InstanceNorm3d` layers, applied identically to both tracks. The *reference's* absence of norm (defect D8) is therefore **not** reproduced; instance norm is present on both arms, which keeps the comparison clean without being an A/B knob.
 
 **Verify.** This block lives once, in `configs/base.yaml` under `model:`, and is consumed by `src/brats/model.py::build_model`.
 
@@ -132,7 +153,7 @@ The top row is byte-identical; every other row is a pipeline knob. Because the a
 
 **Claim.** *"the two tracks"* — the entire study is a single controlled A/B.
 
-**What it means.** **Track A** is the *faithful* reproduction: it deliberately re-commits defects D1, D3, D4, D5, D6, D9 and is designed to fail in a documented way — validation voxel accuracy **0.991** masking a mean-fg Dice of just **0.320** and NETC Dice of **0.009**, with the best (accuracy-selected) checkpoint at epochs 18–22. **Track B** applies all the fixes: val accuracy 0.995, mean-fg Dice 0.682, checkpoints at epochs 64–72. Both share the enforced 5-class contract (D7), the correct metric (D2), and the identical handicapped network (D8, and the 1.98M parameters). The gap between them — held-out TEST mean-fg Dice **0.349 → 0.670, Δ = +0.321** — is thus attributable to the pipeline fixes and to nothing about the model, because the model was the controlled variable throughout.
+**What it means.** **Track A** is the *faithful* reproduction: it deliberately re-commits defects D1, D3, D4, D5, D6, D9 and is designed to fail in a documented way — validation voxel accuracy **0.991** masking a mean-fg Dice of just **0.320** and NETC Dice of **0.009**, with the best (accuracy-selected) checkpoint at epochs 18–22. **Track B** applies all the fixes: val accuracy 0.995, mean-fg Dice 0.682, checkpoints at epochs 64–72. Both share the enforced 5-class contract (D7), the correct metric (D2), and the identical 1.98M-parameter network (instance-normalized, D8 corrected on both). The gap between them — held-out TEST mean-fg Dice **0.349 → 0.670, Δ = +0.321** — is thus attributable to the pipeline fixes and to nothing about the model, because the model was the controlled variable throughout.
 
 !!! gotcha "Watch out"
     These are **voxel-wise** Dice scores, not the BraTS lesion-wise score — internally consistent for this A/B but **not comparable to challenge leaderboards**. And the ±SD is over 3 *seeds* on one fixed 105-case test split: it measures reproducibility, not population generalization.

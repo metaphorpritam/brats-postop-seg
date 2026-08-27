@@ -17,13 +17,13 @@ gain.
 | **D5** | Global-max normalization $X/\max(X)$ | Per-modality z-score over brain voxels | Intensity scale is fragile & not standardized (§15) |
 | **D6** | Non-uniform slice stride `int(j·2.5)` | Foreground crop + class-balanced 96³ patches | Which voxels the model ever sees (§17) |
 | **D7** | A dead label remap that merges RC into ET (a 4-class contract) | Explicit 5-class contract asserted at load | The resection cavity silently disappears |
-| **D8** | No normalization layers inside the network | *Held constant on both tracks* — not part of the A/B | Architecture (frozen, §19) |
+| **D8** | *Reference* had no normalization layers | Instance norm (MONAI default), on **both** tracks | Architecture (frozen, §19) |
 | **D9** | Uncached loader re-reads + re-resizes every epoch | MONAI `PersistentDataset` cache | Speed: I/O-bound GPU starvation |
 
 Track A reproduces the *data-pipeline* defects (D1, D3, D4, D5, D6, D9); D2 is a measurement fix
 applied to **both** tracks so the numbers can be trusted at all; D7 is enforced as a contract; and
-D8 is deliberately **not** touched on either side, because changing the network is exactly what
-§19's rule forbids.
+the network's normalization (D8) is **identical** on both sides — the MONAI U-Net uses instance norm,
+the same for both tracks, so it can never be the confound §19's rule forbids.
 
 ![The defect ladder: each Track-A flaw (left) maps to a Track-B fix (right); the network in the middle is identical for both, so the measured gap is attributable to the pipeline.](figures/diagrams/s20_defect_ladder.png)
 

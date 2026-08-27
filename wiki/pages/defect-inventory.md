@@ -58,10 +58,10 @@ Each entry: **what** (offending line/behaviour) · **why it matters** · **Track
 - **Why:** signals the pipeline was adapted from a pre-op tutorial without re-validating the label contract — pulling this thread reveals it was never audited end-to-end. See [[Data Provenance]] for the vintage table.
 - **Fix (B):** `AssertLabelSetd` fails loudly if `set(labels) ⊄ {0,1,2,3,4}` at load time — asserts, never coerces (`transforms.py`). Track B keeps all 5 classes, RC included.
 
-## D8 — No normalization layers in the network
+## D8 — Reference network has no normalization layers
 - **What:** `build_unet` is Conv3D + Dropout only — no BatchNorm/InstanceNorm anywhere (`unet_cc.py:211-270`).
 - **Why:** slower/less stable convergence.
-- **Fix:** **held constant across tracks, not part of the A/B** (§4.2). Noted in the write-up; if norm is added it must be added to both tracks to keep the comparison unconfounded.
+- **Fix (both tracks):** the MONAI `UNet` uses **instance normalization** (its default) on both tracks — the reference's no-norm was *not* reproduced. Applied identically to A and B, so it is corrected on both arms and never confounds the A/B (§4.2). The header describes the *reference*, not this reimplementation.
 
 ## D9 — Pipeline is I/O-bound; the GPU starves
 - **What:** `DataGenerator.__getitem__` (`unet_cc.py:120-141`) re-loads four gzipped NIfTIs and runs 192 `cv2.resize` calls **per step, every epoch**. Nothing is cached.

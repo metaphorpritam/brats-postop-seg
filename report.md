@@ -277,7 +277,7 @@ the very class this project exists to measure. This is documented, not papered o
 | **D5** | Crude global `X / max(X)` normalization | Per-modality z-score over non-zero voxels | Contributes to the mean-fg delta (§3, §4.1) |
 | **D6** | Non-uniform slice stride `int(j*2.5)` | Foreground crop + `RandCropByLabelClasses` 96³ | Part of Track B pipeline (§3) |
 | **D7** | Dead 4-class remap merges RC→ET (label-contract fork) | Explicit 5-class contract asserted at load | 5-class throughout; RC kept & measured (§5.4) |
-| **D8** | No normalization layers in the net | **Held constant across tracks** (not part of the A/B, §4.2) | Architecture byte-identical (§2) |
+| **D8** | *Reference* net had no normalization layers | Instance norm (MONAI default) on **both** tracks — not an A/B knob (§4.2) | Architecture byte-identical (§2) |
 | **D9** | Uncached, I/O-bound loader starves the GPU | `PersistentDataset` cache | ~23 s → ~8 s data load, ~2.8× (§4.3, §5.3, `d9_speed.png`) |
 
 ---

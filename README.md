@@ -210,5 +210,6 @@ resampled to the native array space for a common view — inference is faithful,
 
 Input: 3 modalities (`t2f`, `t1c`, `t2w`) stacked as channels, matching the original
 (which drops `t1n`). Optimizer AdamW, lr 1e-3, cosine schedule, bf16 autocast, seed 42.
-**D8** (no norm layers in the net) is noted but deliberately *not* fixed — changing it
-would confound the A/B (§4.2).
+**D8** — the reference had *no* norm layers; the MONAI `UNet` uses instance normalization
+(its default) on **both** tracks, so this is corrected identically in both arms and never
+confounds the A/B (§4.2).
