@@ -96,10 +96,10 @@ slice sampling / patching (D6), and caching (D9). The architecture is held const
    the Kaggle mirror `i212385nomanarif/2024-brats-glioma` (~700 of the ~1,350 official
    cases). **Cite the BraTS 2024 challenge (de Verdier et al., [arXiv:2405.18368]), not
    the Kaggle re-upload.** The mirror is **resampled to 182×218×182 (MNI-like) space —
-   NOT the native BraTS 240×240×155.** We used 200 cases; exact IDs and the dataset hash
+   NOT the native BraTS 240×240×155.** We used all 700 mirrored cases (490/105/105 split); exact IDs and the dataset hash
    are in `reports/splits.json` and `reports/data_provenance.json`.
-4. **D1 inflates Track A's case counts (see above).** Track A's NETC 30/30 and ET 30/30
-   are an *artifact of the bilinear label bug*, not real prevalence (true: 17, 25). This
+4. **D1 inflates Track A's case counts (see above).** Track A's NETC 105/105 and ET 100/105
+   (test set) are an *artifact of the bilinear label bug*, not real prevalence (true: 48, 85). This
    is reported as a finding, not hidden.
 5. **D7 — the committed reference is 4-class, a stronger defect than the spec's
    narrative.** CLAUDE.md §3/D7 describes a vestigial `Y[Y==5] = 4` remap. The actually
@@ -114,8 +114,8 @@ slice sampling / patching (D6), and caching (D9). The architecture is held const
    study. This discrepancy is documented rather than papered over.
 6. **SOTA handicap — do not read low absolute numbers as failure (§2.3).** Published
    BraTS 2024 GLI solutions use ~1,350 cases, nnU-Net ensembles, ~1,000 epochs, 4–5
-   channels, test-time augmentation, and STAPLE/weighted ensembling. We use **~200 cases,
-   a ~2M-param plain U-Net, ~10/40 epochs, 3 channels, no TTA, no ensemble, on an 8 GB
+   channels, test-time augmentation, and STAPLE/weighted ensembling. We use **700 cases,
+   a ~2M-param plain U-Net, 25/80 epochs (A/B), 3 channels, no TTA, no ensemble, on an 8 GB
    laptop GPU.** Materially lower numbers are expected and by design; the A→B delta —
    which carries the identical handicap on both sides — is the result.
 
