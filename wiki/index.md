@@ -29,6 +29,9 @@ BraTS-2024 + Kim arXiv papers, code map) is indexed separately in the **pageinde
 - [[Build Journal]] — the *why we got here*: the build narrative plus every decision (16),
   incident + fix (14), and open/resolved question, compiled from the session transcript —
   the storage saga, the WSL mount fights, the D7 discovery, the collate crash, and the scale-up.
+- [[Session Journal]] — sanitized journal of the follow-on session (2026-07-15 → 09-30): the
+  700-case/3-seed scale-up, the explainer + dossier, publication to GitHub Pages, the CV reframe,
+  the D8/architecture correction, and the backup map (what is and is not in git).
 
 ## Decisions & open questions
 
